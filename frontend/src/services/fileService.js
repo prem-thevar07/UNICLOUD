@@ -102,6 +102,15 @@ export const getTransferHistory = async () => {
   }
 };
 
+export const getActiveJobStatus = async () => {
+  try {
+    const res = await api.get("/transfer/active-job");
+    return res.data;
+  } catch (err) {
+    return { activeJob: null };
+  }
+};
+
 export const getActivity = async () => {
   try {
     const res = await api.get("/activity");

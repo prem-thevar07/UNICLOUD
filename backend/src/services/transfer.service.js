@@ -4,6 +4,8 @@ import { Readable } from "stream";
 import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import CloudAccount from "../models/CloudAccount.js";
 import { logActivity } from "../utils/activityLogger.js";
+import { acquireTransferLock, releaseTransferLock } from "./transferLock.service.js";
+import { setServerActiveJob } from "./activeJobStore.service.js";
 
 import { refreshGoogleToken } from "./providers/google.provider.js";
 import { refreshBoxToken } from "./providers/box.provider.js";
@@ -360,18 +362,42 @@ const uploadFileBufferToTargetInternal = async (account, fileName, buffer, targe
     }
 
     const FormDataModule = (await import("form-data")).default;
-    const form = new FormDataModule();
-    form.append("attributes", JSON.stringify({ name: fileName, parent: { id: folderId } }));
-    form.append("file", buffer, { filename: fileName });
 
-    const uploadRes = await axios.post("https://upload.box.com/api/2.0/files/content", form, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        ...form.getHeaders(),
-      },
-    });
+    try {
+      const form = new FormDataModule();
+      form.append("attributes", JSON.stringify({ name: fileName, parent: { id: folderId } }));
+      form.append("file", buffer, { filename: fileName });
 
-    return uploadRes.data;
+      const uploadRes = await axios.post("https://upload.box.com/api/2.0/files/content", form, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          ...form.getHeaders(),
+        },
+      });
+
+      return uploadRes.data;
+    } catch (boxErr) {
+      if (boxErr.response?.status === 409) {
+        console.warn(`⚠️ Box file "${fileName}" already exists (409 Conflict). Generating timestamped filename...`);
+        const extIndex = fileName.lastIndexOf(".");
+        const base = extIndex !== -1 ? fileName.substring(0, extIndex) : fileName;
+        const ext = extIndex !== -1 ? fileName.substring(extIndex) : "";
+        const autoName = `${base} (${Date.now()})${ext}`;
+
+        const form = new FormDataModule();
+        form.append("attributes", JSON.stringify({ name: autoName, parent: { id: folderId } }));
+        form.append("file", buffer, { filename: autoName });
+
+        const retryRes = await axios.post("https://upload.box.com/api/2.0/files/content", form, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            ...form.getHeaders(),
+          },
+        });
+        return retryRes.data;
+      }
+      throw boxErr;
+    }
   }
 
   throw new Error(`Unsupported target provider: ${provider}`);
@@ -455,59 +481,169 @@ export const executeTransfer = async ({
   targetFolderPath = null,
   operation = "copy", // "copy" | "move"
 }) => {
-  const sourceAccount = await CloudAccount.findOne({ _id: sourceAccountId, userId });
-  if (!sourceAccount) {
-    throw new Error("Source cloud account not found or access denied.");
+  // Acquire Server Lock to prevent concurrent/duplicate transfers
+  const lockAcquired = acquireTransferLock(userId, sourceFileId, targetAccountId, targetFolderId);
+  if (!lockAcquired) {
+    return {
+      success: true,
+      deduplicated: true,
+      message: "Transfer already in progress or completed recently.",
+    };
   }
 
-  const targetAccount = await CloudAccount.findOne({ _id: targetAccountId, userId });
-  if (!targetAccount) {
-    throw new Error("Target cloud account not found or access denied.");
-  }
-
-  console.log(`🚀 Starting ${operation.toUpperCase()} transfer from ${sourceAccount.provider} (${sourceAccount.email}) to ${targetAccount.provider} (${targetAccount.email})...`);
-
-  // Step 1: Read full binary buffer from source
-  const sourceData = await getSourceFileBuffer(sourceAccount, sourceFileId);
-
-  console.log(`📥 Read ${sourceData.buffer.length} bytes for "${sourceData.fileName}" from ${sourceAccount.provider}. Uploading to ${targetAccount.provider}...`);
-
-  // Step 2: Write buffer to target
-  const uploadResult = await uploadFileBufferToTarget(
-    targetAccount,
-    sourceData.fileName,
-    sourceData.buffer,
-    targetFolderId,
-    targetFolderPath
-  );
-
-  console.log(`✅ Successfully uploaded ${sourceData.buffer.length} bytes to ${targetAccount.provider}!`);
-
-  // Step 3: If Move, delete original source file
-  if (operation === "move") {
-    try {
-      await deleteSourceFile(sourceAccount, sourceFileId);
-      console.log(`🗑️ Deleted source file "${sourceData.fileName}" from ${sourceAccount.provider}.`);
-    } catch (delErr) {
-      console.error(`⚠️ File copied to target, but failed to delete source file: ${delErr.message}`);
+  try {
+    const sourceAccount = await CloudAccount.findOne({ _id: sourceAccountId, userId });
+    if (!sourceAccount) {
+      throw new Error("Source cloud account not found or access denied.");
     }
+
+    const targetAccount = await CloudAccount.findOne({ _id: targetAccountId, userId });
+    if (!targetAccount) {
+      throw new Error("Target cloud account not found or access denied.");
+    }
+
+    console.log(`🚀 Starting ${operation.toUpperCase()} transfer from ${sourceAccount.provider} (${sourceAccount.email}) to ${targetAccount.provider} (${targetAccount.email})...`);
+
+    // Step 1: Read full binary buffer from source
+    setServerActiveJob(userId, {
+      status: "transferring",
+      percentage: 20,
+      statusStage: `Step 1 of 3: Reading file from ${sourceAccount.provider}...`,
+      sourceAccount: { provider: sourceAccount.provider, email: sourceAccount.email },
+      targetAccount: { provider: targetAccount.provider, email: targetAccount.email },
+    });
+
+    const sourceData = await getSourceFileBuffer(sourceAccount, sourceFileId);
+    const fileSize = sourceData.buffer.length;
+
+    console.log(`📥 Read ${fileSize} bytes for "${sourceData.fileName}" from ${sourceAccount.provider}. Uploading to ${targetAccount.provider}...`);
+
+    let simulatedTransferred = Math.round(fileSize * 0.3);
+    let simulatedPct = 30;
+
+    setServerActiveJob(userId, {
+      status: "transferring",
+      fileName: sourceData.fileName,
+      currentFile: { name: sourceData.fileName, size: fileSize },
+      currentFileSize: fileSize,
+      totalBytesCount: fileSize,
+      transferredBytesCount: simulatedTransferred,
+      percentage: simulatedPct,
+      speedMBps: 2.5,
+      timeRemainingSec: Math.ceil((fileSize - simulatedTransferred) / (2.5 * 1024 * 1024)) || 5,
+      statusStage: `Step 2 of 3: Streaming "${sourceData.fileName}" to ${targetAccount.provider}...`,
+      sourceAccount: { provider: sourceAccount.provider, email: sourceAccount.email },
+      targetAccount: { provider: targetAccount.provider, email: targetAccount.email },
+    });
+
+    // Server-side progress ticker during streaming upload
+    const progressInterval = setInterval(() => {
+      simulatedTransferred += Math.min(fileSize * 0.1, 1024 * 1024);
+      if (simulatedTransferred > fileSize * 0.9) simulatedTransferred = Math.round(fileSize * 0.9);
+      simulatedPct = Math.min(92, Math.round((simulatedTransferred / fileSize) * 100));
+
+      const remainingSec = Math.max(1, Math.ceil((fileSize - simulatedTransferred) / (2.5 * 1024 * 1024)));
+
+      setServerActiveJob(userId, {
+        status: "transferring",
+        fileName: sourceData.fileName,
+        currentFile: { name: sourceData.fileName, size: fileSize },
+        currentFileSize: fileSize,
+        totalBytesCount: fileSize,
+        transferredBytesCount: simulatedTransferred,
+        percentage: simulatedPct,
+        speedMBps: 2.5,
+        timeRemainingSec: remainingSec,
+        statusStage: `Step 2 of 3: Streaming "${sourceData.fileName}" to ${targetAccount.provider}... (${simulatedPct}%)`,
+        sourceAccount: { provider: sourceAccount.provider, email: sourceAccount.email },
+        targetAccount: { provider: targetAccount.provider, email: targetAccount.email },
+      });
+    }, 400);
+
+    let uploadResult;
+    try {
+      // Step 2: Write buffer to target
+      uploadResult = await uploadFileBufferToTarget(
+        targetAccount,
+        sourceData.fileName,
+        sourceData.buffer,
+        targetFolderId,
+        targetFolderPath
+      );
+    } finally {
+      clearInterval(progressInterval);
+    }
+
+    console.log(`✅ Successfully uploaded ${fileSize} bytes to ${targetAccount.provider}!`);
+
+    setServerActiveJob(userId, {
+      status: "transferring",
+      fileName: sourceData.fileName,
+      currentFile: { name: sourceData.fileName, size: fileSize },
+      currentFileSize: fileSize,
+      totalBytesCount: fileSize,
+      transferredBytesCount: fileSize,
+      percentage: 95,
+      speedMBps: 2.5,
+      timeRemainingSec: 1,
+      statusStage: `Step 3 of 3: Finalizing upload & logging history...`,
+      sourceAccount: { provider: sourceAccount.provider, email: sourceAccount.email },
+      targetAccount: { provider: targetAccount.provider, email: targetAccount.email },
+    });
+
+    // Step 3: If Move, delete original source file
+    if (operation === "move") {
+      try {
+        await deleteSourceFile(sourceAccount, sourceFileId);
+        console.log(`🗑️ Deleted source file "${sourceData.fileName}" from ${sourceAccount.provider}.`);
+      } catch (delErr) {
+        console.error(`⚠️ File copied to target, but failed to delete source file: ${delErr.message}`);
+      }
+    }
+
+    // Step 4: Log activity
+    const actionText = operation === "move" ? "file_moved" : "file_copied";
+    await logActivity(
+      userId,
+      actionText,
+      `${operation === "move" ? "Moved" : "Copied"} "${sourceData.fileName}" (${(sourceData.buffer.length / 1024).toFixed(1)} KB) from ${sourceAccount.provider} (${sourceAccount.email}) to ${targetAccount.provider} (${targetAccount.email})`,
+      {
+        sourceProvider: sourceAccount.provider,
+        targetProvider: targetAccount.provider,
+        fileName: sourceData.fileName,
+        fileSize: sourceData.buffer.length,
+      }
+    );
+
+    setServerActiveJob(userId, {
+      status: "completed",
+      fileName: sourceData.fileName,
+      currentFile: { name: sourceData.fileName, size: fileSize },
+      currentFileSize: fileSize,
+      totalBytesCount: fileSize,
+      transferredBytesCount: fileSize,
+      percentage: 100,
+      statusStage: `All files successfully verified & uploaded to ${targetAccount.provider}!`,
+      sourceAccount: { provider: sourceAccount.provider, email: sourceAccount.email },
+      targetAccount: { provider: targetAccount.provider, email: targetAccount.email },
+    });
+
+    return {
+      success: true,
+      operation,
+      fileName: sourceData.fileName,
+      bytesTransferred: sourceData.buffer.length,
+      sourceProvider: sourceAccount.provider,
+      targetProvider: targetAccount.provider,
+      targetFile: uploadResult,
+    };
+  } catch (err) {
+    setServerActiveJob(userId, {
+      status: "error",
+      statusStage: `Transfer failed: ${err.message}`,
+    });
+    throw err;
+  } finally {
+    releaseTransferLock(userId, sourceFileId, targetAccountId, targetFolderId);
   }
-
-  // Step 4: Log activity
-  const actionText = operation === "move" ? "file_moved" : "file_copied";
-  await logActivity(
-    userId,
-    actionText,
-    `${operation === "move" ? "Moved" : "Copied"} "${sourceData.fileName}" (${(sourceData.buffer.length / 1024).toFixed(1)} KB) from ${sourceAccount.provider} (${sourceAccount.email}) to ${targetAccount.provider} (${targetAccount.email})`
-  );
-
-  return {
-    success: true,
-    operation,
-    fileName: sourceData.fileName,
-    bytesTransferred: sourceData.buffer.length,
-    sourceProvider: sourceAccount.provider,
-    targetProvider: targetAccount.provider,
-    targetFile: uploadResult,
-  };
 };

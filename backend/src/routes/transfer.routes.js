@@ -1,9 +1,22 @@
 import express from "express";
 import auth from "../middleware/auth.middleware.js";
 import { executeTransfer } from "../services/transfer.service.js";
+import { getServerActiveJob } from "../services/activeJobStore.service.js";
 import ActivityLog from "../models/ActivityLog.js";
 
 const router = express.Router();
+
+/* ==========================================
+   📡 GET /api/transfer/active-job
+========================================== */
+router.get("/active-job", auth, async (req, res) => {
+  try {
+    const job = getServerActiveJob(req.user.id);
+    res.json({ activeJob: job || null });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch active job status." });
+  }
+});
 
 /* ==========================================
    🔄 POST /api/transfer/copy

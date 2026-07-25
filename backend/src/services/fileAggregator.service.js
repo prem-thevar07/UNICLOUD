@@ -341,8 +341,11 @@ export const deleteFile = async (userId, { id, provider, accountId }) => {
 };
 
 export const getExplorerContents = async (userId, accountId, folderId = "root", folderPath = "/") => {
+  if (!accountId || accountId === "undefined" || accountId === "null") {
+    return { subfolders: [], files: [] };
+  }
   const account = await CloudAccount.findOne({ _id: accountId, userId });
-  if (!account) throw new Error("Account not found");
+  if (!account) return { subfolders: [], files: [] };
 
   const provider = account.provider;
   let subfolders = [];

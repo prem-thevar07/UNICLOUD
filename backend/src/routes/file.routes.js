@@ -29,8 +29,8 @@ router.post("/create-folder", authMiddleware, async (req, res) => {
 router.get("/explorer-contents", authMiddleware, async (req, res) => {
   try {
     const { accountId, folderId, folderPath } = req.query;
-    if (!accountId) {
-      return res.status(400).json({ error: "accountId is required" });
+    if (!accountId || accountId === "undefined" || accountId === "null") {
+      return res.json({ subfolders: [], files: [] });
     }
     const data = await getExplorerContents(req.user.id, accountId, folderId, folderPath);
     res.json(data);
