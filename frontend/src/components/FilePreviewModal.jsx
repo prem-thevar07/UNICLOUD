@@ -54,9 +54,13 @@ const FilePreviewModal = ({ file, isOpen, onClose, onDownload }) => {
   }, [file]);
 
   const token = localStorage.getItem("token") || "";
-  const getCleanApiUrl = (endpoint) => {
-    const baseUrl = import.meta.env.VITE_API_URL || "http://localhost:5001";
-    return `${baseUrl}${endpoint}`;
+  const getCleanApiUrl = (path) => {
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
+    const envBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001";
+    const cleanBase = envBase.endsWith("/api") ? envBase.slice(0, -4) : envBase;
+    const cleanPath = path.startsWith("/") ? path : `/${path}`;
+    return `${cleanBase}${cleanPath}`;
   };
 
   const fileName = (file?.name || "").toLowerCase();
