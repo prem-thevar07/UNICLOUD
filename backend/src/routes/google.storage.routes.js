@@ -501,9 +501,39 @@ router.get("/open/:accountId", auth, async (req, res) => {
       fields: "id, name, mimeType, webViewLink, webContentLink",
     });
 
-    const { name, webViewLink } = fileMetadata.data;
+    const { name, mimeType, webViewLink } = fileMetadata.data;
+    const ext = name ? name.split(".").pop().toLowerCase() : "";
+    const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext) || (mimeType && mimeType.startsWith("image/"));
+    const isMedia = ["mp3", "wav", "ogg", "m4a", "aac", "flac", "mp4", "webm", "mov", "ogv", "mkv"].includes(ext) || (mimeType && (mimeType.startsWith("audio/") || mimeType.startsWith("video/")));
+    const isPdf = ext === "pdf" || mimeType === "application/pdf";
+    const isCodeOrText = ["js", "jsx", "ts", "tsx", "py", "json", "html", "css", "cpp", "c", "java", "sql", "md", "txt", "sh", "env", "log", "xml", "yaml", "yml", "ipynb"].includes(ext) || (mimeType && mimeType.startsWith("text/"));
+    const isGoogleApps = mimeType && mimeType.startsWith("application/vnd.google-apps.");
 
-    // Convert Google Drive /view link to /preview embed link for video/audio/pdf/doc player
+    if (isGoogleApps && webViewLink) {
+      if (req.headers.authorization) return res.json({ link: webViewLink });
+      return res.redirect(webViewLink);
+    }
+
+    if (isImage || isMedia || isPdf || isCodeOrText) {
+      // Direct raw byte stream for Images, Audio, Video, PDFs, and Code/Text Files
+      const driveResponse = await drive.files.get(
+        { fileId, alt: "media" },
+        { responseType: "stream" }
+      );
+      const mimeMap = {
+        jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml", bmp: "image/bmp", ico: "image/x-icon",
+        mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg", m4a: "audio/mp4", aac: "audio/aac", flac: "audio/flac",
+        mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime", ogv: "video/ogg", mkv: "video/x-matroska",
+        pdf: "application/pdf",
+        txt: "text/plain; charset=utf-8", html: "text/html; charset=utf-8", json: "application/json", xml: "text/xml"
+      };
+      const contentType = mimeMap[ext] || mimeType || "application/octet-stream";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(name || "preview")}"`);
+      return driveResponse.data.pipe(res);
+    }
+
+    // Fallback to Google Drive web view
     if (webViewLink) {
       const embedPreviewUrl = webViewLink.replace(/\/view(\?.*)?$/, "/preview");
       if (req.headers.authorization) return res.json({ link: embedPreviewUrl });

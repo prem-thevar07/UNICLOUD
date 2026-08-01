@@ -285,32 +285,33 @@ router.get(["/download/:accountId", "/open/:accountId"], auth, async (req, res) 
     }
 
     const fileName = String(req.query.name || path || "").toLowerCase();
+    const ext = fileName.split(".").pop().toLowerCase();
+    const isOfficeDoc = ["docx", "doc", "xlsx", "xls", "pptx", "ppt"].includes(ext);
     const isDownloadRoute = req.path?.startsWith("/download") || req.originalUrl?.includes("/download/");
-    const isDocx = fileName.endsWith(".docx") || fileName.endsWith(".doc");
 
-    if (!isDownloadRoute) {
-      if (isDocx) {
-        // Office Web Viewer for Dropbox docx files (with dl=0 to prevent forced attachment downloads)
-        const cleanLink = linkRes.data.link.replace("dl=1", "dl=0");
-        const officeViewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(cleanLink)}`;
-        if (req.headers.authorization) return res.json({ link: officeViewerUrl });
-        return res.redirect(officeViewerUrl);
-      }
+    if (!isDownloadRoute && isOfficeDoc) {
+      const isEmbedMode = req.query.embed === "true";
+      const mode = isEmbedMode ? "embed.aspx" : "view.aspx";
+
+      // Office Web Viewer for Dropbox docx/xlsx/pptx files (with dl=0 to prevent forced attachment downloads)
+      const cleanLink = linkRes.data.link.replace("dl=1", "dl=0");
+      const officeViewerUrl = `https://view.officeapps.live.com/op/${mode}?src=${encodeURIComponent(cleanLink)}`;
+      if (req.headers.authorization) return res.json({ link: officeViewerUrl });
+      return res.redirect(officeViewerUrl);
+    }
 
       // Stream inline preview for Dropbox files (PDF, Images, Video, Audio, Text)
       try {
         const dbxStreamRes = await axios.get(linkRes.data.link, { responseType: "stream" });
-        const ext = fileName.split(".").pop().toLowerCase();
         const mimeMap = {
           pdf: "application/pdf",
-          jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml",
-          bmp: "image/bmp", ico: "image/x-icon",
-          mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg",
-          mp4: "video/mp4", webm: "video/webm", ogv: "video/ogg",
-          txt: "text/plain; charset=utf-8", html: "text/html; charset=utf-8",
-          json: "application/json", xml: "text/xml"
+          jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml", bmp: "image/bmp", ico: "image/x-icon",
+          mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg", m4a: "audio/mp4", aac: "audio/aac", flac: "audio/flac",
+          mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime", ogv: "video/ogg", mkv: "video/x-matroska",
+          txt: "text/plain; charset=utf-8", html: "text/html; charset=utf-8", json: "application/json", xml: "text/xml",
+          js: "text/plain; charset=utf-8", py: "text/plain; charset=utf-8", ts: "text/plain; charset=utf-8", ipynb: "application/json"
         };
-        const contentType = mimeMap[ext] || "application/pdf";
+        const contentType = mimeMap[ext] || dbxStreamRes.headers["content-type"] || "application/octet-stream";
         const safeName = req.query.name ? String(req.query.name).replace(/["\r\n]/g, "") : "preview";
 
         res.setHeader("Content-Type", contentType);
@@ -321,7 +322,6 @@ router.get(["/download/:accountId", "/open/:accountId"], auth, async (req, res) 
         if (req.headers.authorization) return res.json({ link: linkRes.data.link });
         return res.redirect(linkRes.data.link);
       }
-    }
 
     if (req.headers.authorization) {
       res.json({ link: linkRes.data.link });

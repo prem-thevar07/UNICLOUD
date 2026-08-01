@@ -204,14 +204,25 @@ router.get(["/open/:id", "/download/:id"], auth, async (req, res) => {
     }
 
     const command = new GetObjectCommand(commandParams);
-
     const signedUrl = await getSignedUrl(client, command, { expiresIn: 3600 });
 
-    const isDocx = ext === "docx" || ext === "doc";
+    const isCodeOrText = ["js", "jsx", "ts", "tsx", "py", "json", "html", "css", "cpp", "c", "java", "sql", "md", "txt", "sh", "env", "log", "xml", "yaml", "yml", "ipynb"].includes(ext);
 
-    if (!isDownloadRoute && isDocx) {
-      // Wrap presigned S3 URL with Microsoft Office Web Viewer for docx browser preview
-      const officeViewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(signedUrl)}`;
+    if (!isDownloadRoute && isCodeOrText) {
+      // Direct stream S3 object to client to bypass S3 CORS restrictions when fetched by Monaco Editor
+      const s3Obj = await client.send(new GetObjectCommand({ Bucket: bucket, Key: targetKey }));
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      return s3Obj.Body.pipe(res);
+    }
+
+    const isOfficeDoc = ["docx", "doc", "xlsx", "xls", "pptx", "ppt"].includes(ext);
+
+    if (!isDownloadRoute && isOfficeDoc) {
+      const isEmbedMode = req.query.embed === "true";
+      const mode = isEmbedMode ? "embed.aspx" : "view.aspx";
+      // Wrap presigned S3 URL with Microsoft Office Web Viewer for docx/xlsx/pptx browser preview
+      const officeViewerUrl = `https://view.officeapps.live.com/op/${mode}?src=${encodeURIComponent(signedUrl)}`;
       if (req.headers.authorization) {
         return res.json({ link: officeViewerUrl });
       } else {

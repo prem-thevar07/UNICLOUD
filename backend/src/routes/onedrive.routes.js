@@ -325,8 +325,8 @@ router.get("/open/:id", auth, async (req, res) => {
 
     const name = driveItemRes.data.name || "file";
     const ext = name.split(".").pop().toLowerCase();
-    const isOfficeDoc = ["docx", "doc", "xlsx", "xls", "pptx", "ppt"].includes(ext);
     const downloadUrl = driveItemRes.data["@microsoft.graph.downloadUrl"];
+    const isOfficeDoc = ["docx", "doc", "xlsx", "xls", "pptx", "ppt"].includes(ext);
 
     if (isOfficeDoc && downloadUrl) {
       // Use view.aspx for full view tab, embed.aspx for iframe
@@ -335,6 +335,28 @@ router.get("/open/:id", auth, async (req, res) => {
       const officeViewerUrl = `https://view.officeapps.live.com/op/${mode}?src=${encodeURIComponent(downloadUrl)}`;
       if (req.headers.authorization) return res.json({ link: officeViewerUrl });
       return res.redirect(officeViewerUrl);
+    }
+
+    if (ext === "pdf" && downloadUrl) {
+      // Direct authenticated PDF proxy stream for in-browser PDF Viewer (No auto-downloads, No public URL errors!)
+      try {
+        const pdfStreamRes = await axios.get(downloadUrl, { responseType: "stream" });
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(name)}"`);
+        return pdfStreamRes.data.pipe(res);
+      } catch (pdfErr) {
+        console.warn("OneDrive PDF stream error:", pdfErr.message);
+      }
+    }
+
+    const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext);
+    const isMedia = ["mp3", "wav", "ogg", "m4a", "aac", "flac", "mp4", "webm", "mov", "ogv", "mkv"].includes(ext);
+    const isCodeOrText = ["js", "jsx", "ts", "tsx", "py", "json", "html", "css", "cpp", "c", "java", "sql", "md", "txt", "sh", "env", "log", "xml", "yaml", "yml", "ipynb"].includes(ext);
+
+    // Direct byte stream URL for Images, Audio, Video, and Code/Text files
+    if ((isImage || isMedia || isCodeOrText) && downloadUrl) {
+      if (req.headers.authorization) return res.json({ link: downloadUrl });
+      return res.redirect(downloadUrl);
     }
 
     // Default OneDrive Provided Preview (Microsoft Graph Preview / webUrl)

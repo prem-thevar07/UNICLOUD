@@ -227,64 +227,81 @@ router.get(["/download/:id", "/open/:id"], auth, async (req, res) => {
 
     const fileName = String(req.query.name || "file").toLowerCase();
     const safeName = req.query.name ? String(req.query.name).replace(/["\r\n]/g, "") : "file";
-    const isDocx = fileName.endsWith(".docx") || fileName.endsWith(".doc");
+    const ext = fileName.split(".").pop().toLowerCase();
+    const isOfficeDoc = ["docx", "doc", "xlsx", "xls", "pptx", "ppt"].includes(ext);
     const isDownloadRoute = req.path?.startsWith("/download") || req.originalUrl?.includes("/download/");
 
-    if (!isDownloadRoute) {
-      if (isDocx) {
-        // Microsoft Word Web Viewer for docx files
-        const downloadUrl = `https://api.box.com/2.0/files/${fileId}/content?access_token=${account.accessToken}`;
-        const officeViewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(downloadUrl)}`;
-        if (req.headers.authorization) return res.json({ link: officeViewerUrl });
-        return res.redirect(officeViewerUrl);
-      }
-
-      // Official Box App Preview UI (Zero Box login prompts required!)
-      try {
-        let token = account.accessToken;
-        let embedRes;
-        try {
-          embedRes = await axios.get(`https://api.box.com/2.0/files/${fileId}?fields=expiring_embed_link,shared_link`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-        } catch (err) {
-          if (err.response?.status === 401 && account.refreshToken) {
-            token = await refreshBoxToken(account);
-            embedRes = await axios.get(`https://api.box.com/2.0/files/${fileId}?fields=expiring_embed_link,shared_link`, {
-              headers: { Authorization: `Bearer ${token}` }
-            });
-          } else {
-            throw err;
-          }
-        }
-
-        const embedUrl = embedRes.data?.expiring_embed_link?.url || embedRes.data?.shared_link?.url;
-        if (embedUrl) {
-          if (req.headers.authorization) return res.json({ link: embedUrl });
-          return res.redirect(embedUrl);
-        }
-      } catch (embedErr) {
-        console.warn("Box expiring embed link fetch failed:", embedErr.message);
-      }
-
-      // Fallback Inline Stream Preview
+    if (isDownloadRoute) {
       const { streamRes } = await getBoxStream();
-      const ext = fileName.split(".").pop().toLowerCase();
+      res.setHeader("Content-Type", streamRes.headers["content-type"] || "application/octet-stream");
+      res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(safeName)}"`);
+      return streamRes.data.pipe(res);
+    }
+
+    if (isOfficeDoc) {
+      const isEmbedMode = req.query.embed === "true";
+      const mode = isEmbedMode ? "embed.aspx" : "view.aspx";
+
+      // Microsoft Office Web Viewer for docx/xlsx/pptx files
+      const downloadUrl = `https://api.box.com/2.0/files/${fileId}/content?access_token=${account.accessToken}`;
+      const officeViewerUrl = `https://view.officeapps.live.com/op/${mode}?src=${encodeURIComponent(downloadUrl)}`;
+      if (req.headers.authorization) return res.json({ link: officeViewerUrl });
+      return res.redirect(officeViewerUrl);
+    }
+
+    const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext);
+    const isMedia = ["mp3", "wav", "ogg", "m4a", "aac", "flac", "mp4", "webm", "mov", "ogv", "mkv"].includes(ext);
+    const isPdf = ext === "pdf";
+    const isCodeOrText = ["js", "jsx", "ts", "tsx", "py", "json", "html", "css", "cpp", "c", "java", "sql", "md", "txt", "sh", "env", "log", "xml", "yaml", "yml", "ipynb"].includes(ext);
+
+    // Direct raw byte stream for Images, Audio, Video, PDFs, and Code/Text Files
+    if (isImage || isMedia || isPdf || isCodeOrText) {
+      const { streamRes } = await getBoxStream();
       const mimeMap = {
+        jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml", bmp: "image/bmp", ico: "image/x-icon",
+        mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg", m4a: "audio/mp4", aac: "audio/aac", flac: "audio/flac",
+        mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime", ogv: "video/ogg", mkv: "video/x-matroska",
         pdf: "application/pdf",
-        jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml",
-        mp3: "audio/mpeg", mp4: "video/mp4", webm: "video/webm", txt: "text/plain; charset=utf-8", html: "text/html"
+        txt: "text/plain; charset=utf-8", html: "text/html; charset=utf-8", json: "application/json", xml: "text/xml"
       };
-      const contentType = mimeMap[ext] || streamRes.headers["content-type"] || "application/pdf";
+      const contentType = mimeMap[ext] || streamRes.headers["content-type"] || "application/octet-stream";
       res.setHeader("Content-Type", contentType);
       res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(safeName)}"`);
       return streamRes.data.pipe(res);
     }
 
-    // Download Route - Stream attachment file directly with OAuth Bearer token
+    // Official Box App Preview UI for unhandled documents
+    try {
+      let token = account.accessToken;
+      let embedRes;
+      try {
+        embedRes = await axios.get(`https://api.box.com/2.0/files/${fileId}?fields=expiring_embed_link,shared_link`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      } catch (err) {
+        if (err.response?.status === 401 && account.refreshToken) {
+          token = await refreshBoxToken(account);
+          embedRes = await axios.get(`https://api.box.com/2.0/files/${fileId}?fields=expiring_embed_link,shared_link`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } else {
+          throw err;
+        }
+      }
+
+      const embedUrl = embedRes.data?.expiring_embed_link?.url || embedRes.data?.shared_link?.url;
+      if (embedUrl) {
+        if (req.headers.authorization) return res.json({ link: embedUrl });
+        return res.redirect(embedUrl);
+      }
+    } catch (embedErr) {
+      console.warn("Box expiring embed link fetch failed:", embedErr.message);
+    }
+
+    // Fallback Inline Stream Preview
     const { streamRes } = await getBoxStream();
     res.setHeader("Content-Type", streamRes.headers["content-type"] || "application/octet-stream");
-    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(safeName)}"`);
+    res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(safeName)}"`);
     return streamRes.data.pipe(res);
 
   } catch (err) {
