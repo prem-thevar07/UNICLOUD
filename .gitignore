@@ -27,9 +27,10 @@ yarn-debug.log*
 pnpm-debug.log*
 
 # =========================
-# OS / Editor files
+# OS / Editor files & AI Customizations
 # =========================
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
+.agents/
