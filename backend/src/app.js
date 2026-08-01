@@ -30,8 +30,10 @@ const app = express();
 ======================= */
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:3000",
   process.env.FRONTEND_URL,
-];
+  "https://unicloud-services.netlify.app",
+].filter(Boolean);
 
 app.use(
   cors({
@@ -39,10 +41,16 @@ app.use(
       // Allow server-to-server, Postman, mobile apps
       if (!origin) return callback(null, true);
 
-      if (allowedOrigins.includes(origin)) {
+      const isAllowed =
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".netlify.app") ||
+        origin.endsWith(".onrender.com");
+
+      if (isAllowed) {
         callback(null, true);
       } else {
-        callback(new Error("CORS not allowed"));
+        console.warn(`[CORS] Allowing non-listed origin: ${origin}`);
+        callback(null, true);
       }
     },
     credentials: true,

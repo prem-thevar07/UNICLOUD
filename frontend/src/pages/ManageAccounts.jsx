@@ -74,7 +74,7 @@ const ManageAccounts = () => {
       return;
     }
 
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001/api";
     window.location.href = `${baseUrl}/google/connect?token=${token}`;
   };
 
@@ -89,7 +89,7 @@ const ManageAccounts = () => {
       return;
     }
 
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001/api";
     window.location.href = `${baseUrl}/dropbox/connect?token=${token}`;
   };
 
@@ -104,7 +104,7 @@ const ManageAccounts = () => {
       return;
     }
 
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001/api";
     window.location.href = `${baseUrl}/onedrive/connect?token=${token}`;
   };
 
@@ -119,7 +119,7 @@ const ManageAccounts = () => {
       return;
     }
 
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001/api";
     window.location.href = `${baseUrl}/box/connect?token=${token}`;
   };
 

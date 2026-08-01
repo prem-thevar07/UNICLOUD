@@ -498,7 +498,7 @@ const Optimize = () => {
   const getCleanApiUrl = (path) => {
     if (!path) return "";
     if (path.startsWith("http")) return path;
-    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001/api";
     const cleanBase = baseUrl.endsWith("/api") ? baseUrl.slice(0, -4) : baseUrl;
     return `${cleanBase}${path}`;
   };
