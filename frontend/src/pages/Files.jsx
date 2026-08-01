@@ -2353,8 +2353,14 @@ const Files = () => {
                         <div
                           key={file.id}
                           className={`file-grid-card ${isSelected ? "selected" : ""}`}
-                          onClick={() => isSelectMode && toggleSelectFile(file.id)}
-                          style={{ cursor: isSelectMode ? "pointer" : "default" }}
+                          onClick={() => {
+                            if (isSelectMode) {
+                              toggleSelectFile(file.id);
+                            } else {
+                              handleOpenFileModal(file);
+                            }
+                          }}
+                          style={{ cursor: "pointer" }}
                         >
                           {isSelectMode && (
                             <div className="grid-card-checkbox" onClick={(e) => { e.stopPropagation(); toggleSelectFile(file.id); }}>

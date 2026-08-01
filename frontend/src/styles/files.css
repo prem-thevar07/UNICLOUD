@@ -1901,3 +1901,47 @@
     to { transform: rotate(360deg); }
   }
 }
+
+/* GRID CARD HOVER OVERLAY & OPEN BUTTON */
+.grid-card-hover-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(9, 13, 26, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 5;
+  border-radius: var(--radius-lg);
+}
+
+.file-grid-card:hover .grid-card-hover-overlay {
+  opacity: 1;
+}
+
+.grid-open-btn {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
+  transition: transform 0.15s ease, background 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.grid-open-btn:hover {
+  transform: scale(1.06);
+  background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+}

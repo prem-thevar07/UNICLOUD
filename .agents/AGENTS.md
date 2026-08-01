@@ -1,6 +1,6 @@
-# Unicloud Core Architectural Rules & Contracts
+# Unicloud Master Architectural Rules & System Contracts
 
-## 1. Cloud File Preview & Download Router Contract (Google Drive, OneDrive, Box, Dropbox, S3)
+## 1. Files Page (`/files`) & Router Contracts
 When modifying `/open` or `/download` backend routes (`google.storage.routes.js`, `onedrive.routes.js`, `box.routes.js`, `dropbox.routes.js`, `s3.routes.js`) or frontend `FilePreviewModal.jsx`:
 
 - **Images (`.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`, `.svg`, `.bmp`, `.ico`)**:
@@ -22,7 +22,23 @@ When modifying `/open` or `/download` backend routes (`google.storage.routes.js`
 - **Microsoft Office Documents (`.docx`, `.doc`, `.xlsx`, `.xls`, `.csv`, `.pptx`, `.ppt`)**:
   - Route to `https://view.officeapps.live.com/op/view.aspx?src=...` (or `embed.aspx`).
 
-## 2. In-App Code Editor & Live Code Runner Engine (`FilePreviewModal.jsx`)
+## 2. Transfer & Migration Page (`/transfer`) Contracts
+- **Zero-Disk Streaming**:
+  - Source read streams MUST pipe directly into destination write streams with backpressure control. Zero bytes of local disk are consumed.
+- **Provider Chunking Requirements**:
+  - OneDrive: 320 KB multiples.
+  - Dropbox: 4MB - 8MB chunked append sessions.
+  - S3: 5MB minimum multipart upload chunks.
+- **Token Refresh Mid-Transfer**:
+  - Transfer workers must auto-refresh 401 expired OAuth tokens mid-job and resume without throwing fatal errors.
+
+## 3. Storage Optimization & Cleanup Page (`/optimize`) Contracts
+- **Duplicate Indexing**:
+  - Match by exact size first, then compare provider hashes (`md5Checksum`, `sha1`, `content_hash`, `etag`), then normalized filenames.
+- **Trash Cleaner**:
+  - One-click cross-cloud empty trash calling native provider APIs (`drive.files.emptyTrash()`).
+
+## 4. In-App Code Editor & Live Code Runner Engine (`FilePreviewModal.jsx`)
 - Uses `@monaco-editor/react` with VS Code dark theme (`vs-dark`).
 - **Python**: Executed via Pyodide WebAssembly Python 3.11 engine (`window.loadPyodide()`) capturing `stdout` (`print()`) in real-time.
 - **Java, C++, C, C#, Go, Rust, Ruby, PHP, Swift, Kotlin**: Executed via Piston Multi-Language Compiler API (`https://emkc.org/api/v2/piston/execute`).
