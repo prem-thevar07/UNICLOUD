@@ -716,3 +716,359 @@
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
   color: #f8fafc;
 }
+
+/* ===============================
+   📱 DEDICATED PHONE / MOBILE VIEW (<= 768px)
+   (PC View > 768px remains 100% untouched)
+=============================== */
+.mobile-transfer-tab-bar {
+  display: none;
+}
+
+.mobile-sticky-action-bar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .transfer-page-container {
+    padding: 0.8rem 0.8rem 6rem 0.8rem !important;
+  }
+
+  /* Header Compact Redesign */
+  .transfer-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 1rem;
+  }
+
+  .transfer-header-title-box {
+    gap: 10px;
+  }
+
+  .transfer-header-icon-badge {
+    width: 42px;
+    height: 42px;
+    font-size: 1.3rem;
+  }
+
+  .transfer-header-title-box h1 {
+    font-size: 1.35rem;
+  }
+
+  .transfer-header-title-box p {
+    font-size: 0.78rem;
+  }
+
+  .transfer-header-actions {
+    width: 100%;
+    display: flex;
+    gap: 8px;
+  }
+
+  .transfer-header-actions .btn-header-action {
+    flex: 1;
+    justify-content: center;
+    padding: 8px;
+    font-size: 0.78rem;
+  }
+
+  /* Mobile Segmented Tab Bar */
+  .mobile-transfer-tab-bar {
+    display: flex;
+    background: rgba(15, 23, 42, 0.75);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    padding: 4px;
+    margin-bottom: 1rem;
+    gap: 4px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  }
+
+  .mobile-tab-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 9px 6px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #94a3b8;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+  }
+
+  .mobile-tab-btn.active {
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3));
+    border: 1px solid rgba(168, 85, 247, 0.4);
+    color: #ffffff;
+    box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+  }
+
+  .mobile-tab-count-badge {
+    background: #6366f1;
+    color: #fff;
+    font-size: 0.68rem;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-weight: 700;
+  }
+
+  .mobile-tab-dot-badge {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+  }
+
+  /* Segmented Visibility for Mobile Panes */
+  .transfer-explorers-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .transfer-explorers-grid.mobile-active-tab-source .explorer-pane-card:nth-child(3) {
+    display: none;
+  }
+
+  .transfer-explorers-grid.mobile-active-tab-destination .explorer-pane-card:nth-child(1) {
+    display: none;
+  }
+
+  .transfer-explorers-grid.mobile-active-tab-progress {
+    display: none;
+  }
+
+  .center-arrow-container {
+    display: flex;
+    justify-content: center;
+    padding: 4px 0;
+  }
+
+  .center-arrow-btn {
+    transform: rotate(90deg);
+    width: 36px;
+    height: 36px;
+    font-size: 1rem;
+  }
+
+  /* Explorer Card Mobile Optimization */
+  .explorer-pane-card {
+    border-radius: 16px;
+    padding: 1rem;
+  }
+
+  .pane-top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .account-selector-pill {
+    width: 100%;
+    font-size: 0.8rem;
+    padding: 8px 10px;
+  }
+
+  .explorer-breadcrumbs-track {
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+
+  .explorer-toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .explorer-toolbar-actions {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .explorer-search-input {
+    flex: 1;
+    font-size: 0.8rem;
+    padding: 8px 12px;
+  }
+
+  .selection-pill-badge {
+    width: 100%;
+    text-align: center;
+    font-size: 0.78rem;
+  }
+
+  /* Table Mobile Layout */
+  .explorer-table-container {
+    max-height: 280px;
+  }
+
+  .explorer-items-table th:nth-child(4),
+  .explorer-items-table td:nth-child(4) {
+    display: none; /* Hide Modified column on mobile screens for room */
+  }
+
+  .explorer-items-table th,
+  .explorer-items-table td {
+    padding: 10px 8px;
+    font-size: 0.8rem;
+  }
+
+  /* Settings Panel Mobile Optimization */
+  .transfer-settings-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 1rem;
+  }
+
+  .settings-options-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .setting-field-group {
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .setting-select-dropdown {
+    width: 60%;
+  }
+
+  .settings-action-right {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .btn-start-transfer-big {
+    width: 100%;
+    padding: 12px;
+    font-size: 0.9rem;
+    justify-content: center;
+  }
+
+  /* Progress & Activity Mobile Optimization */
+  .transfer-bottom-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .transfer-bottom-grid.mobile-active-tab-source,
+  .transfer-bottom-grid.mobile-active-tab-destination {
+    display: none;
+  }
+
+  .transfer-progress-card,
+  .transfer-activity-card {
+    padding: 1rem;
+    border-radius: 16px;
+  }
+
+  .progress-active-file-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .progress-big-percentage {
+    align-self: flex-end;
+    text-align: right;
+  }
+
+  .big-percentage-num {
+    font-size: 1.8rem;
+  }
+
+  .progress-bottom-meta-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .progress-control-btns {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .activity-item-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 10px 0;
+  }
+
+  .activity-item-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  /* Mobile Sticky Bottom Action Bar */
+  .mobile-sticky-action-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    background: rgba(10, 15, 30, 0.92);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 10px 16px;
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+  }
+
+  .mobile-action-summary {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .mobile-summary-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #f8fafc;
+  }
+
+  .mobile-summary-sub {
+    font-size: 0.72rem;
+    color: #94a3b8;
+  }
+
+  .mobile-btn-primary {
+    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    border: none;
+    color: #ffffff;
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);
+  }
+
+  .mobile-btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .transfer-footer-tip {
+    font-size: 0.75rem;
+    margin-bottom: 2rem;
+  }
+}

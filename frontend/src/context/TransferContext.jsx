@@ -24,6 +24,7 @@ export const TransferProvider = ({ children }) => {
 
   // Load history & rehydrate activeJob on mount
   const fetchHistory = async () => {
+    if (!localStorage.getItem("token")) return [];
     try {
       setLoadingHistory(true);
       const data = await getTransferHistory();
@@ -44,7 +45,6 @@ export const TransferProvider = ({ children }) => {
       setTransferHistory(formatted);
       return formatted;
     } catch (err) {
-      console.error("Failed to load transfer history:", err);
       return [];
     } finally {
       setLoadingHistory(false);
@@ -53,6 +53,7 @@ export const TransferProvider = ({ children }) => {
 
   // Sync with Server Active Job State on Mount & Reload
   useEffect(() => {
+    if (!localStorage.getItem("token")) return;
     fetchHistory();
 
     const checkServerActiveJob = async () => {

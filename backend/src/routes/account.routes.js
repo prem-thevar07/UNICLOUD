@@ -86,7 +86,26 @@ router.post("/:id/sync", auth, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error("❌ Sync error:", err.message);
-    res.status(500).json({ message: "Sync failed" });
+    const isInvalidGrant = err.message?.includes("invalid_grant") || err.response?.data?.error === "invalid_grant";
+
+    if (isInvalidGrant) {
+      try {
+        const account = await CloudAccount.findOne({ _id: req.params.id, userId: req.user.id });
+        if (account) {
+          account.status = "expired";
+          await account.save();
+        }
+      } catch (e) {
+        console.error("Failed to update account status to expired:", e.message);
+      }
+      return res.status(400).json({
+        message: "Account session has expired or was revoked. Please reconnect your account.",
+        error: "invalid_grant",
+        status: "expired"
+      });
+    }
+
+    res.status(500).json({ message: "Sync failed", error: err.message });
   }
 });
 

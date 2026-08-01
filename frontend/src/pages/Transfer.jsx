@@ -86,6 +86,9 @@ const Transfer = () => {
   const [newFolderName, setNewFolderName] = useState("");
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
 
+  // Mobile View Tab State ("source" | "destination" | "progress")
+  const [mobileTab, setMobileTab] = useState("source");
+
   // Toast feedback
   const [toastMessage, setToastMessage] = useState("");
   const showToast = (msg) => {
@@ -317,6 +320,7 @@ const Transfer = () => {
       notifyOnCompletion,
     });
 
+    setMobileTab("progress");
     showToast(`Started background ${transferMode.toUpperCase()} transfer of ${selectedFileIds.length} item(s)!`);
   };
 
@@ -364,8 +368,32 @@ const Transfer = () => {
           </div>
         </div>
 
+        {/* MOBILE SEGMENTED TAB SWITCHER (< 768px Only) */}
+        <div className="mobile-transfer-tab-bar">
+          <button
+            className={`mobile-tab-btn ${mobileTab === "source" ? "active" : ""}`}
+            onClick={() => setMobileTab("source")}
+          >
+            <span>📦 1. Source</span>
+            {selectedFileIds.length > 0 && <span className="mobile-tab-count-badge">{selectedFileIds.length}</span>}
+          </button>
+          <button
+            className={`mobile-tab-btn ${mobileTab === "destination" ? "active" : ""}`}
+            onClick={() => setMobileTab("destination")}
+          >
+            <span>🎯 2. Target</span>
+          </button>
+          <button
+            className={`mobile-tab-btn ${mobileTab === "progress" ? "active" : ""}`}
+            onClick={() => setMobileTab("progress")}
+          >
+            <span>📊 3. Activity</span>
+            {isTransferring && <span className="mobile-tab-dot-badge" />}
+          </button>
+        </div>
+
         {/* MAIN SPLIT EXPLORER PANES ROW */}
-        <div className="transfer-explorers-grid">
+        <div className={`transfer-explorers-grid mobile-active-tab-${mobileTab}`}>
           {/* SOURCE EXPLORER PANE */}
           <div className="explorer-pane-card">
             <div className="pane-top-bar">
@@ -712,7 +740,7 @@ const Transfer = () => {
         </div>
 
         {/* BOTTOM ROW: PROGRESS & ACTIVITY */}
-        <div className="transfer-bottom-grid">
+        <div className={`transfer-bottom-grid mobile-active-tab-${mobileTab}`}>
           {/* TRANSFER PROGRESS CARD (LEFT) */}
           <div className="transfer-progress-card">
             <div className="progress-header-title">
@@ -857,6 +885,36 @@ const Transfer = () => {
         {/* FOOTER TIP */}
         <div className="transfer-footer-tip">
           💡 Tip: You can close or navigate away from this page, we'll process the transfer in the background and notify you when complete.
+        </div>
+
+        {/* MOBILE STICKY FLOATING ACTION BAR (< 768px Only) */}
+        <div className="mobile-sticky-action-bar">
+          <div className="mobile-action-summary">
+            <div className="mobile-summary-title">
+              {selectedFileIds.length > 0 ? `${selectedFileIds.length} items selected` : "No items selected"}
+            </div>
+            <div className="mobile-summary-sub">
+              {selectedFileIds.length > 0 ? formatBytes(selectedTotalBytes) : "Select files from Source"}
+            </div>
+          </div>
+
+          {isTransferring ? (
+            <button
+              className="mobile-btn-primary"
+              onClick={() => setMobileTab("progress")}
+              style={{ background: "linear-gradient(135deg, #10b981 0%, #059669 100%)" }}
+            >
+              📊 View Progress ({activeJob?.percentage || 0}%)
+            </button>
+          ) : (
+            <button
+              className="mobile-btn-primary"
+              onClick={handleStartTransfer}
+              disabled={selectedFileIds.length === 0 || !sourceAccountId || !targetAccountId}
+            >
+              🚀 Start Transfer ➔
+            </button>
+          )}
         </div>
 
         {/* MODAL 1: HOW IT WORKS */}

@@ -1,5 +1,6 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import axios from "axios";
 import CloudAccount from "../models/CloudAccount.js";
 import auth from "../middleware/auth.middleware.js";
@@ -193,6 +194,19 @@ router.post("/sync/:id", auth, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     console.error("❌ OneDrive manual sync error:", err.response?.data || err.message);
+    const isTokenErr = err.response?.status === 400 || err.response?.status === 401 || err.message?.includes("invalid") || err.message?.includes("expired");
+    if (isTokenErr) {
+      try {
+        const account = await CloudAccount.findOne({ _id: req.params.id, userId: req.user.id });
+        if (account) {
+          account.status = "expired";
+          await account.save();
+        }
+      } catch (e) {
+        console.error("Failed to set status expired:", e.message);
+      }
+      return res.status(400).json({ message: "OneDrive session expired. Please reconnect.", status: "expired" });
+    }
     res.status(500).json({ message: "Sync failed" });
   }
 });
@@ -209,10 +223,22 @@ router.get("/download/:id", auth, async (req, res) => {
       return res.status(400).json({ message: "File ID is required" });
     }
 
-    const account = await CloudAccount.findOne({
-      _id: accountId,
-      userId: req.user.id,
-    });
+    let account = null;
+    const targetAccountId = req.query.accountId || accountId;
+    if (targetAccountId && targetAccountId !== "default" && mongoose.Types.ObjectId.isValid(targetAccountId)) {
+      account = await CloudAccount.findOne({
+        _id: targetAccountId,
+        userId: req.user.id,
+        provider: "onedrive",
+      });
+    }
+
+    if (!account) {
+      account = await CloudAccount.findOne({
+        userId: req.user.id,
+        provider: "onedrive",
+      });
+    }
 
     if (!account) {
       return res.status(404).json({ message: "Account not found" });
@@ -244,7 +270,11 @@ router.get("/download/:id", auth, async (req, res) => {
       return res.status(404).json({ message: "Download URL not found" });
     }
 
-    res.json({ link: downloadUrl });
+    if (req.headers.authorization) {
+      res.json({ link: downloadUrl });
+    } else {
+      res.redirect(downloadUrl);
+    }
   } catch (err) {
     console.error("❌ OneDrive download link error:", err.response?.data || err.message);
     res.status(500).json({ message: "Failed to generate download link" });
@@ -294,10 +324,18 @@ router.get("/open/:id", auth, async (req, res) => {
     }
 
     const name = driveItemRes.data.name || "file";
-    const mime = driveItemRes.data.file?.mimeType || "application/octet-stream";
     const ext = name.split(".").pop().toLowerCase();
+    const isDocx = ext === "docx" || ext === "doc";
+    const downloadUrl = driveItemRes.data["@microsoft.graph.downloadUrl"];
 
-    // 1. Try Microsoft Graph OAuth Preview embed link (Pre-authenticated, works for ANY connected account without browser login)
+    if (isDocx && downloadUrl) {
+      // Force Microsoft Word Web Viewer for docx preview
+      const officeViewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(downloadUrl)}`;
+      if (req.headers.authorization) return res.json({ link: officeViewerUrl });
+      return res.redirect(officeViewerUrl);
+    }
+
+    // Default OneDrive Provided Preview (Microsoft Graph Preview / webUrl)
     try {
       const previewRes = await axios.post(
         `https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/preview`,
@@ -305,35 +343,20 @@ router.get("/open/:id", auth, async (req, res) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (previewRes.data?.getUrl) {
+        if (req.headers.authorization) return res.json({ link: previewRes.data.getUrl });
         return res.redirect(previewRes.data.getUrl);
       }
     } catch (previewErr) {
       console.warn("Graph preview embed link failed:", previewErr.message);
     }
 
-    // 2. Direct Inline Content Stream (Images, Videos, PDFs, Text, Code, Documents)
-    try {
-      const streamRes = await axios.get(`https://graph.microsoft.com/v1.0/me/drive/items/${fileId}/content`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: "stream"
-      });
-
-      const contentType = mime.includes("pdf") ? "application/pdf" :
-                        mime.startsWith("image/") ? mime :
-                        mime.startsWith("video/") ? mime :
-                        mime.startsWith("audio/") ? mime :
-                        "text/plain; charset=utf-8";
-
-      res.setHeader("Content-Type", contentType);
-      res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(name)}"`);
-      return streamRes.data.pipe(res);
-    } catch (streamErr) {
-      console.warn("Direct stream failed:", streamErr.message);
+    if (driveItemRes.data.webUrl) {
+      if (req.headers.authorization) return res.json({ link: driveItemRes.data.webUrl });
+      return res.redirect(driveItemRes.data.webUrl);
     }
 
-    // 3. Fallback to @microsoft.graph.downloadUrl
-    const downloadUrl = driveItemRes.data["@microsoft.graph.downloadUrl"];
     if (downloadUrl) {
+      if (req.headers.authorization) return res.json({ link: downloadUrl });
       return res.redirect(downloadUrl);
     }
 

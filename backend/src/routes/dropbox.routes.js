@@ -1,5 +1,6 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import axios from "axios";
 import CloudAccount from "../models/CloudAccount.js";
 import auth from "../middleware/auth.middleware.js";
@@ -192,6 +193,19 @@ router.post("/sync/:accountId", auth, async (req, res) => {
     });
   } catch (err) {
     console.error("❌ Dropbox sync error:", err.message);
+    const isTokenErr = err.status === 401 || err.message?.includes("invalid") || err.message?.includes("expired");
+    if (isTokenErr) {
+      try {
+        const account = await CloudAccount.findOne({ _id: req.params.accountId, userId: req.user.id });
+        if (account) {
+          account.status = "expired";
+          await account.save();
+        }
+      } catch (e) {
+        console.error("Failed to set status expired:", e.message);
+      }
+      return res.status(400).json({ message: "Dropbox session expired. Please reconnect.", status: "expired" });
+    }
     res.status(500).json({ message: "Sync failed" });
   }
 });
@@ -199,7 +213,7 @@ router.post("/sync/:accountId", auth, async (req, res) => {
 /* ===============================
    📥 DROPBOX DOWNLOAD TEMP LINK
 =============================== */
-router.get("/download/:accountId", auth, async (req, res) => {
+router.get(["/download/:accountId", "/open/:accountId"], auth, async (req, res) => {
   try {
     const { accountId } = req.params;
     const { path } = req.query;
@@ -208,11 +222,22 @@ router.get("/download/:accountId", auth, async (req, res) => {
       return res.status(400).json({ message: "Missing file path" });
     }
 
-    const account = await CloudAccount.findOne({
-      _id: accountId,
-      userId: req.user.id,
-      provider: "dropbox",
-    });
+    let account = null;
+    const targetAccountId = req.query.accountId || accountId;
+    if (targetAccountId && targetAccountId !== "default" && mongoose.Types.ObjectId.isValid(targetAccountId)) {
+      account = await CloudAccount.findOne({
+        _id: targetAccountId,
+        userId: req.user.id,
+        provider: "dropbox",
+      });
+    }
+
+    if (!account) {
+      account = await CloudAccount.findOne({
+        userId: req.user.id,
+        provider: "dropbox",
+      });
+    }
 
     if (!account) {
       return res.status(404).json({ message: "Account not found" });
@@ -259,7 +284,50 @@ router.get("/download/:accountId", auth, async (req, res) => {
       }
     }
 
-    res.json({ link: linkRes.data.link });
+    const fileName = String(req.query.name || path || "").toLowerCase();
+    const isDownloadRoute = req.path?.startsWith("/download") || req.originalUrl?.includes("/download/");
+    const isDocx = fileName.endsWith(".docx") || fileName.endsWith(".doc");
+
+    if (!isDownloadRoute) {
+      if (isDocx) {
+        // Office Web Viewer for Dropbox docx files (with dl=0 to prevent forced attachment downloads)
+        const cleanLink = linkRes.data.link.replace("dl=1", "dl=0");
+        const officeViewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(cleanLink)}`;
+        if (req.headers.authorization) return res.json({ link: officeViewerUrl });
+        return res.redirect(officeViewerUrl);
+      }
+
+      // Stream inline preview for Dropbox files (PDF, Images, Video, Audio, Text)
+      try {
+        const dbxStreamRes = await axios.get(linkRes.data.link, { responseType: "stream" });
+        const ext = fileName.split(".").pop().toLowerCase();
+        const mimeMap = {
+          pdf: "application/pdf",
+          jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml",
+          bmp: "image/bmp", ico: "image/x-icon",
+          mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg",
+          mp4: "video/mp4", webm: "video/webm", ogv: "video/ogg",
+          txt: "text/plain; charset=utf-8", html: "text/html; charset=utf-8",
+          json: "application/json", xml: "text/xml"
+        };
+        const contentType = mimeMap[ext] || "application/pdf";
+        const safeName = req.query.name ? String(req.query.name).replace(/["\r\n]/g, "") : "preview";
+
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(safeName)}"`);
+        return dbxStreamRes.data.pipe(res);
+      } catch (streamErr) {
+        console.warn("Dropbox inline stream fallback:", streamErr.message);
+        if (req.headers.authorization) return res.json({ link: linkRes.data.link });
+        return res.redirect(linkRes.data.link);
+      }
+    }
+
+    if (req.headers.authorization) {
+      res.json({ link: linkRes.data.link });
+    } else {
+      res.redirect(linkRes.data.link);
+    }
   } catch (err) {
     console.error("❌ Dropbox get download link failed:", err.response?.data || err.message);
     res.status(500).json({ message: "Failed to generate download link" });

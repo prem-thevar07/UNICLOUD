@@ -48,7 +48,7 @@ const cloudAccountSchema = new mongoose.Schema(
     =============================== */
     status: {
       type: String,
-      enum: ["connected", "error", "syncing"],
+      enum: ["connected", "error", "syncing", "expired", "needs_reconnect"],
       default: "connected",
     },
 

@@ -213,7 +213,8 @@ export const normalizeFile = (
     const parts = file.Key.split("/");
     parts.pop(); // remove file name
     const cleanPath = "/" + parts.join("/");
-    const s3Url = `/api/s3/download/${accountId}?fileId=${encodeURIComponent(file.Key)}`;
+    const s3DownloadUrl = `/api/s3/download/${accountId}?fileId=${encodeURIComponent(file.Key)}`;
+    const s3OpenUrl = `/api/s3/open/${accountId}?fileId=${encodeURIComponent(file.Key)}`;
 
     return {
       id: file.Key,
@@ -225,9 +226,9 @@ export const normalizeFile = (
       accountEmail,
       thumbnail: null,
       path: cleanPath,
-      url: s3Url,
-      officialUrl: s3Url,
-      webContentLink: s3Url,
+      url: s3OpenUrl,
+      officialUrl: s3OpenUrl,
+      webContentLink: s3DownloadUrl,
       createdAt: file.LastModified || null,
       mimeType
     };

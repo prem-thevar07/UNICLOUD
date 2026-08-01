@@ -1,11 +1,12 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import axios from "axios";
 import CloudAccount from "../models/CloudAccount.js";
 import auth from "../middleware/auth.middleware.js";
 import { fileCache } from "../utils/cache.js";
 import { logActivity } from "../utils/activityLogger.js";
-import { fetchBoxStorage } from "../services/providers/box.provider.js";
+import { fetchBoxStorage, refreshBoxToken } from "../services/providers/box.provider.js";
 
 const router = express.Router();
 
@@ -148,17 +149,30 @@ router.post("/sync/:accountId", auth, async (req, res) => {
     // Clear local caches
     fileCache.clear();
 
-    res.json({ success: true, account });
+    res.json({ success: true, storage });
   } catch (err) {
     console.error("❌ Box sync error:", err.message);
+    const isTokenErr = err.response?.status === 400 || err.response?.status === 401 || err.message?.includes("invalid") || err.message?.includes("expired");
+    if (isTokenErr) {
+      try {
+        const account = await CloudAccount.findOne({ _id: req.params.accountId, userId: req.user.id });
+        if (account) {
+          account.status = "expired";
+          await account.save();
+        }
+      } catch (e) {
+        console.error("Failed to set status expired:", e.message);
+      }
+      return res.status(400).json({ message: "Box session expired. Please reconnect.", status: "expired" });
+    }
     res.status(500).json({ message: "Sync failed" });
   }
 });
 
 /* ===============================
-   📥 BOX DOWNLOAD STREAM
+   📥 BOX SECURE OPEN & DOWNLOAD PROXY
 =============================== */
-router.get("/download/:id", auth, async (req, res) => {
+router.get(["/download/:id", "/open/:id"], auth, async (req, res) => {
   try {
     const accountId = req.params.id;
     const { fileId } = req.query;
@@ -167,22 +181,115 @@ router.get("/download/:id", auth, async (req, res) => {
       return res.status(400).json({ message: "File ID is required" });
     }
 
-    const account = await CloudAccount.findOne({
-      _id: accountId,
-      userId: req.user.id,
-      provider: "box",
-    });
+    let account = null;
+    const targetAccountId = req.query.accountId || accountId;
+    if (targetAccountId && targetAccountId !== "default" && mongoose.Types.ObjectId.isValid(targetAccountId)) {
+      account = await CloudAccount.findOne({
+        _id: targetAccountId,
+        userId: req.user.id,
+        provider: "box",
+      });
+    }
+
+    if (!account) {
+      account = await CloudAccount.findOne({
+        userId: req.user.id,
+        provider: "box",
+      });
+    }
 
     if (!account) {
       return res.status(404).json({ message: "Account not found" });
     }
 
-    // Return secure download link in JSON for frontend trigger
-    const downloadUrl = `https://api.box.com/2.0/files/${fileId}/content?access_token=${account.accessToken}`;
-    res.json({ link: downloadUrl });
+    // Resilient Box stream fetcher with automatic 401 token refresh
+    const getBoxStream = async () => {
+      let token = account.accessToken;
+      const contentUrl = `https://api.box.com/2.0/files/${fileId}/content`;
+      try {
+        const streamRes = await axios.get(contentUrl, {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "stream"
+        });
+        return { streamRes, token };
+      } catch (err) {
+        if (err.response?.status === 401 && account.refreshToken) {
+          token = await refreshBoxToken(account);
+          const streamRes = await axios.get(contentUrl, {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: "stream"
+          });
+          return { streamRes, token };
+        }
+        throw err;
+      }
+    };
+
+    const fileName = String(req.query.name || "file").toLowerCase();
+    const safeName = req.query.name ? String(req.query.name).replace(/["\r\n]/g, "") : "file";
+    const isDocx = fileName.endsWith(".docx") || fileName.endsWith(".doc");
+    const isDownloadRoute = req.path?.startsWith("/download") || req.originalUrl?.includes("/download/");
+
+    if (!isDownloadRoute) {
+      if (isDocx) {
+        // Microsoft Word Web Viewer for docx files
+        const downloadUrl = `https://api.box.com/2.0/files/${fileId}/content?access_token=${account.accessToken}`;
+        const officeViewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(downloadUrl)}`;
+        if (req.headers.authorization) return res.json({ link: officeViewerUrl });
+        return res.redirect(officeViewerUrl);
+      }
+
+      // Official Box App Preview UI (Zero Box login prompts required!)
+      try {
+        let token = account.accessToken;
+        let embedRes;
+        try {
+          embedRes = await axios.get(`https://api.box.com/2.0/files/${fileId}?fields=expiring_embed_link,shared_link`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+        } catch (err) {
+          if (err.response?.status === 401 && account.refreshToken) {
+            token = await refreshBoxToken(account);
+            embedRes = await axios.get(`https://api.box.com/2.0/files/${fileId}?fields=expiring_embed_link,shared_link`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+          } else {
+            throw err;
+          }
+        }
+
+        const embedUrl = embedRes.data?.expiring_embed_link?.url || embedRes.data?.shared_link?.url;
+        if (embedUrl) {
+          if (req.headers.authorization) return res.json({ link: embedUrl });
+          return res.redirect(embedUrl);
+        }
+      } catch (embedErr) {
+        console.warn("Box expiring embed link fetch failed:", embedErr.message);
+      }
+
+      // Fallback Inline Stream Preview
+      const { streamRes } = await getBoxStream();
+      const ext = fileName.split(".").pop().toLowerCase();
+      const mimeMap = {
+        pdf: "application/pdf",
+        jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml",
+        mp3: "audio/mpeg", mp4: "video/mp4", webm: "video/webm", txt: "text/plain; charset=utf-8", html: "text/html"
+      };
+      const contentType = mimeMap[ext] || streamRes.headers["content-type"] || "application/pdf";
+      res.setHeader("Content-Type", contentType);
+      res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(safeName)}"`);
+      return streamRes.data.pipe(res);
+    }
+
+    // Download Route - Stream attachment file directly with OAuth Bearer token
+    const { streamRes } = await getBoxStream();
+    res.setHeader("Content-Type", streamRes.headers["content-type"] || "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(safeName)}"`);
+    return streamRes.data.pipe(res);
+
   } catch (err) {
-    console.error("❌ Box download link error:", err.message);
-    res.status(500).json({ message: "Failed to retrieve Box link" });
+    console.error("❌ Box file proxy error:", err.message);
+    res.status(500).json({ message: "Failed to retrieve Box file: " + err.message });
   }
 });
 

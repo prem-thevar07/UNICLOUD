@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { getFiles } from "../services/fileService";
+import { getFiles, deleteFileApi } from "../services/fileService";
 import API from "../config/api";
 import MainLayout from "../layouts/MainLayout";
 import TransferModal from "../components/TransferModal";
@@ -171,15 +171,15 @@ const Optimize = () => {
     }
 
     try {
-      const response = await getFiles({ 
-        view: "unified", 
-        mode: "all", 
+      const response = await getFiles({
+        view: "unified",
+        mode: "all",
         pageSize: 200 // Sub-second fast response
       });
 
       const files = flattenFiles(response?.data || response);
       const tokensObj = response?.nextPageTokens || response?.data?.nextPageTokens || response?.pageTokens;
-      
+
       if (tokensObj && typeof tokensObj === "object") {
         setCloudPageTokens(tokensObj);
         setHasMoreCloudPages(Object.values(tokensObj).some((t) => t && t !== "EOF"));
@@ -486,33 +486,88 @@ const Optimize = () => {
     analyzeFiles(allFiles);
   };
 
+  const getCleanApiUrl = (path) => {
+    if (!path) return "";
+    if (path.startsWith("http")) return path;
+    const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
+    const cleanBase = baseUrl.endsWith("/api") ? baseUrl.slice(0, -4) : baseUrl;
+    return `${cleanBase}${path}`;
+  };
+
+  const isDocxFile = (file) => {
+    if (!file) return false;
+    const name = (file.name || "").toLowerCase();
+    const mime = (file.mimeType || "").toLowerCase();
+    return name.endsWith(".docx") || name.endsWith(".doc") || mime.includes("wordprocessingml") || mime.includes("msword");
+  };
+
   // Open File Action
   const handleOpenFile = (file) => {
     if (!file) return;
-    if (file.url) {
-      window.open(file.url, "_blank", "noopener,noreferrer");
+    const token = localStorage.getItem("token");
+
+    let rawUrl = file.url || file.webViewLink || file.officialUrl;
+    if (!rawUrl) {
+      if (file.provider === "onedrive" || file.provider === "box" || file.provider === "s3") {
+        rawUrl = `/api/${file.provider}/open/${file.accountId}?fileId=${encodeURIComponent(file.id)}`;
+      } else {
+        const accountParam = file.accountId ? `?accountId=${file.accountId}` : "";
+        rawUrl = `/api/${file.provider}/open/${encodeURIComponent(file.id)}${accountParam}`;
+      }
+    }
+
+    if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+      window.open(rawUrl, "_blank", "noopener,noreferrer");
     } else {
-      const accountParam = file.accountId ? `?accountId=${file.accountId}` : "";
-      const openUrl = `/api/${file.provider}/open/${encodeURIComponent(file.id)}${accountParam}`;
-      window.open(openUrl, "_blank", "noopener,noreferrer");
+      const fullUrl = getCleanApiUrl(rawUrl);
+      const sep = fullUrl.includes("?") ? "&" : "?";
+      const authenticatedUrl = `${fullUrl}${sep}token=${encodeURIComponent(token || "")}`;
+      window.open(authenticatedUrl, "_blank", "noopener,noreferrer");
     }
   };
 
-  // Download File Action
+  // Downloading State for Button Spinner
+  const [downloadingFileId, setDownloadingFileId] = useState(null);
+
+  const triggerNativeDownload = (url, fileName) => {
+    const a = document.createElement("a");
+    a.href = url;
+    if (fileName) a.download = fileName;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      if (document.body.contains(a)) {
+        document.body.removeChild(a);
+      }
+    }, 200);
+  };
+
+  // Download File Action with Instant Spinner & Universal Native Download
   const handleDownloadFile = (file) => {
     if (!file) return;
     const token = localStorage.getItem("token");
-    const accountParam = file.accountId ? `&accountId=${file.accountId}` : "";
-    const nameParam = file.name ? `&name=${encodeURIComponent(file.name)}` : "";
-    const downloadUrl = `/api/${file.provider}/download/${encodeURIComponent(file.id)}?token=${encodeURIComponent(token)}${accountParam}${nameParam}`;
+    setDownloadingFileId(file.id);
+    showToast(`📥 Starting download for "${file.name}"...`);
 
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.setAttribute("download", file.name || "download");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    showToast(`Downloading "${file.name}"...`);
+    const accId = file.accountId || (typeof file.account === "object" ? file.account?._id : file.account) || "default";
+    const idParamKey = file.provider === "dropbox" ? "path" : "fileId";
+    const rawPath = `/api/${file.provider}/download/${accId}?${idParamKey}=${encodeURIComponent(file.id)}&name=${encodeURIComponent(file.name || "download")}`;
+    const fullDownloadUrl = `${getCleanApiUrl(rawPath)}&token=${encodeURIComponent(token || "")}`;
+
+    const a = document.createElement("a");
+    a.href = fullDownloadUrl;
+    a.download = file.name || "download";
+    document.body.appendChild(a);
+    a.click();
+
+    setTimeout(() => {
+      if (document.body.contains(a)) {
+        document.body.removeChild(a);
+      }
+      setDownloadingFileId(null);
+    }, 500);
   };
 
   // Delete Action
@@ -523,11 +578,11 @@ const Optimize = () => {
 
     setDeletingId(file.id);
     try {
-      await API.delete(`/files/${file.id}`, {
-        params: {
-          provider: file.provider,
-          accountId: file.accountId,
-        },
+      await deleteFileApi({
+        id: file.id,
+        provider: file.provider,
+        accountId: file.accountId,
+        fileName: file.name,
       });
 
       const updatedFiles = allFiles.filter((f) => f.id !== file.id);
@@ -538,7 +593,7 @@ const Optimize = () => {
       } catch (e) {
         console.warn("Session cache update error:", e);
       }
-      
+
       if (hasFetchedLarge) {
         const targetBytes = getThresholdBytes();
         let matched = updatedFiles.filter((f) => f.size && Number(f.size) >= targetBytes);
@@ -558,7 +613,7 @@ const Optimize = () => {
         matched.sort((a, b) => b.size - a.size);
         setLargeFiles(matched);
       }
-      
+
       showToast(`Deleted "${file.name}"`);
     } catch (err) {
       console.error("Delete file error:", err);
@@ -699,25 +754,11 @@ const Optimize = () => {
                       </div>
                       <div className="dup-item-actions">
                         <button
-                          className="btn-opt-action btn-opt-open"
+                          className={`btn-opt-action btn-opt-open ${isDocxFile(file) ? "btn-opt-word" : ""}`}
                           onClick={() => handleOpenFile(file)}
-                          title="Open File"
+                          title={isDocxFile(file) ? "Open with Microsoft Word" : "Open File"}
                         >
-                          👁️ Open
-                        </button>
-                        <button
-                          className="btn-opt-action btn-opt-download"
-                          onClick={() => handleDownloadFile(file)}
-                          title="Download File"
-                        >
-                          📥 Download
-                        </button>
-                        <button
-                          className="btn-opt-action btn-opt-transfer"
-                          onClick={() => handleOpenTransfer(file)}
-                          title="Transfer / Move File Across Clouds"
-                        >
-                          🔄 Transfer
+                          {isDocxFile(file) ? "📝 Open with Microsoft Word" : "👁️ Open"}
                         </button>
                         <button
                           className="btn-danger-sm"
@@ -744,12 +785,12 @@ const Optimize = () => {
       <div className="large-files-section">
         {/* LARGE FILES FILTER & FETCH CONTROL BAR */}
         <div className="large-files-filter-bar glass">
-          
+
           {/* 1. SIZE THRESHOLD DROPDOWN */}
           <div className="filter-group">
             <label className="filter-label">⚡ Min Size:</label>
             <div className="custom-dropdown-container">
-              <div 
+              <div
                 className="custom-dropdown-trigger glass"
                 onClick={() => {
                   setCustomDropdownOpen(!customDropdownOpen);
@@ -807,7 +848,7 @@ const Optimize = () => {
           <div className="filter-group">
             <label className="filter-label">☁️ Accounts:</label>
             <div className="custom-dropdown-container">
-              <div 
+              <div
                 className="custom-dropdown-trigger glass"
                 onClick={() => {
                   setAccountDropdownOpen(!accountDropdownOpen);
@@ -837,7 +878,7 @@ const Optimize = () => {
                   {connectedAccounts.map((acc) => {
                     const isAccSelected = selectedAccountIds.includes(String(acc._id));
                     const providerName = acc.provider === 'google' ? 'Google Drive' : acc.provider === 'dropbox' ? 'Dropbox' : acc.provider === 's3' ? 'Amazon S3' : acc.provider === 'box' ? 'Box' : 'OneDrive';
-                    
+
                     return (
                       <div
                         key={acc._id}
@@ -872,7 +913,7 @@ const Optimize = () => {
           <div className="filter-group">
             <label className="filter-label">📁 File Type:</label>
             <div className="custom-dropdown-container">
-              <div 
+              <div
                 className="custom-dropdown-trigger glass"
                 onClick={() => {
                   setTypeDropdownOpen(!typeDropdownOpen);
@@ -922,7 +963,7 @@ const Optimize = () => {
               <div>
                 <h4 className="skeleton-text-glow">📡 Scanning Connected Cloud Storage...</h4>
                 <p className="muted" style={{ fontSize: "0.85rem", marginTop: "2px" }}>
-                  Scanning connected cloud drives in chunks until 10 matching files are collected. Please wait...
+                  Scanning connected cloud services to collect large files. Please wait...
                 </p>
               </div>
             </div>
@@ -950,8 +991,8 @@ const Optimize = () => {
               Largest file in storage: <strong>{formatSize(maxFileSizeInDrive)}</strong>.
             </p>
             {maxFileSizeInDrive > 0 && maxFileSizeInDrive < getThresholdBytes() && (
-              <button 
-                className="btn-secondary" 
+              <button
+                className="btn-secondary"
                 style={{ marginTop: "1rem" }}
                 onClick={() => {
                   setPresetThreshold("50MB");
@@ -993,25 +1034,23 @@ const Optimize = () => {
                       <td>{formatDate(file.createdAt)}</td>
                       <td className="opt-action-cell">
                         <button
-                          className="btn-opt-action btn-opt-open"
+                          className={`btn-opt-action btn-opt-open ${isDocxFile(file) ? "btn-opt-word" : ""}`}
                           onClick={() => handleOpenFile(file)}
-                          title="Open File"
+                          title={isDocxFile(file) ? "Open with Microsoft Word" : "Open File"}
                         >
-                          👁️ Open
+                          {isDocxFile(file) ? "📝 Open with Microsoft Word" : "👁️ Open"}
                         </button>
                         <button
                           className="btn-opt-action btn-opt-download"
                           onClick={() => handleDownloadFile(file)}
+                          disabled={downloadingFileId === file.id}
                           title="Download File"
                         >
-                          📥 Download
-                        </button>
-                        <button
-                          className="btn-opt-action btn-opt-transfer"
-                          onClick={() => handleOpenTransfer(file)}
-                          title="Transfer / Move File Across Clouds"
-                        >
-                          🔄 Transfer
+                          {downloadingFileId === file.id ? (
+                            <>⏳ Fetching...</>
+                          ) : (
+                            <>📥 Download</>
+                          )}
                         </button>
                         <button
                           className="btn-danger-sm"

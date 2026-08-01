@@ -47,7 +47,7 @@ const DOC_SUBCATEGORIES = [
 const getFileCategory = (file) => {
   const mime = file.mimeType?.toLowerCase() || "";
   const name = file.name?.toLowerCase() || "";
-  
+
   if (mime.startsWith("image/")) return "image";
   if (mime.startsWith("video/")) return "video";
   if (mime.startsWith("audio/")) return "audio";
@@ -87,10 +87,16 @@ const getCleanApiUrl = (path) => {
 };
 
 const getFileOpenUrl = (file) => {
-  const url = file.url || file.webViewLink || "";
+  if (!file) return "#";
+  let url = file.url || file.webViewLink || file.officialUrl || "";
+  if (!url && file.provider && file.accountId && file.id) {
+    url = `/api/${file.provider}/open/${file.accountId}?fileId=${encodeURIComponent(file.id)}`;
+  }
   if (url.startsWith("/api/")) {
     const token = localStorage.getItem("token");
-    return `${getCleanApiUrl(url)}&token=${encodeURIComponent(token)}`;
+    const cleanUrl = getCleanApiUrl(url);
+    const sep = cleanUrl.includes("?") ? "&" : "?";
+    return `${cleanUrl}${sep}token=${encodeURIComponent(token || "")}`;
   }
   return url;
 };
@@ -101,7 +107,9 @@ const getThumbnailSrc = (file) => {
   if (!rawThumb) return null;
   if (rawThumb.startsWith("/api/")) {
     const token = localStorage.getItem("token");
-    return `${getCleanApiUrl(rawThumb)}&token=${encodeURIComponent(token)}`;
+    const cleanThumb = getCleanApiUrl(rawThumb);
+    const sep = cleanThumb.includes("?") ? "&" : "?";
+    return `${cleanThumb}${sep}token=${encodeURIComponent(token || "")}`;
   }
   return rawThumb;
 };
@@ -126,7 +134,7 @@ const fileTypeConfigs = {
 const getFileTypeKey = (file) => {
   const mime = file.mimeType?.toLowerCase() || "";
   const name = file.name?.toLowerCase() || "";
-  
+
   if (name.endsWith(".pdf") || mime.includes("pdf")) return "pdf";
   if (name.endsWith(".doc") || name.endsWith(".docx") || mime.includes("word") || mime.includes("officedocument.wordprocessingml")) return "word";
   if (name.endsWith(".xls") || name.endsWith(".xlsx") || name.endsWith(".csv") || mime.includes("excel") || mime.includes("spreadsheet") || mime.includes("officedocument.spreadsheetml")) return "excel";
@@ -135,7 +143,7 @@ const getFileTypeKey = (file) => {
   if (mime.startsWith("image/")) return "image";
   if (mime.startsWith("video/")) return "video";
   if (mime.startsWith("audio/")) return "audio";
-  
+
   return "other";
 };
 
@@ -150,7 +158,7 @@ const getFileVirtualPath = (file) => {
   if (name.includes("screenshot") || name.includes("photo") || name.includes("img") || name.includes("backup")) return "/Photos Backup";
   if (name.includes("study") || name.includes("material") || name.includes("notes") || name.includes("book")) return "/Study Material";
   if (name.includes("personal") || name.includes("diary") || name.includes("todo")) return "/Personal";
-  
+
   // Fallback: assign based on char codes of name to distribute evenly
   const folders = ["/Projects", "/College", "/Documents", "/Photos Backup", "/Personal", "/Work Files", "/Designs", "/Study Material"];
   const charCodeSum = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
@@ -238,7 +246,7 @@ const RecursiveFolderTreeNode = ({
         >
           {isLoading ? "⌛" : isExpanded ? "▼" : "▶"}
         </span>
-        <div 
+        <div
           className={`custom-folder-checkbox ${isFolderActive ? "checked" : ""}`}
           onClick={(e) => toggleFolderCheckbox(e, folder)}
           title={isFolderActive ? "Uncheck folder filter" : "Check to multi-select folder"}
@@ -326,7 +334,7 @@ const RecursiveFolderTreeNode = ({
 =============================== */
 const Files = () => {
   const [files, setFiles] = useState([]);
-    const [accounts, setAccounts] = useState(() => {
+  const [accounts, setAccounts] = useState(() => {
     try {
       const cached = localStorage.getItem("unicloud_cached_accounts");
       return cached ? JSON.parse(cached) : [];
@@ -335,7 +343,7 @@ const Files = () => {
     }
   });
   const [filteredFiles, setFilteredFiles] = useState([]);
-  
+
   // Custom design states
   const [viewMode, setViewMode] = useState("list"); // "list" | "grid"
   const [selectedFileIds, setSelectedFileIds] = useState([]);
@@ -348,7 +356,7 @@ const Files = () => {
   ]);
   const [foldersLoading, setFoldersLoading] = useState(false);
   const [isSelectMode, setIsSelectMode] = useState(false);
-    const [sortOption, setSortOption] = useState("newest");
+  const [sortOption, setSortOption] = useState("newest");
   const [foldersViewMode, setFoldersViewMode] = useState("classic");
   const [hoveredPath, setHoveredPath] = useState([]);
   const [flyoutTops, setFlyoutTops] = useState([]);
@@ -380,15 +388,15 @@ const Files = () => {
   const [timeline, setTimeline] = useState("all");
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
-    const [selectedAccounts, setSelectedAccounts] = useState([]);
+  const [selectedAccounts, setSelectedAccounts] = useState([]);
   const [accountsDropdownOpen, setAccountsDropdownOpen] = useState(false);
-  
-    // Pagination
+
+  // Pagination
   const [visibleCount, setVisibleCount] = useState(15);
   const [loading, setLoading] = useState(true);
   const [loadingMoreCloud, setLoadingMoreCloud] = useState(false);
   const [localLoadingMore, setLocalLoadingMore] = useState(false);
-    const [pageTokens, setPageTokens] = useState({});
+  const [pageTokens, setPageTokens] = useState({});
   const isFetchingRef = useRef(false);
   const [searchParams] = useSearchParams();
 
@@ -396,7 +404,7 @@ const Files = () => {
   useEffect(() => {
     try {
       localStorage.removeItem("unicloud_cached_folders");
-    } catch (_) {}
+    } catch (_) { }
   }, []);
 
   // Load account filter from URL parameters if navigated from Dashboard
@@ -428,7 +436,7 @@ const Files = () => {
               };
               try {
                 localStorage.setItem("unicloud_cached_folders", JSON.stringify(updated));
-              } catch (_) {}
+              } catch (_) { }
               return updated;
             });
           } catch (err) {
@@ -451,7 +459,7 @@ const Files = () => {
     return () => clearTimeout(handler);
   }, [search]);
 
-    // Fetch when filters update
+  // Fetch when filters update
   useEffect(() => {
     fetchData();
   }, [debouncedSearch, timeline, customStartDate, customEndDate, selectedFolderFilters, selectedAccounts]);
@@ -567,7 +575,7 @@ const Files = () => {
       setAccounts(fetchedAccounts);
       try {
         localStorage.setItem("unicloud_cached_accounts", JSON.stringify(fetchedAccounts));
-      } catch (_) {}
+      } catch (_) { }
 
       // 1. Fetch deep files for active folder filters
       let folderPromises = [];
@@ -628,7 +636,7 @@ const Files = () => {
 
   const fetchMoreFromCloud = async () => {
     if (isFetchingRef.current) return;
-    
+
     // Check if there are any valid page tokens left
     const hasMoreInCloud = Object.values(pageTokens).some(token => token && token !== "EOF");
     if (!hasMoreInCloud) return;
@@ -872,7 +880,7 @@ const Files = () => {
         const updated = { ...prev, [accIdStr]: accountFolders };
         try {
           localStorage.setItem("unicloud_cached_folders", JSON.stringify(updated));
-        } catch (_) {}
+        } catch (_) { }
         return updated;
       });
     } catch (err) {
@@ -920,7 +928,7 @@ const Files = () => {
     const visibleFilesSlice = filteredFiles.slice(0, visibleCount);
     const visibleIds = visibleFilesSlice.map(f => f.id);
     const allSelected = visibleIds.every(id => selectedFileIds.includes(id));
-    
+
     if (allSelected) {
       setSelectedFileIds(prev => prev.filter(id => !visibleIds.includes(id)));
     } else {
@@ -930,7 +938,7 @@ const Files = () => {
 
   // Toggle individual selection
   const toggleSelectFile = (fileId) => {
-    setSelectedFileIds(prev => 
+    setSelectedFileIds(prev =>
       prev.includes(fileId) ? prev.filter(id => id !== fileId) : [...prev, fileId]
     );
   };
@@ -968,38 +976,52 @@ const Files = () => {
     }
   };
 
-  const handleSingleDownload = async (file) => {
-    try {
-      let downloadUrl = null;
-      if (file.provider === "dropbox") {
-        const res = await api.get(`/dropbox/download/${file.accountId}?path=${encodeURIComponent(file.id)}`);
-        downloadUrl = res.data?.link;
-      } else if (file.provider === "google") {
-        const token = localStorage.getItem("token");
-        downloadUrl = `${getCleanApiUrl(`/api/google/download/${file.accountId}?fileId=${file.id}`)}&token=${encodeURIComponent(token)}`;
-      } else if (file.provider === "onedrive") {
-        const res = await api.get(`/onedrive/download/${file.accountId}?fileId=${file.id}`);
-        downloadUrl = res.data?.link;
-      } else if (file.provider === "s3") {
-        const res = await api.get(`/s3/download/${file.accountId}?fileId=${encodeURIComponent(file.id)}`);
-        downloadUrl = res.data?.link;
-      } else if (file.provider === "box") {
-        const res = await api.get(`/box/download/${file.accountId}?fileId=${file.id}`);
-        downloadUrl = res.data?.link;
-      } else {
-        downloadUrl = file.webContentLink || file.url;
+  const triggerNativeDownload = (url, fileName) => {
+    const a = document.createElement("a");
+    a.href = url;
+    if (fileName) a.download = fileName;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      if (document.body.contains(a)) {
+        document.body.removeChild(a);
       }
+    }, 200);
+  };
 
-      if (downloadUrl) {
-        await triggerDownload(downloadUrl, file.name);
-        logActivity(`Downloaded file <strong>${file.name}</strong>`, "📥", "green");
-      } else {
-        alert("Failed to generate download link");
+  const getFileOpenUrl = (file) => {
+    if (!file) return "#";
+    const token = localStorage.getItem("token");
+    const idParamKey = file.provider === "dropbox" ? "path" : "fileId";
+    const accId = file.accountId || (typeof file.account === "object" ? file.account?._id : file.account) || "default";
+    const rawPath = `/api/${file.provider}/open/${accId}?${idParamKey}=${encodeURIComponent(file.id)}&name=${encodeURIComponent(file.name || "file")}`;
+    return `${getCleanApiUrl(rawPath)}&token=${encodeURIComponent(token || "")}`;
+  };
+
+  const handleSingleDownload = (file) => {
+    if (!file) return;
+    const token = localStorage.getItem("token");
+
+    const idParamKey = file.provider === "dropbox" ? "path" : "fileId";
+    const accId = file.accountId || (typeof file.account === "object" ? file.account?._id : file.account) || "default";
+    const rawPath = `/api/${file.provider}/download/${accId}?${idParamKey}=${encodeURIComponent(file.id)}&name=${encodeURIComponent(file.name || "download")}`;
+    const fullDownloadUrl = `${getCleanApiUrl(rawPath)}&token=${encodeURIComponent(token || "")}`;
+
+    const a = document.createElement("a");
+    a.href = fullDownloadUrl;
+    a.download = file.name || "download";
+    document.body.appendChild(a);
+    a.click();
+
+    logActivity(`Downloaded file <strong>${file.name}</strong>`, "📥", "green");
+
+    setTimeout(() => {
+      if (document.body.contains(a)) {
+        document.body.removeChild(a);
       }
-    } catch (err) {
-      console.error("Single download error:", err);
-      alert("Failed to download file");
-    }
+    }, 500);
   };
 
   // Bulk Actions - Sequential Blob-Based Multi-Download
@@ -1048,13 +1070,13 @@ const Files = () => {
 
 
 
-    const handleShareFile = async (file) => {
+  const handleShareFile = async (file) => {
     const slink = file.url || file.webContentLink || file.webViewLink;
     if (!slink) {
       alert("Share link not available");
       return;
     }
-    
+
     logActivity(`Shared link generated for <strong>${file.name}</strong>`, "🔗", "purple");
 
     if (navigator.share) {
@@ -1082,9 +1104,9 @@ const Files = () => {
       alert("No share links available");
       return;
     }
-    
+
     const shareText = `Shared ${links.length} files from Unicloud:\n` + selectedFiles.map(f => `${f.name}: ${f.url || f.webContentLink || f.webViewLink}`).join("\n");
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -1107,14 +1129,14 @@ const Files = () => {
 
   const handleBulkDelete = async () => {
     if (!window.confirm(`Are you sure you want to delete ${selectedCount} items?`)) return;
-    
+
     try {
       setLoading(true);
       setFiles(prev => prev.filter(f => !selectedFileIds.includes(f.id)));
       setSelectedFileIds([]);
     } catch (err) {
       console.error(err);
-            } finally {
+    } finally {
       setLoading(false);
     }
   };
@@ -1123,7 +1145,7 @@ const Files = () => {
 
   const getAccountTree = (account, foldersOverride = null) => {
     const folders = foldersOverride || foldersByAccount[account._id] || foldersByAccount[String(account._id)] || [];
-    
+
     // Convert flat folders array to tree nodes
     const nodesMap = {};
     const topLevelNodes = [];
@@ -1157,18 +1179,18 @@ const Files = () => {
     });
 
     // If topLevelNodes is empty but folders exist, fallback to all non-root folders
-    const rootChildren = topLevelNodes.length > 0 
-      ? topLevelNodes 
+    const rootChildren = topLevelNodes.length > 0
+      ? topLevelNodes
       : folders.filter(f => f && f.id && f.id !== "root").map(f => ({
-          id: f.id,
-          name: f.name || "Untitled Folder",
-          type: "folder",
-          path: f.path || ("/" + f.name),
-          accountId: f.accountId || String(account._id),
-          provider: f.provider || account.provider,
-          children: [],
-          childrenLoaded: false
-        }));
+        id: f.id,
+        name: f.name || "Untitled Folder",
+        type: "folder",
+        path: f.path || ("/" + f.name),
+        accountId: f.accountId || String(account._id),
+        provider: f.provider || account.provider,
+        children: [],
+        childrenLoaded: false
+      }));
 
     return rootChildren;
   };
@@ -1216,7 +1238,7 @@ const Files = () => {
   // in-place instead of unmounting/remounting on every hover state change.
   const renderHoverFolderExplorer = () => {
     return (
-      <div 
+      <div
         ref={hoverContainerRef}
         className="hover-explorer-container"
         onMouseLeave={scheduleHoverLeave}
@@ -1226,10 +1248,10 @@ const Files = () => {
           {accounts.map(acc => {
             const providerName = acc.provider === 'google' ? 'Google Drive' : acc.provider === 'dropbox' ? 'Dropbox' : acc.provider === 's3' ? 'Amazon S3' : acc.provider === 'box' ? 'Box' : 'OneDrive';
             const isHovered = hoveredPath.length > 0 && hoveredPath[0].id === acc._id;
-            
+
             return (
-              <div 
-                key={acc._id} 
+              <div
+                key={acc._id}
                 className={`hover-explorer-account-row ${isHovered ? "hovered" : ""} ${selectedAccounts.includes(acc._id) ? "selected" : ""}`}
                 onMouseEnter={(e) => {
                   cancelHoverTimers();
@@ -1280,7 +1302,7 @@ const Files = () => {
                   handleAccountClick(acc._id);
                 }}
               >
-                <div 
+                <div
                   className={`custom-account-checkbox ${selectedAccounts.includes(acc._id) ? "checked" : ""}`}
                   onClick={(e) => toggleAccountCheckbox(e, acc._id)}
                   title={selectedAccounts.includes(acc._id) ? "Uncheck account filter" : "Check to multi-select account"}
@@ -1306,7 +1328,7 @@ const Files = () => {
           if (children.length === 0) return null;
 
           return (
-            <div 
+            <div
               key={level}
               className="hover-explorer-flyout glass"
               style={{
@@ -1331,7 +1353,7 @@ const Files = () => {
                     const isFolder = child.type === "folder";
                     const isChildEmpty = isFolder && child.childrenLoaded && (child.children || []).length === 0;
                     const isChildHovered = hoveredPath.length > level + 1 && hoveredPath[level + 1].id === child.id;
-                    
+
                     return (
                       <div
                         key={child.id}
@@ -1345,7 +1367,7 @@ const Files = () => {
                             }
                             hoverEnterTimer.current = setTimeout(async () => {
                               const top = getRelativeTop(currentTarget);
-                              
+
                               if (!child.childrenLoaded && child.id !== "root") {
                                 try {
                                   const res = await getExplorerContents({
@@ -1414,7 +1436,7 @@ const Files = () => {
                         {isFolder && (() => {
                           const isChildChecked = selectedFolderFilters.some(sf => sf.id === child.id);
                           return (
-                            <div 
+                            <div
                               className={`custom-folder-checkbox ${isChildChecked ? "checked" : ""}`}
                               onClick={(e) => toggleFolderCheckbox(e, {
                                 id: child.id,
@@ -1460,15 +1482,15 @@ const Files = () => {
 
         {/* TOP STORAGE CARDS */}
         <div className="storage-overview-grid">
-                    {/* All Accounts Card */}
-                    <div 
+          {/* All Accounts Card */}
+          <div
             className={`storage-overview-card master ${selectedAccounts.length === 0 ? "active" : ""}`}
             onClick={() => {
               setActiveFolderFilter(null);
               setSelectedAccounts([]);
             }}
           >
-                        <div className="card-selection-check">
+            <div className="card-selection-check">
               <div className={`custom-card-checkbox ${selectedAccounts.length === 0 ? "checked" : ""}`} />
             </div>
 
@@ -1476,14 +1498,14 @@ const Files = () => {
               <div className="card-icon-container master">
                 ☁️
               </div>
-                            <div className="card-details" style={{ flex: 1, minWidth: 0 }}>
+              <div className="card-details" style={{ flex: 1, minWidth: 0 }}>
                 <h4>All Accounts</h4>
-                <span 
-                  className="card-email" 
-                  style={{ 
-                    fontSize: "11.5px", 
-                    color: "rgba(255,255,255,0.45)", 
-                    display: "block", 
+                <span
+                  className="card-email"
+                  style={{
+                    fontSize: "11.5px",
+                    color: "rgba(255,255,255,0.45)",
+                    display: "block",
                     marginBottom: "4px"
                   }}
                 >
@@ -1498,18 +1520,18 @@ const Files = () => {
           {accounts.map(acc => {
             const isSelected = selectedAccounts.includes(acc._id);
             return (
-              <div 
+              <div
                 key={acc._id}
                 className={`storage-overview-card ${isSelected ? "active" : ""}`}
                 onClick={() => {
-                  setSelectedAccounts(prev => 
-                    prev.includes(acc._id) 
-                      ? prev.filter(id => id !== acc._id) 
+                  setSelectedAccounts(prev =>
+                    prev.includes(acc._id)
+                      ? prev.filter(id => id !== acc._id)
                       : [...prev, acc._id]
                   );
                 }}
               >
-                                <div className="card-selection-check">
+                <div className="card-selection-check">
                   <div className={`custom-card-checkbox ${isSelected ? "checked" : ""}`} />
                 </div>
 
@@ -1518,14 +1540,14 @@ const Files = () => {
                     <img src={providerIcons[acc.provider]} alt={acc.provider} className="provider-card-icon" />
                   </div>
                   <div className="card-details" style={{ flex: 1, minWidth: 0 }}>
-                                                             <h4>{acc.provider === 'google' ? 'Google Drive' : acc.provider === 'dropbox' ? 'Dropbox' : acc.provider === 's3' ? 'Amazon S3' : acc.provider === 'box' ? 'Box' : 'OneDrive'}</h4>
+                    <h4>{acc.provider === 'google' ? 'Google Drive' : acc.provider === 'dropbox' ? 'Dropbox' : acc.provider === 's3' ? 'Amazon S3' : acc.provider === 'box' ? 'Box' : 'OneDrive'}</h4>
 
-                    <span 
-                      className="card-email" 
-                      style={{ 
-                        fontSize: "11.5px", 
-                        color: "rgba(255,255,255,0.45)", 
-                        display: "block", 
+                    <span
+                      className="card-email"
+                      style={{
+                        fontSize: "11.5px",
+                        color: "rgba(255,255,255,0.45)",
+                        display: "block",
                         marginBottom: "4px",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
@@ -1544,7 +1566,7 @@ const Files = () => {
           })}
 
           {accounts.length === 0 && !loading && (
-             <div className="no-accounts-msg">No cloud accounts connected.</div>
+            <div className="no-accounts-msg">No cloud accounts connected.</div>
           )}
         </div>
 
@@ -1552,16 +1574,16 @@ const Files = () => {
         <div className="fm-search-row">
           <div className="fm-search-wrapper">
             <span className="search-icon">🔍</span>
-            <input 
-              type="text" 
-              placeholder="Search files across all accounts..." 
+            <input
+              type="text"
+              placeholder="Search files across all accounts..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-           <div className="view-mode-selector">
+          <div className="view-mode-selector">
             {isMobile ? (
-              <button 
+              <button
                 className="view-btn active"
                 onClick={() => setViewMode(viewMode === "list" ? "grid" : "list")}
                 title={viewMode === "list" ? "Grid View" : "List View"}
@@ -1570,7 +1592,7 @@ const Files = () => {
               </button>
             ) : (
               <>
-                <button 
+                <button
                   className={`view-btn ${viewMode === "grid" ? "active" : ""}`}
                   onClick={() => setViewMode("grid")}
                   title="Grid View"
@@ -1578,7 +1600,7 @@ const Files = () => {
                   <span className="desktop-only-text">Grid</span>
                   <span className="mobile-only-icon" style={{ display: "none" }}>📊</span>
                 </button>
-                <button 
+                <button
                   className={`view-btn ${viewMode === "list" ? "active" : ""}`}
                   onClick={() => setViewMode("list")}
                   title="List View"
@@ -1589,8 +1611,8 @@ const Files = () => {
               </>
             )}
           </div>
-          <button 
-            className="filter-toggle-mobile-btn" 
+          <button
+            className="filter-toggle-mobile-btn"
             onClick={() => setMobileFiltersOpen(!mobileFiltersOpen)}
             style={{ display: "none" }}
             title="Toggle Filters"
@@ -1601,7 +1623,7 @@ const Files = () => {
 
         {/* HORIZONTAL FILTERS BAR */}
         <div className={`fm-horizontal-filters ${mobileFiltersOpen ? "mobile-open" : "mobile-closed"}`}>
-          <select 
+          <select
             className="filter-select"
             value={activeCategory}
             onChange={(e) => {
@@ -1617,7 +1639,7 @@ const Files = () => {
           </select>
 
           {activeCategory === "document" && (
-            <select 
+            <select
               className="filter-select"
               value={activeSubCategory}
               onChange={(e) => setActiveSubCategory(e.target.value)}
@@ -1649,7 +1671,7 @@ const Files = () => {
           </select>
 
           <div className="custom-multiselect-container" style={{ position: "relative", display: "inline-block" }}>
-            <button 
+            <button
               className="filter-select custom-select-btn"
               onClick={() => setAccountsDropdownOpen(!accountsDropdownOpen)}
               style={{
@@ -1662,23 +1684,23 @@ const Files = () => {
               }}
             >
               <span>
-                ☁️ {selectedAccounts.length === 0 
-                  ? "All Accounts" 
+                ☁️ {selectedAccounts.length === 0
+                  ? "All Accounts"
                   : `${selectedAccounts.length} Selected`}
               </span>
               <span style={{ fontSize: "10px", marginLeft: "8px", opacity: 0.7 }}>
                 {accountsDropdownOpen ? "▲" : "▼"}
               </span>
             </button>
-            
+
             {accountsDropdownOpen && (
               <>
-                <div 
-                  className="dropdown-overlay-closer" 
+                <div
+                  className="dropdown-overlay-closer"
                   onClick={() => setAccountsDropdownOpen(false)}
                   style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, zIndex: 998 }}
                 />
-                <div 
+                <div
                   className="custom-select-dropdown-card glass"
                   style={{
                     position: "absolute",
@@ -1698,7 +1720,7 @@ const Files = () => {
                     gap: "4px"
                   }}
                 >
-                  <div 
+                  <div
                     className="custom-dropdown-item select-all-row"
                     onClick={() => {
                       setSelectedAccounts([]);
@@ -1715,23 +1737,23 @@ const Files = () => {
                       background: selectedAccounts.length === 0 ? "rgba(255,255,255,0.05)" : "transparent"
                     }}
                   >
-                                        <div className={`custom-card-checkbox ${selectedAccounts.length === 0 ? "checked" : ""}`} />
+                    <div className={`custom-card-checkbox ${selectedAccounts.length === 0 ? "checked" : ""}`} />
                     <span>All Accounts</span>
 
                   </div>
-                  
+
                   <div style={{ height: "1px", background: "rgba(255,255,255,0.08)", margin: "4px 0" }} />
-                  
+
                   {accounts.map(acc => {
                     const isChecked = selectedAccounts.includes(acc._id);
                     return (
-                      <div 
+                      <div
                         key={acc._id}
                         className="custom-dropdown-item"
                         onClick={() => {
-                          setSelectedAccounts(prev => 
-                            prev.includes(acc._id) 
-                              ? prev.filter(id => id !== acc._id) 
+                          setSelectedAccounts(prev =>
+                            prev.includes(acc._id)
+                              ? prev.filter(id => id !== acc._id)
                               : [...prev, acc._id]
                           );
                         }}
@@ -1749,11 +1771,11 @@ const Files = () => {
                         onMouseEnter={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.05)"}
                         onMouseLeave={(e) => e.currentTarget.style.background = isChecked ? "rgba(255,255,255,0.03)" : "transparent"}
                       >
-                                                <div className={`custom-card-checkbox ${isChecked ? "checked" : ""}`} />
-                        <img 
-                          src={providerIcons[acc.provider]} 
-                          alt={acc.provider} 
-                          style={{ width: "16px", height: "16px", objectFit: "contain" }} 
+                        <div className={`custom-card-checkbox ${isChecked ? "checked" : ""}`} />
+                        <img
+                          src={providerIcons[acc.provider]}
+                          alt={acc.provider}
+                          style={{ width: "16px", height: "16px", objectFit: "contain" }}
                         />
 
                         <span className="truncate" style={{ flex: 1, color: "var(--text-primary)" }} title={acc.email}>
@@ -1767,7 +1789,7 @@ const Files = () => {
             )}
           </div>
 
-                    <select
+          <select
             className="filter-select"
             value={timeline}
             onChange={(e) => setTimeline(e.target.value)}
@@ -1782,18 +1804,18 @@ const Files = () => {
 
           {timeline === "custom" && (
             <div className="custom-date-inputs" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input 
-                type="date" 
-                className="filter-select" 
-                value={customStartDate} 
+              <input
+                type="date"
+                className="filter-select"
+                value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
                 style={{ padding: "4px 8px", height: "35px" }}
               />
               <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>to</span>
-              <input 
-                type="date" 
-                className="filter-select" 
-                value={customEndDate} 
+              <input
+                type="date"
+                className="filter-select"
+                value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
                 style={{ padding: "4px 8px", height: "35px" }}
               />
@@ -1814,70 +1836,70 @@ const Files = () => {
             <option value="size_asc">💾 Size (Small)</option>
           </select>
 
-                    {!isMobile && (
-                      <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
-                        <button 
-                          className={`filter-select select-mode-btn ${isSelectMode ? "active" : ""}`}
-                          onClick={() => {
-                            setIsSelectMode(!isSelectMode);
-                            if (isSelectMode) setSelectedFileIds([]);
-                          }}
-                          style={{
-                            padding: "6px 16px",
-                            background: isSelectMode ? "rgba(99, 102, 241, 0.2)" : "rgba(255, 255, 255, 0.05)",
-                            border: isSelectMode ? "1px solid rgba(99, 102, 241, 0.4)" : "1px solid rgba(255, 255, 255, 0.08)",
-                            borderRadius: "var(--radius-md)",
-                            color: isSelectMode ? "#a5b4fc" : "var(--text-secondary)",
-                            fontSize: "12.5px",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            height: "35px",
-                            transition: "all 0.15s ease"
-                          }}
-                        >
-                          {isSelectMode ? "Cancel" : "Multi-Select"}
-                        </button>
+          {!isMobile && (
+            <div style={{ marginLeft: "auto", display: "flex", gap: "8px" }}>
+              <button
+                className={`filter-select select-mode-btn ${isSelectMode ? "active" : ""}`}
+                onClick={() => {
+                  setIsSelectMode(!isSelectMode);
+                  if (isSelectMode) setSelectedFileIds([]);
+                }}
+                style={{
+                  padding: "6px 16px",
+                  background: isSelectMode ? "rgba(99, 102, 241, 0.2)" : "rgba(255, 255, 255, 0.05)",
+                  border: isSelectMode ? "1px solid rgba(99, 102, 241, 0.4)" : "1px solid rgba(255, 255, 255, 0.08)",
+                  borderRadius: "var(--radius-md)",
+                  color: isSelectMode ? "#a5b4fc" : "var(--text-secondary)",
+                  fontSize: "12.5px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  height: "35px",
+                  transition: "all 0.15s ease"
+                }}
+              >
+                {isSelectMode ? "Cancel" : "Multi-Select"}
+              </button>
 
-                        <button 
-                          className="reset-filters-btn" 
-                          onClick={handleResetFilters}
-                          style={{
-                            padding: "6px 16px",
-                            background: "rgba(99, 102, 241, 0.1)",
-                            border: "1px solid rgba(99, 102, 241, 0.2)",
-                            borderRadius: "var(--radius-md)",
-                            color: "#a5b4fc",
-                            fontSize: "12.5px",
-                            fontWeight: "600",
-                            cursor: "pointer",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            height: "35px",
-                            transition: "all 0.15s ease"
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = "rgba(99, 102, 241, 0.2)";
-                            e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.35)";
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = "rgba(99, 102, 241, 0.1)";
-                            e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.2)";
-                          }}
-                        >
-                          🔄 Reset
-                        </button>
-                      </div>
-                    )}
+              <button
+                className="reset-filters-btn"
+                onClick={handleResetFilters}
+                style={{
+                  padding: "6px 16px",
+                  background: "rgba(99, 102, 241, 0.1)",
+                  border: "1px solid rgba(99, 102, 241, 0.2)",
+                  borderRadius: "var(--radius-md)",
+                  color: "#a5b4fc",
+                  fontSize: "12.5px",
+                  fontWeight: "600",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  height: "35px",
+                  transition: "all 0.15s ease"
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(99, 102, 241, 0.2)";
+                  e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.35)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(99, 102, 241, 0.1)";
+                  e.currentTarget.style.borderColor = "rgba(99, 102, 241, 0.2)";
+                }}
+              >
+                🔄 Reset
+              </button>
+            </div>
+          )}
 
 
         </div>
 
         {/* MOBILE SIDEBAR TOGGLE BUTTON */}
-        <button 
+        <button
           className="mobile-sidebar-toggle-btn"
           onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
         >
@@ -1891,8 +1913,8 @@ const Files = () => {
             <div className="fm-folders-section-vertical">
               <div className="section-header">
                 <h3>Accounts <span className="item-count">{accounts.length}</span></h3>
-                <button 
-                  className="show-all-btn" 
+                <button
+                  className="show-all-btn"
                   onClick={() => {
                     setSelectedAccounts([]);
                     setExpandedAccountId(null);
@@ -1902,43 +1924,43 @@ const Files = () => {
                   All Files
                 </button>
               </div>
-              
-                            </div>
 
-              {/* FOLDERS VIEW MODE TOGGLE */}
-              <div className="folders-mode-toggle-bar">
-                <button 
-                  className={`toggle-mode-btn ${foldersViewMode === 'classic' ? 'active' : ''}`}
-                  onClick={() => setFoldersViewMode('classic')}
-                >
-                  Classic Tree
-                </button>
-                <button 
-                  className={`toggle-mode-btn ${foldersViewMode === 'hover' ? 'active' : ''}`}
-                  onClick={() => setFoldersViewMode('hover')}
-                >
-                  Hover Explore
-                </button>
-              </div>
+            </div>
 
-              {foldersViewMode === "classic" ? (
-                <div className="folders-sidebar-list">
+            {/* FOLDERS VIEW MODE TOGGLE */}
+            <div className="folders-mode-toggle-bar">
+              <button
+                className={`toggle-mode-btn ${foldersViewMode === 'classic' ? 'active' : ''}`}
+                onClick={() => setFoldersViewMode('classic')}
+              >
+                Classic Tree
+              </button>
+              <button
+                className={`toggle-mode-btn ${foldersViewMode === 'hover' ? 'active' : ''}`}
+                onClick={() => setFoldersViewMode('hover')}
+              >
+                Hover Explore
+              </button>
+            </div>
+
+            {foldersViewMode === "classic" ? (
+              <div className="folders-sidebar-list">
                 {accounts.map(acc => {
                   const isExpanded = expandedAccountIds.includes(String(acc._id)) || expandedAccountIds.includes(acc._id);
-                                    const isAccountSelected = selectedAccounts.includes(acc._id);
+                  const isAccountSelected = selectedAccounts.includes(acc._id);
 
-                                    const accountFolders = foldersByAccount[acc._id] || [];
-                                                       const providerName = acc.provider === 'google' ? 'Google Drive' : acc.provider === 'dropbox' ? 'Dropbox' : acc.provider === 's3' ? 'Amazon S3' : acc.provider === 'box' ? 'Box' : 'OneDrive';
+                  const accountFolders = foldersByAccount[acc._id] || [];
+                  const providerName = acc.provider === 'google' ? 'Google Drive' : acc.provider === 'dropbox' ? 'Dropbox' : acc.provider === 's3' ? 'Amazon S3' : acc.provider === 'box' ? 'Box' : 'OneDrive';
 
-                  
+
                   return (
 
                     <div key={acc._id} className="sidebar-account-group">
-                                            <div 
+                      <div
                         className={`folder-list-item account-row ${isAccountSelected ? "active" : ""}`}
                         onClick={() => handleAccountClick(acc._id)}
                       >
-                        <div 
+                        <div
                           className={`custom-account-checkbox ${isAccountSelected ? "checked" : ""}`}
                           onClick={(e) => toggleAccountCheckbox(e, acc._id)}
                           title={isAccountSelected ? "Uncheck account filter" : "Check to multi-select account"}
@@ -1956,7 +1978,7 @@ const Files = () => {
                           {isExpanded ? "▲" : "▼"}
                         </span>
                       </div>
-                      
+
                       {isExpanded && (
                         <div className="nested-folders-list" style={{ paddingLeft: "24px", marginTop: "4px", display: "flex", flexDirection: "column", gap: "4px" }}>
                           {foldersLoading && !foldersByAccount[acc._id] && (
@@ -1982,7 +2004,7 @@ const Files = () => {
                       )}
                     </div>
                   );
-                                })}
+                })}
               </div>
 
             ) : (
@@ -1996,416 +2018,408 @@ const Files = () => {
           <main className="fm-right-pane">
             {/* FILES GRID OR TABLE */}
             <div className="fm-files-section">
-          <div className="section-header">
-            <h3>Files <span className="item-count">{filteredFiles.length} items</span></h3>
-            {isMobile && (
-              <div className="mobile-section-header-actions">
-                <button 
-                  className={`mobile-header-btn select-btn ${isSelectMode ? "active" : ""}`}
-                  onClick={() => {
-                    setIsSelectMode(!isSelectMode);
-                    if (isSelectMode) setSelectedFileIds([]);
-                  }}
-                >
-                  {isSelectMode ? "Cancel" : "Multi-Select"}
-                </button>
-                <button 
-                  className="mobile-header-btn reset-btn"
-                  onClick={handleResetFilters}
-                >
-                  🔄 Reset
-                </button>
+              <div className="section-header">
+                <h3>Files <span className="item-count">{filteredFiles.length} items</span></h3>
+                {isMobile && (
+                  <div className="mobile-section-header-actions">
+                    <button
+                      className={`mobile-header-btn select-btn ${isSelectMode ? "active" : ""}`}
+                      onClick={() => {
+                        setIsSelectMode(!isSelectMode);
+                        if (isSelectMode) setSelectedFileIds([]);
+                      }}
+                    >
+                      {isSelectMode ? "Cancel" : "Multi-Select"}
+                    </button>
+                    <button
+                      className="mobile-header-btn reset-btn"
+                      onClick={handleResetFilters}
+                    >
+                      🔄 Reset
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {loading ? (
-            <div className="fm-table-container">
-              <table className="fm-files-table">
-                                <thead>
-                  <tr>
-                    <th className="col-name">File Name</th>
-                    <th className="col-account">Provider</th>
-                    <th className="col-modified">Last Modified</th>
-                    <th className="col-size">File Size</th>
-                    <th className="col-actions"></th>
-                  </tr>
-                </thead>
+              {loading ? (
+                <div className="fm-table-container">
+                  <table className="fm-files-table">
+                    <thead>
+                      <tr>
+                        <th className="col-name">File Name</th>
+                        <th className="col-account">Provider</th>
+                        <th className="col-modified">Last Modified</th>
+                        <th className="col-size">File Size</th>
+                        <th className="col-actions"></th>
+                      </tr>
+                    </thead>
 
-                <tbody>
-                  {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonRow key={i} />)}
-                </tbody>
-              </table>
-            </div>
-          ) : filteredFiles.length === 0 ? (
-            <div className="empty-state">No files found matching criteria.</div>
-          ) : viewMode === "list" ? (
-            /* TABLE VIEW */
-            isMobile ? (
-              /* NATIVE MOBILE LIST VIEW */
-              <>
-                <div className="mobile-native-file-list" onScroll={handleScroll}>
-                  {filteredFiles.slice(0, visibleCount).map((file) => {
-                    const fileTypeKey = getFileTypeKey(file);
-                    const config = fileTypeConfigs[fileTypeKey];
-                    const virtualPath = getFileVirtualPath(file);
-                    const isSelected = selectedFileIds.includes(file.id);
-                    const providerLabel = file.provider === 'google' ? 'Google Drive' : file.provider === 'dropbox' ? 'Dropbox' : file.provider === 's3' ? 'Amazon S3' : file.provider === 'box' ? 'Box' : 'OneDrive';
-                    
-                    const fileDateStr = file.createdAt || file.updatedAt || file.modifiedTime;
-                    const formattedDateShort = formatDateShort(fileDateStr);
-                    const accountDisplay = file.accountEmail || providerLabel;
-                    const formattedSize = file.size ? formatSize(file.size) : "-";
+                    <tbody>
+                      {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonRow key={i} />)}
+                    </tbody>
+                  </table>
+                </div>
+              ) : filteredFiles.length === 0 ? (
+                <div className="empty-state">No files found matching criteria.</div>
+              ) : viewMode === "list" ? (
+                /* TABLE VIEW */
+                isMobile ? (
+                  /* NATIVE MOBILE LIST VIEW */
+                  <>
+                    <div className="mobile-native-file-list" onScroll={handleScroll}>
+                      {filteredFiles.slice(0, visibleCount).map((file) => {
+                        const fileTypeKey = getFileTypeKey(file);
+                        const config = fileTypeConfigs[fileTypeKey];
+                        const virtualPath = getFileVirtualPath(file);
+                        const isSelected = selectedFileIds.includes(file.id);
+                        const providerLabel = file.provider === 'google' ? 'Google Drive' : file.provider === 'dropbox' ? 'Dropbox' : file.provider === 's3' ? 'Amazon S3' : file.provider === 'box' ? 'Box' : 'OneDrive';
 
-                    return (
-                      <div 
-                        key={file.id} 
-                        className={`native-mobile-file-row ${isSelected ? "selected" : ""}`}
-                        onClick={() => isSelectMode ? toggleSelectFile(file.id) : setSelectedMobileFile(file)}
-                      >
-                        {isSelectMode && (
-                          <div 
-                            className={`custom-card-checkbox ${isSelected ? "checked" : ""}`}
-                            onClick={(e) => { e.stopPropagation(); toggleSelectFile(file.id); }}
-                          />
-                        )}
-                        
-                        <div className="native-file-icon-box" style={{ background: config.bg }}>
-                          {config.icon}
-                        </div>
+                        const fileDateStr = file.createdAt || file.updatedAt || file.modifiedTime;
+                        const formattedDateShort = formatDateShort(fileDateStr);
+                        const accountDisplay = file.accountEmail || providerLabel;
+                        const formattedSize = file.size ? formatSize(file.size) : "-";
 
-                        <div className="native-file-info">
-                          <span className="native-file-name" title={file.name}>
-                            {file.name}
-                          </span>
-                          <span className="native-file-subtext">
-                            {providerIcons[file.provider] && (
-                              <img 
-                                src={providerIcons[file.provider]} 
-                                alt={file.provider} 
-                                className="mobile-subtext-provider-logo" 
+                        return (
+                          <div
+                            key={file.id}
+                            className={`native-mobile-file-row ${isSelected ? "selected" : ""}`}
+                            onClick={() => isSelectMode ? toggleSelectFile(file.id) : setSelectedMobileFile(file)}
+                          >
+                            {isSelectMode && (
+                              <div
+                                className={`custom-card-checkbox ${isSelected ? "checked" : ""}`}
+                                onClick={(e) => { e.stopPropagation(); toggleSelectFile(file.id); }}
                               />
                             )}
-                            <span className="subtext-account">{accountDisplay}</span>
-                            {formattedDateShort && <span className="subtext-date"> • {formattedDateShort}</span>}
-                            <span className="subtext-size"> • {formattedSize}</span>
-                          </span>
-                        </div>
 
-                        {!isSelectMode && (
-                          <button 
-                            className="native-more-btn" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedMobileFile(file);
-                            }}
-                            title="File Options"
-                          >
-                            ⋮
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                  {showSkeletons && [1, 2, 3].map((i) => (
-                    <div key={`skeleton-${i}`} className="native-mobile-file-row skeleton" style={{ opacity: 0.2 }}>
-                      <div className="native-file-icon-box" style={{ background: "rgba(255,255,255,0.1)" }} />
-                      <div className="native-file-info">
-                        <div style={{ height: "14px", width: "60%", background: "rgba(255,255,255,0.2)", borderRadius: "4px" }} />
-                        <div style={{ height: "10px", width: "40%", background: "rgba(255,255,255,0.1)", borderRadius: "4px", marginTop: "4px" }} />
-                      </div>
-                    </div>
-                  ))}
+                            <div className="native-file-icon-box" style={{ background: config.bg }}>
+                              {config.icon}
+                            </div>
 
-                  {/* BOTTOM LOADING SPINNER ANIMATION */}
-                  {!hasNonRootFolders && (localLoadingMore || loadingMoreCloud) && (
-                    <div className="mobile-bottom-loader">
-                      <div className="mobile-spinner"></div>
-                      <span>Loading more files...</span>
-                    </div>
-                  )}
-                </div>
+                            <div className="native-file-info">
+                              <span className="native-file-name" title={file.name}>
+                                {file.name}
+                              </span>
+                              <span className="native-file-subtext">
+                                {providerIcons[file.provider] && (
+                                  <img
+                                    src={providerIcons[file.provider]}
+                                    alt={file.provider}
+                                    className="mobile-subtext-provider-logo"
+                                  />
+                                )}
+                                <span className="subtext-account">{accountDisplay}</span>
+                                {formattedDateShort && <span className="subtext-date"> • {formattedDateShort}</span>}
+                                <span className="subtext-size"> • {formattedSize}</span>
+                              </span>
+                            </div>
 
-                {/* NATIVE MOBILE BOTTOM SHEET DRAWER FOR ACTIONS */}
-                {selectedMobileFile && (() => {
-                  const selDateStr = selectedMobileFile.createdAt || selectedMobileFile.updatedAt || selectedMobileFile.modifiedTime;
-                  const selFormattedDateShort = formatDateShort(selDateStr);
-                  const selProviderLabel = selectedMobileFile.provider === 'google' ? 'Google Drive' : selectedMobileFile.provider === 'dropbox' ? 'Dropbox' : selectedMobileFile.provider === 's3' ? 'Amazon S3' : selectedMobileFile.provider === 'box' ? 'Box' : 'OneDrive';
-                  const selAccountDisplay = selectedMobileFile.accountEmail || selProviderLabel;
-                  const selFormattedSize = selectedMobileFile.size ? formatSize(selectedMobileFile.size) : "-";
-
-                  return (
-                    <div className="mobile-sheet-backdrop" onClick={() => setSelectedMobileFile(null)}>
-                      <div className="mobile-sheet-content" onClick={(e) => e.stopPropagation()}>
-                        <div className="mobile-sheet-drag-handle"></div>
-                        
-                        <div className="mobile-sheet-header">
-                          <span className="sheet-icon-badge" style={{ background: fileTypeConfigs[getFileTypeKey(selectedMobileFile)].bg }}>
-                            {fileTypeConfigs[getFileTypeKey(selectedMobileFile)].icon}
-                          </span>
-                          <div className="sheet-file-details">
-                            <h4 className="sheet-file-title">{selectedMobileFile.name}</h4>
-                            <p className="sheet-file-sub">
-                              {providerIcons[selectedMobileFile.provider] && (
-                                <img 
-                                  src={providerIcons[selectedMobileFile.provider]} 
-                                  alt={selectedMobileFile.provider} 
-                                  className="mobile-subtext-provider-logo" 
-                                />
-                              )}
-                              <span>{selAccountDisplay}</span>
-                              {selFormattedDateShort && <span> • {selFormattedDateShort}</span>}
-                              <span> • {selFormattedSize}</span>
-                            </p>
+                            {!isSelectMode && (
+                              <button
+                                className="native-more-btn"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedMobileFile(file);
+                                }}
+                                title="File Options"
+                              >
+                                ⋮
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                      {showSkeletons && [1, 2, 3].map((i) => (
+                        <div key={`skeleton-${i}`} className="native-mobile-file-row skeleton" style={{ opacity: 0.2 }}>
+                          <div className="native-file-icon-box" style={{ background: "rgba(255,255,255,0.1)" }} />
+                          <div className="native-file-info">
+                            <div style={{ height: "14px", width: "60%", background: "rgba(255,255,255,0.2)", borderRadius: "4px" }} />
+                            <div style={{ height: "10px", width: "40%", background: "rgba(255,255,255,0.1)", borderRadius: "4px", marginTop: "4px" }} />
                           </div>
                         </div>
+                      ))}
 
-                        <div className="mobile-sheet-actions">
-                        <a 
-                          href={getFileOpenUrl(selectedMobileFile)} 
-                          target="_blank" 
-                          rel="noreferrer" 
-                          className="sheet-btn primary"
-                          onClick={() => setSelectedMobileFile(null)}
-                        >
-                          <span className="btn-icon">👁️</span> Open File
-                        </a>
-                        <button 
-                          className="sheet-btn"
-                          onClick={() => {
-                            handleSingleDownload(selectedMobileFile);
-                            setSelectedMobileFile(null);
-                          }}
-                        >
-                          <span className="btn-icon">📥</span> Download File
-                        </button>
-                        <button 
-                          className="sheet-btn"
-                          onClick={() => {
-                            handleShareFile(selectedMobileFile);
-                            setSelectedMobileFile(null);
-                          }}
-                        >
-                          <span className="btn-icon">🔗</span> Copy Share Link
-                        </button>
-                        <button 
-                          className="sheet-btn cancel"
-                          onClick={() => setSelectedMobileFile(null)}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
-            </>
-            ) : (
-              /* DESKTOP TABLE VIEW */
-              <div className="fm-table-container" onScroll={handleScroll}>
-                <table className="fm-files-table">
-                  <thead>
-                    <tr>
-                      <th className="col-index" style={{ width: "45px", textAlign: "center", opacity: 0.7 }}>#</th>
-                      {isSelectMode && (
-                        <th className="checkbox-col" onClick={toggleSelectAllFiles} style={{ cursor: "pointer" }}>
-                          <div 
-                            className={`custom-card-checkbox ${
-                              filteredFiles.length > 0 && filteredFiles.slice(0, visibleCount).every(f => selectedFileIds.includes(f.id)) 
-                                ? "checked" 
-                                : ""
-                            }`}
-                            style={{ margin: "0 auto" }}
-                          />
-                        </th>
+                      {/* BOTTOM LOADING SPINNER ANIMATION */}
+                      {!hasNonRootFolders && (localLoadingMore || loadingMoreCloud) && (
+                        <div className="mobile-bottom-loader">
+                          <div className="mobile-spinner"></div>
+                          <span>Loading more files...</span>
+                        </div>
                       )}
-                      <th className="col-name">Name</th>
-                      <th className="col-account">Account</th>
-                      <th className="col-size">Size</th>
-                      <th className="col-modified">Modified</th>
-                      <th className="col-actions">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredFiles.slice(0, visibleCount).map((file, index) => {
+                    </div>
+
+                    {/* NATIVE MOBILE BOTTOM SHEET DRAWER FOR ACTIONS */}
+                    {selectedMobileFile && (() => {
+                      const selDateStr = selectedMobileFile.createdAt || selectedMobileFile.updatedAt || selectedMobileFile.modifiedTime;
+                      const selFormattedDateShort = formatDateShort(selDateStr);
+                      const selProviderLabel = selectedMobileFile.provider === 'google' ? 'Google Drive' : selectedMobileFile.provider === 'dropbox' ? 'Dropbox' : selectedMobileFile.provider === 's3' ? 'Amazon S3' : selectedMobileFile.provider === 'box' ? 'Box' : 'OneDrive';
+                      const selAccountDisplay = selectedMobileFile.accountEmail || selProviderLabel;
+                      const selFormattedSize = selectedMobileFile.size ? formatSize(selectedMobileFile.size) : "-";
+
+                      return (
+                        <div className="mobile-sheet-backdrop" onClick={() => setSelectedMobileFile(null)}>
+                          <div className="mobile-sheet-content" onClick={(e) => e.stopPropagation()}>
+                            <div className="mobile-sheet-drag-handle"></div>
+
+                            <div className="mobile-sheet-header">
+                              <span className="sheet-icon-badge" style={{ background: fileTypeConfigs[getFileTypeKey(selectedMobileFile)].bg }}>
+                                {fileTypeConfigs[getFileTypeKey(selectedMobileFile)].icon}
+                              </span>
+                              <div className="sheet-file-details">
+                                <h4 className="sheet-file-title">{selectedMobileFile.name}</h4>
+                                <p className="sheet-file-sub">
+                                  {providerIcons[selectedMobileFile.provider] && (
+                                    <img
+                                      src={providerIcons[selectedMobileFile.provider]}
+                                      alt={selectedMobileFile.provider}
+                                      className="mobile-subtext-provider-logo"
+                                    />
+                                  )}
+                                  <span>{selAccountDisplay}</span>
+                                  {selFormattedDateShort && <span> • {selFormattedDateShort}</span>}
+                                  <span> • {selFormattedSize}</span>
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="mobile-sheet-actions">
+                              <a
+                                href={getFileOpenUrl(selectedMobileFile)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="sheet-btn primary"
+                                onClick={() => setSelectedMobileFile(null)}
+                              >
+                                <span className="btn-icon">👁️</span> Open File
+                              </a>
+                              <button
+                                className="sheet-btn"
+                                onClick={() => {
+                                  handleSingleDownload(selectedMobileFile);
+                                  setSelectedMobileFile(null);
+                                }}
+                              >
+                                <span className="btn-icon">📥</span> Download File
+                              </button>
+                              <button
+                                className="sheet-btn"
+                                onClick={() => {
+                                  handleShareFile(selectedMobileFile);
+                                  setSelectedMobileFile(null);
+                                }}
+                              >
+                                <span className="btn-icon">🔗</span> Copy Share Link
+                              </button>
+                              <button
+                                className="sheet-btn cancel"
+                                onClick={() => setSelectedMobileFile(null)}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </>
+                ) : (
+                  /* DESKTOP TABLE VIEW */
+                  <div className="fm-table-container" onScroll={handleScroll}>
+                    <table className="fm-files-table">
+                      <thead>
+                        <tr>
+                          <th className="col-index" style={{ width: "45px", textAlign: "center", opacity: 0.7 }}>#</th>
+                          {isSelectMode && (
+                            <th className="checkbox-col" onClick={toggleSelectAllFiles} style={{ cursor: "pointer" }}>
+                              <div
+                                className={`custom-card-checkbox ${filteredFiles.length > 0 && filteredFiles.slice(0, visibleCount).every(f => selectedFileIds.includes(f.id))
+                                  ? "checked"
+                                  : ""
+                                  }`}
+                                style={{ margin: "0 auto" }}
+                              />
+                            </th>
+                          )}
+                          <th className="col-name">Name</th>
+                          <th className="col-account">Account</th>
+                          <th className="col-size">Size</th>
+                          <th className="col-modified">Modified</th>
+                          <th className="col-actions">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredFiles.slice(0, visibleCount).map((file, index) => {
+                          const fileTypeKey = getFileTypeKey(file);
+                          const config = fileTypeConfigs[fileTypeKey];
+                          const virtualPath = getFileVirtualPath(file);
+                          const isSelected = selectedFileIds.includes(file.id);
+
+                          return (
+                            <tr
+                              key={file.id}
+                              className={isSelected ? "selected-row" : ""}
+                              onClick={() => isSelectMode && toggleSelectFile(file.id)}
+                              style={{ cursor: isSelectMode ? "pointer" : "default" }}
+                            >
+                              <td style={{ textAlign: "center", fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>
+                                {index + 1}
+                              </td>
+                              {isSelectMode && (
+                                <td className="checkbox-cell" onClick={(e) => { e.stopPropagation(); toggleSelectFile(file.id); }}>
+                                  <div
+                                    className={`custom-card-checkbox ${isSelected ? "checked" : ""}`}
+                                    style={{ margin: "0 auto" }}
+                                  />
+                                </td>
+                              )}
+                              <td>
+                                <div className="file-name-cell-custom">
+                                  <span className="file-type-icon-badge" style={{ background: config.bg }}>
+                                    {config.icon}
+                                  </span>
+                                  <div className="file-meta">
+                                    <span className="file-name-title" title={file.name}>{file.name}</span>
+                                    <span className="file-virtual-path">{virtualPath}</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="file-account-cell">
+                                <div className="file-account-badge">
+                                  <img src={providerIcons[file.provider]} alt={file.provider} className="provider-logo-table" />
+                                  <span>{file.accountEmail || (file.provider === 'google' ? 'Google Drive' : file.provider === 'dropbox' ? 'Dropbox' : file.provider === 's3' ? 'Amazon S3' : file.provider === 'box' ? 'Box' : 'OneDrive')}</span>
+                                </div>
+                              </td>
+                              <td className="file-size-cell">{file.size ? formatSize(file.size) : "-"}</td>
+                              <td className="file-modified-cell">
+                                {file.createdAt ? new Date(file.createdAt).toLocaleDateString("en-GB", {
+                                  year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                                }) : "-"}
+                              </td>
+                              <td className="file-actions-cell" onClick={(e) => e.stopPropagation()}>
+                                <a
+                                  href={getFileOpenUrl(file)}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="action-btn"
+                                  style={{
+                                    marginRight: "8px",
+                                    padding: "6px 12px",
+                                    background: "rgba(255, 255, 255, 0.06)",
+                                    border: "1px solid rgba(255, 255, 255, 0.1)",
+                                    borderRadius: "var(--radius-md)",
+                                    color: "var(--text-primary)",
+                                    fontSize: "12.5px",
+                                    fontWeight: "500",
+                                    textDecoration: "none",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    height: "30px",
+                                    transition: "all 0.15s ease"
+                                  }}
+                                  title={(file.name || "").toLowerCase().endsWith(".docx") || (file.name || "").toLowerCase().endsWith(".doc") ? "Open with Microsoft Word" : "Open File"}
+                                >
+                                  {(file.name || "").toLowerCase().endsWith(".docx") || (file.name || "").toLowerCase().endsWith(".doc") ? "Open" : "Open"}
+                                </a>
+                                <button className="action-icon-btn download" title="Download" onClick={() => handleSingleDownload(file)}>⬇️</button>
+                                <button className="action-icon-btn share" title="Share File" onClick={() => handleShareFile(file)}>🔗</button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {showSkeletons && [1, 2, 3].map((i) => <SkeletonRow key={`loading-${i}`} />)}
+                      </tbody>
+                    </table>
+                  </div>
+                )
+              ) : (
+                /* GRID VIEW */
+                <div className="fm-grid-container" onScroll={handleScroll}>
+                  <div className="files-grid-layout">
+                    {filteredFiles.slice(0, visibleCount).map((file) => {
                       const fileTypeKey = getFileTypeKey(file);
                       const config = fileTypeConfigs[fileTypeKey];
                       const virtualPath = getFileVirtualPath(file);
                       const isSelected = selectedFileIds.includes(file.id);
-                      
+
                       return (
-                        <tr 
-                          key={file.id} 
-                          className={isSelected ? "selected-row" : ""}
+                        <div
+                          key={file.id}
+                          className={`file-grid-card ${isSelected ? "selected" : ""}`}
                           onClick={() => isSelectMode && toggleSelectFile(file.id)}
                           style={{ cursor: isSelectMode ? "pointer" : "default" }}
                         >
-                          <td style={{ textAlign: "center", fontSize: "12px", color: "var(--text-muted)", fontWeight: "600" }}>
-                            {index + 1}
-                          </td>
                           {isSelectMode && (
-                            <td className="checkbox-cell" onClick={(e) => { e.stopPropagation(); toggleSelectFile(file.id); }}>
-                              <div 
-                                className={`custom-card-checkbox ${isSelected ? "checked" : ""}`}
-                                style={{ margin: "0 auto" }}
-                              />
-                            </td>
+                            <div className="grid-card-checkbox" onClick={(e) => { e.stopPropagation(); toggleSelectFile(file.id); }}>
+                              <div className={`custom-card-checkbox ${isSelected ? "checked" : ""}`} />
+                            </div>
                           )}
-                          <td>
-                            <div className="file-name-cell-custom">
-                              <span className="file-type-icon-badge" style={{ background: config.bg }}>
-                                {config.icon}
-                              </span>
-                              <div className="file-meta">
-                                <span className="file-name-title" title={file.name}>{file.name}</span>
-                                <span className="file-virtual-path">{virtualPath}</span>
-                              </div>
+
+                          <div className="grid-card-icon-area" style={{ background: config.bg + "15" }}>
+                            {(() => {
+                              const thumbSrc = getThumbnailSrc(file);
+                              return (
+                                <>
+                                  {thumbSrc ? (
+                                    <img
+                                      src={thumbSrc}
+                                      alt={file.name}
+                                      className="grid-card-thumbnail"
+                                      referrerPolicy="no-referrer"
+                                      onError={(e) => {
+                                        e.currentTarget.style.display = "none";
+                                        const fallbackIcon = e.currentTarget.nextSibling;
+                                        if (fallbackIcon) fallbackIcon.style.display = "inline";
+                                      }}
+                                    />
+                                  ) : null}
+                                  <span
+                                    className="grid-card-icon"
+                                    style={{
+                                      color: config.bg,
+                                      display: thumbSrc ? "none" : "inline"
+                                    }}
+                                  >
+                                    {config.icon}
+                                  </span>
+                                </>
+                              );
+                            })()}
+                          </div>
+
+                          <div className="grid-card-info">
+                            <h4 title={file.name}>{file.name}</h4>
+                            <span className="grid-card-path">{virtualPath}</span>
+                            <div className="grid-card-footer">
+                              <span className="grid-card-size">{file.size ? formatSize(file.size) : "-"}</span>
+                              <img src={providerIcons[file.provider]} alt={file.provider} className="provider-logo-grid" />
                             </div>
-                          </td>
-                          <td className="file-account-cell">
-                            <div className="file-account-badge">
-                              <img src={providerIcons[file.provider]} alt={file.provider} className="provider-logo-table" />
-                              <span>{file.accountEmail || (file.provider === 'google' ? 'Google Drive' : file.provider === 'dropbox' ? 'Dropbox' : file.provider === 's3' ? 'Amazon S3' : file.provider === 'box' ? 'Box' : 'OneDrive')}</span>
-                            </div>
-                          </td>
-                          <td className="file-size-cell">{file.size ? formatSize(file.size) : "-"}</td>
-                          <td className="file-modified-cell">
-                            {file.createdAt ? new Date(file.createdAt).toLocaleDateString("en-GB", {
-                              year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                            }) : "-"}
-                          </td>
-                          <td className="file-actions-cell" onClick={(e) => e.stopPropagation()}>
-                            <a 
-                              href={getFileOpenUrl(file)} 
-                              target="_blank" 
-                              rel="noreferrer" 
-                              className="action-btn" 
-                              style={{ 
-                                marginRight: "8px",
-                                padding: "6px 12px",
-                                background: "rgba(255, 255, 255, 0.06)",
-                                border: "1px solid rgba(255, 255, 255, 0.1)",
-                                borderRadius: "var(--radius-md)",
-                                color: "var(--text-primary)",
-                                fontSize: "12.5px",
-                                fontWeight: "500",
-                                textDecoration: "none",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                height: "30px",
-                                transition: "all 0.15s ease"
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = "rgba(255, 255, 255, 0.12)";
-                                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.2)";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = "rgba(255, 255, 255, 0.06)";
-                                e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
-                              }}
-                            >
-                              Open
-                            </a>
-                            <button className="action-icon-btn download" title="Download" onClick={() => handleSingleDownload(file)}>⬇️</button>
-                            <button className="action-icon-btn share" title="Share File" onClick={() => handleShareFile(file)}>🔗</button>
-                          </td>
-                        </tr>
+                          </div>
+                        </div>
                       );
                     })}
-                    {showSkeletons && [1, 2, 3].map((i) => <SkeletonRow key={`loading-${i}`} />)}
-                  </tbody>
-                </table>
-              </div>
-            )
-          ) : (
-            /* GRID VIEW */
-            <div className="fm-grid-container" onScroll={handleScroll}>
-              <div className="files-grid-layout">
-                {filteredFiles.slice(0, visibleCount).map((file) => {
-                  const fileTypeKey = getFileTypeKey(file);
-                  const config = fileTypeConfigs[fileTypeKey];
-                  const virtualPath = getFileVirtualPath(file);
-                  const isSelected = selectedFileIds.includes(file.id);
-                  
-                  return (
-                    <div 
-                      key={file.id}
-                      className={`file-grid-card ${isSelected ? "selected" : ""}`}
-                      onClick={() => isSelectMode && toggleSelectFile(file.id)}
-                      style={{ cursor: isSelectMode ? "pointer" : "default" }}
-                    >
-                      {isSelectMode && (
-                        <div className="grid-card-checkbox" onClick={(e) => { e.stopPropagation(); toggleSelectFile(file.id); }}>
-                          <div className={`custom-card-checkbox ${isSelected ? "checked" : ""}`} />
+                    {showSkeletons && (
+                      <>
+                        {[1, 2, 3, 4].map((i) => (
+                          <div key={`grid-skeleton-${i}`} className="skeleton-card">
+                            <div className="skeleton-card-icon" />
+                            <div className="skeleton-card-text" />
+                            <div className="skeleton-card-text short" />
+                          </div>
+                        ))}
+                        <div className="grid-loading-more">
+                          <div className="grid-loading-spinner"></div>
+                          <span>Loading more files...</span>
                         </div>
-                      )}
-
-                      <div className="grid-card-icon-area" style={{ background: config.bg + "15" }}>
-                        {(() => {
-                          const thumbSrc = getThumbnailSrc(file);
-                          return (
-                            <>
-                              {thumbSrc ? (
-                                <img 
-                                  src={thumbSrc} 
-                                  alt={file.name} 
-                                  className="grid-card-thumbnail"
-                                  referrerPolicy="no-referrer"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = "none";
-                                    const fallbackIcon = e.currentTarget.nextSibling;
-                                    if (fallbackIcon) fallbackIcon.style.display = "inline";
-                                  }}
-                                />
-                              ) : null}
-                              <span 
-                                className="grid-card-icon" 
-                                style={{ 
-                                  color: config.bg,
-                                  display: thumbSrc ? "none" : "inline" 
-                                }}
-                              >
-                                {config.icon}
-                              </span>
-                            </>
-                          );
-                        })()}
-                      </div>
-
-                      <div className="grid-card-info">
-                        <h4 title={file.name}>{file.name}</h4>
-                        <span className="grid-card-path">{virtualPath}</span>
-                        <div className="grid-card-footer">
-                          <span className="grid-card-size">{file.size ? formatSize(file.size) : "-"}</span>
-                          <img src={providerIcons[file.provider]} alt={file.provider} className="provider-logo-grid" />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                                                                {showSkeletons && (
-                  <>
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={`grid-skeleton-${i}`} className="skeleton-card">
-                        <div className="skeleton-card-icon" />
-                        <div className="skeleton-card-text" />
-                        <div className="skeleton-card-text short" />
-                      </div>
-                    ))}
-                    <div className="grid-loading-more">
-                      <div className="grid-loading-spinner"></div>
-                      <span>Loading more files...</span>
-                    </div>
-                  </>
-                )}
+                      </>
+                    )}
 
 
-              </div>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
+          </main>
         </div>
-      </main>
-    </div>
 
 
         {/* FLOATING ACTION BAR FOR BULK OPERATIONS */}
@@ -2421,7 +2435,7 @@ const Files = () => {
               <button className="fab-action-btn download" onClick={handleBulkDownload}>
                 📥 Download
               </button>
-                            <button className="fab-action-btn share" onClick={handleBulkShare}>
+              <button className="fab-action-btn share" onClick={handleBulkShare}>
                 🔗 Share
               </button>
 

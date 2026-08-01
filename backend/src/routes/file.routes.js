@@ -52,22 +52,77 @@ router.post("/clear-cache", authMiddleware, async (req, res) => {
   }
 });
 
-router.delete("/:id", authMiddleware, async (req, res) => {
+/* ==========================================
+   🗑️ POST /api/files/delete & DELETE /api/files/delete & DELETE /api/files/:id
+========================================== */
+router.post("/delete", authMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
-    const { provider, accountId, fileName } = req.query;
+    const { id, provider, accountId, fileName } = req.body;
+    if (!id || !provider || !accountId) {
+      return res.status(400).json({ error: "Missing required parameters: id, provider, accountId" });
+    }
+
     await deleteFile(req.user.id, { id, provider, accountId });
 
-    // ✅ Log real file_deleted event
     await logActivity(req.user.id, "file_deleted",
-      `Deleted ${fileName || "a file"} from ${provider === "google" ? "Google Drive" : "Dropbox"}`,
+      `Deleted "${fileName || "file"}" from ${provider.toUpperCase()}`,
       { provider, fileName }
     );
 
     res.json({ success: true, message: "File deleted successfully" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Failed to delete file" });
+    console.error("❌ Delete file error:", err.message);
+    res.status(500).json({ error: err.message || "Failed to delete file" });
+  }
+});
+
+router.delete("/delete", authMiddleware, async (req, res) => {
+  try {
+    const id = req.query.id || req.body?.id;
+    const provider = req.query.provider || req.body?.provider;
+    const accountId = req.query.accountId || req.body?.accountId;
+    const fileName = req.query.fileName || req.body?.fileName;
+
+    if (!id || !provider || !accountId) {
+      return res.status(400).json({ error: "Missing required parameters: id, provider, accountId" });
+    }
+
+    await deleteFile(req.user.id, { id, provider, accountId });
+
+    await logActivity(req.user.id, "file_deleted",
+      `Deleted "${fileName || "file"}" from ${provider.toUpperCase()}`,
+      { provider, fileName }
+    );
+
+    res.json({ success: true, message: "File deleted successfully" });
+  } catch (err) {
+    console.error("❌ Delete file error:", err.message);
+    res.status(500).json({ error: err.message || "Failed to delete file" });
+  }
+});
+
+router.delete("/:id", authMiddleware, async (req, res) => {
+  try {
+    const id = req.params.id || req.query.id;
+    const provider = req.query.provider;
+    const accountId = req.query.accountId;
+    const fileName = req.query.fileName;
+
+    if (!id || !provider || !accountId) {
+      return res.status(400).json({ error: "Missing required parameters: id, provider, accountId" });
+    }
+
+    await deleteFile(req.user.id, { id, provider, accountId });
+
+    await logActivity(req.user.id, "file_deleted",
+      `Deleted "${fileName || "file"}" from ${provider.toUpperCase()}`,
+      { provider, fileName }
+    );
+
+    res.json({ success: true, message: "File deleted successfully" });
+  } catch (err) {
+    console.error("❌ Delete file error:", err.message);
+    res.status(500).json({ error: err.message || "Failed to delete file" });
   }
 });
 

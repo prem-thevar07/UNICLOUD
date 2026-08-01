@@ -1,4 +1,5 @@
 import express from "express";
+import mongoose from "mongoose";
 import auth from "../middleware/auth.middleware.js";
 import CloudAccount from "../models/CloudAccount.js";
 import { S3Client, ListBucketsCommand, ListObjectsV2Command, GetObjectCommand } from "@aws-sdk/client-s3";
@@ -100,9 +101,9 @@ router.post("/connect", auth, async (req, res) => {
 });
 
 /* ===============================
-   📥 GENERATE DOWNLOAD / PRE-SIGNED URL
+   📂 OPEN / GENERATE PRE-SIGNED URL (INLINE & DOWNLOAD)
 =============================== */
-router.get("/download/:id", auth, async (req, res) => {
+router.get(["/open/:id", "/download/:id"], auth, async (req, res) => {
   try {
     const accountId = req.params.id;
     const { fileId } = req.query; // fileId is the S3 object Key!
@@ -111,10 +112,22 @@ router.get("/download/:id", auth, async (req, res) => {
       return res.status(400).json({ message: "File ID (Key) is required" });
     }
 
-    const account = await CloudAccount.findOne({
-      _id: accountId,
-      userId: req.user.id,
-    });
+    let account = null;
+    const targetAccountId = req.query.accountId || accountId;
+    if (targetAccountId && targetAccountId !== "default" && mongoose.Types.ObjectId.isValid(targetAccountId)) {
+      account = await CloudAccount.findOne({
+        _id: targetAccountId,
+        userId: req.user.id,
+        provider: "s3",
+      });
+    }
+
+    if (!account) {
+      account = await CloudAccount.findOne({
+        userId: req.user.id,
+        provider: "s3",
+      });
+    }
 
     if (!account) {
       return res.status(404).json({ message: "Account not found" });
@@ -134,39 +147,58 @@ router.get("/download/:id", auth, async (req, res) => {
       },
     });
 
-    let targetKey = fileId;
+    let targetKey = String(fileId || "").replace(/^\/+/, "");
 
     const ext = targetKey.split(".").pop().toLowerCase();
     const mimeMap = {
+      // Images
       jpg: "image/jpeg",
       jpeg: "image/jpeg",
       png: "image/png",
       gif: "image/gif",
       webp: "image/webp",
       svg: "image/svg+xml",
+      bmp: "image/bmp",
+      ico: "image/x-icon",
+
+      // Documents / PDFs / Text
       pdf: "application/pdf",
-      txt: "text/plain",
+      txt: "text/plain; charset=utf-8",
+      json: "application/json",
+      xml: "text/xml",
+      csv: "text/csv",
+      html: "text/html",
+      css: "text/css",
+      js: "text/javascript",
+
+      // Audio & Video
       mp3: "audio/mpeg",
+      wav: "audio/wav",
+      ogg: "audio/ogg",
+      m4a: "audio/mp4",
       mp4: "video/mp4",
-      html: "text/html"
+      webm: "video/webm",
+      ogv: "video/ogg",
+      mov: "video/quicktime",
+      avi: "video/x-msvideo"
     };
-    const contentType = mimeMap[ext] || "application/octet-stream";
+    const contentType = mimeMap[ext] || "application/pdf";
 
     const rawFilename = targetKey.split("/").pop() || "download";
     // Sanitize filename for Content-Disposition so '=' and quotes do not corrupt AWS S3 presigned URL query string
     const safeFilename = rawFilename.replace(/=/g, "_").replace(/["\r\n]/g, "");
 
-    const isAjax = req.headers.authorization;
     const commandParams = {
       Bucket: bucket,
       Key: targetKey,
     };
 
-    if (isAjax) {
-      // Force download for AJAX request (download button)
+    const isDownloadRoute = req.baseUrl?.includes("download") || req.path?.includes("download") || req.originalUrl?.includes("download");
+    if (isDownloadRoute) {
+      // Force download attachment header for S3 presigned URL
       commandParams.ResponseContentDisposition = `attachment; filename="${safeFilename}"`;
     } else {
-      // Inline rendering inside browser tab (open button)
+      // Inline rendering inside browser tab for Open button preview
       commandParams.ResponseContentDisposition = "inline";
       commandParams.ResponseContentType = contentType;
     }
@@ -174,6 +206,18 @@ router.get("/download/:id", auth, async (req, res) => {
     const command = new GetObjectCommand(commandParams);
 
     const signedUrl = await getSignedUrl(client, command, { expiresIn: 3600 });
+
+    const isDocx = ext === "docx" || ext === "doc";
+
+    if (!isDownloadRoute && isDocx) {
+      // Wrap presigned S3 URL with Microsoft Office Web Viewer for docx browser preview
+      const officeViewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(signedUrl)}`;
+      if (req.headers.authorization) {
+        return res.json({ link: officeViewerUrl });
+      } else {
+        return res.redirect(officeViewerUrl);
+      }
+    }
 
     // Return secure URL in JSON if requested via Axios (for download button), 
     // otherwise redirect directly for direct browser tab opens (for open button)

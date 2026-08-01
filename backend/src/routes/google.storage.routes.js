@@ -1,5 +1,6 @@
 import express from "express";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import { google } from "googleapis";
 import CloudAccount from "../models/CloudAccount.js";
 import auth from "../middleware/auth.middleware.js";
@@ -190,8 +191,27 @@ router.post("/sync/:accountId", auth, async (req, res) => {
 
     res.json({ success: true });
   } catch (err) {
-    console.error("❌ Sync error:", err.message);
-    res.status(500).json({ message: "Sync failed" });
+    console.error("❌ Google sync error:", err.message);
+    const isInvalidGrant = err.message?.includes("invalid_grant") || err.response?.data?.error === "invalid_grant";
+
+    if (isInvalidGrant) {
+      try {
+        const account = await CloudAccount.findOne({ _id: req.params.accountId, userId: req.user.id });
+        if (account) {
+          account.status = "expired";
+          await account.save();
+        }
+      } catch (e) {
+        console.error("Failed to update account status to expired:", e.message);
+      }
+      return res.status(400).json({
+        message: "Google account session has expired or was revoked. Please reconnect your account.",
+        error: "invalid_grant",
+        status: "expired"
+      });
+    }
+
+    res.status(500).json({ message: "Sync failed", error: err.message });
   }
 });
 
@@ -329,11 +349,22 @@ router.get("/download/:accountId", auth, async (req, res) => {
       return res.status(400).json({ message: "File ID is required" });
     }
 
-    const account = await CloudAccount.findOne({
-      _id: accountId,
-      userId: req.user.id,
-      provider: "google",
-    });
+    let account = null;
+    const targetAccountId = req.query.accountId || accountId;
+    if (targetAccountId && targetAccountId !== "default" && mongoose.Types.ObjectId.isValid(targetAccountId)) {
+      account = await CloudAccount.findOne({
+        _id: targetAccountId,
+        userId: req.user.id,
+        provider: "google",
+      });
+    }
+
+    if (!account) {
+      account = await CloudAccount.findOne({
+        userId: req.user.id,
+        provider: "google",
+      });
+    }
 
     if (!account) {
       return res.status(404).json({ message: "Account not found" });
@@ -353,32 +384,135 @@ router.get("/download/:accountId", auth, async (req, res) => {
       auth: client,
     });
 
-    // 1. Retrieve file metadata to get name and size
+    // 1. Retrieve file metadata to get name, size, and mimeType
     const fileMetadata = await drive.files.get({
       fileId,
-      fields: "name, size, mimeType",
+      fields: "id, name, size, mimeType",
     });
 
     const { name, size, mimeType } = fileMetadata.data;
+    const safeName = name ? name.replace(/["\r\n]/g, "") : "download";
 
-    // 2. Fetch the file data stream
+    // 2. Check if Google Workspace file (Doc, Sheet, Slide, etc.)
+    if (mimeType && mimeType.startsWith("application/vnd.google-apps.")) {
+      let exportMimeType = "application/pdf";
+      let ext = ".pdf";
+
+      if (mimeType.includes("document")) {
+        exportMimeType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+        ext = ".docx";
+      } else if (mimeType.includes("spreadsheet")) {
+        exportMimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        ext = ".xlsx";
+      } else if (mimeType.includes("presentation")) {
+        exportMimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+        ext = ".pptx";
+      } else if (mimeType.includes("drawing")) {
+        exportMimeType = "image/png";
+        ext = ".png";
+      }
+
+      const exportName = safeName.endsWith(ext) ? safeName : `${safeName}${ext}`;
+
+      const exportResponse = await drive.files.export(
+        { fileId, mimeType: exportMimeType },
+        { responseType: "stream" }
+      );
+
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename="${encodeURIComponent(exportName)}"; filename*=UTF-8''${encodeURIComponent(exportName)}`
+      );
+      res.setHeader("Content-Type", exportMimeType);
+      return exportResponse.data.pipe(res);
+    }
+
+    // 3. Binary file stream download (PDF, MP4, JPG, ZIP, etc.)
     const driveResponse = await drive.files.get(
       { fileId, alt: "media" },
       { responseType: "stream" }
     );
 
-    // 3. Set standard stream headers
-    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(name)}"`);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${encodeURIComponent(safeName)}"; filename*=UTF-8''${encodeURIComponent(safeName)}`
+    );
     res.setHeader("Content-Type", mimeType || "application/octet-stream");
     if (size) {
       res.setHeader("Content-Length", size);
     }
 
-    // Pipe the response stream
     driveResponse.data.pipe(res);
   } catch (err) {
     console.error("❌ Google download proxy error:", err.message);
     res.status(500).json({ message: "Failed to download Google Drive file: " + err.message });
+  }
+});
+
+/* ===============================
+   📂 GOOGLE DRIVE SECURE OPEN / PREVIEW
+=============================== */
+router.get("/open/:accountId", auth, async (req, res) => {
+  try {
+    const { accountId } = req.params;
+    const { fileId } = req.query;
+
+    if (!fileId) {
+      return res.status(400).json({ message: "File ID is required" });
+    }
+
+    let account = null;
+    const targetAccountId = req.query.accountId || accountId;
+    if (targetAccountId && targetAccountId !== "default" && mongoose.Types.ObjectId.isValid(targetAccountId)) {
+      account = await CloudAccount.findOne({
+        _id: targetAccountId,
+        userId: req.user.id,
+        provider: "google",
+      });
+    }
+
+    if (!account) {
+      account = await CloudAccount.findOne({
+        userId: req.user.id,
+        provider: "google",
+      });
+    }
+
+    if (!account) {
+      return res.status(404).json({ message: "Account not found" });
+    }
+
+    const client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET
+    );
+    client.setCredentials({
+      access_token: account.accessToken,
+      refresh_token: account.refreshToken,
+    });
+
+    const drive = google.drive({
+      version: "v3",
+      auth: client,
+    });
+
+    const fileMetadata = await drive.files.get({
+      fileId,
+      fields: "id, name, mimeType, webViewLink, webContentLink",
+    });
+
+    const { name, webViewLink } = fileMetadata.data;
+
+    // Default Google Drive Provided Preview (webViewLink) for ALL files (including .docx)
+    if (webViewLink) {
+      if (req.headers.authorization) return res.json({ link: webViewLink });
+      return res.redirect(webViewLink);
+    }
+
+    res.status(404).json({ message: "Preview not available" });
+  } catch (err) {
+    console.error("❌ Google open proxy error:", err.message);
+    res.status(500).json({ message: "Failed to open Google Drive file: " + err.message });
   }
 });
 

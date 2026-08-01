@@ -93,16 +93,19 @@ export const batchTransferFiles = async (batchData) => {
 };
 
 export const getTransferHistory = async () => {
+  if (!localStorage.getItem("token")) return { history: [] };
   try {
     const res = await api.get("/transfer/history");
     return res.data;
   } catch (err) {
+    if (err.response?.status === 401) return { history: [] };
     console.error("❌ getTransferHistory error:", err);
-    throw err;
+    return { history: [] };
   }
 };
 
 export const getActiveJobStatus = async () => {
+  if (!localStorage.getItem("token")) return { activeJob: null };
   try {
     const res = await api.get("/transfer/active-job");
     return res.data;
@@ -132,6 +135,21 @@ export const createFolder = async ({ accountId, folderName, parentFolderId, pare
     return res.data;
   } catch (err) {
     console.error("❌ createFolder error:", err);
+    throw err;
+  }
+};
+
+export const deleteFileApi = async ({ id, provider, accountId, fileName }) => {
+  try {
+    const res = await api.post("/files/delete", {
+      id,
+      provider,
+      accountId,
+      fileName,
+    });
+    return res.data;
+  } catch (err) {
+    console.error("❌ deleteFileApi error:", err);
     throw err;
   }
 };

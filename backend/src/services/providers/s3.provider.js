@@ -138,9 +138,11 @@ export const deleteS3File = async (account, fileId) => {
     const client = getS3Client(account);
     const bucket = getBucketName(account);
 
+    const cleanKey = String(fileId || "").replace(/^\/+/, "");
+
     const command = new DeleteObjectCommand({
       Bucket: bucket,
-      Key: fileId, // fileId is the Key!
+      Key: cleanKey,
     });
     await client.send(command);
     return true;

@@ -189,8 +189,10 @@ const ManageAccounts = () => {
   };
 
   /* ===============================
-     SYNC ACCOUNT
+     SYNC ACCOUNT & SYNC ALL
   =============================== */
+  const [syncingAll, setSyncingAll] = useState(false);
+
   const triggerSync = async (id) => {
     try {
       console.log("🔄 Sync:", id);
@@ -213,6 +215,27 @@ const ManageAccounts = () => {
       fetchAccounts();
     } catch (err) {
       console.error("❌ Sync failed:", err);
+    }
+  };
+
+  const handleSyncAll = async () => {
+    if (!accounts.length) return;
+    try {
+      setSyncingAll(true);
+      await Promise.allSettled(
+        accounts.map((acc) => {
+          if (acc.provider === "dropbox") return api.post(`/dropbox/sync/${acc._id}`);
+          if (acc.provider === "onedrive") return api.post(`/onedrive/sync/${acc._id}`);
+          if (acc.provider === "s3") return api.post(`/s3/sync/${acc._id}`);
+          if (acc.provider === "box") return api.post(`/box/sync/${acc._id}`);
+          return api.post(`/google/sync/${acc._id}`);
+        })
+      );
+      await fetchAccounts();
+    } catch (err) {
+      console.error("❌ Sync all failed:", err);
+    } finally {
+      setSyncingAll(false);
     }
   };
 
@@ -261,24 +284,35 @@ const ManageAccounts = () => {
           </div>
         </div>
 
-        {/* FILTER TABS */}
-        <div className="tabs">
-          <button
-            className={activeProvider === "all" ? "active" : ""}
-            onClick={() => setActiveProvider("all")}
-          >
-            All
-          </button>
-
-          {providers.map((p) => (
+        {/* FILTER TABS & SYNC ALL */}
+        <div className="tabs-row-header">
+          <div className="tabs">
             <button
-              key={p}
-              className={activeProvider === p ? "active" : ""}
-              onClick={() => setActiveProvider(p)}
+              className={activeProvider === "all" ? "active" : ""}
+              onClick={() => setActiveProvider("all")}
             >
-              {p}
+              All
             </button>
-          ))}
+
+            {providers.map((p) => (
+              <button
+                key={p}
+                className={activeProvider === p ? "active" : ""}
+                onClick={() => setActiveProvider(p)}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          <button
+            className="btn-sync-all"
+            onClick={handleSyncAll}
+            disabled={syncingAll || accounts.length === 0}
+            title="Sync storage usage and metadata for all connected accounts"
+          >
+            {syncingAll ? "🔄 Syncing All..." : "🔄 Sync All Accounts"}
+          </button>
         </div>
 
         <div className="content">
@@ -303,8 +337,8 @@ const ManageAccounts = () => {
                         src={providerIcons[acc.provider]}
                         alt={acc.provider}
                       />
-                      <span className={`status ${acc.status}`}>
-                        {acc.status || "connected"}
+                      <span className={`status ${acc.status || "connected"}`}>
+                        {acc.status === "expired" ? "⚠️ Session Expired" : (acc.status || "connected")}
                       </span>
                     </div>
 
@@ -343,14 +377,31 @@ const ManageAccounts = () => {
 
                     {/* ACTIONS */}
                     <div className="actions">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          triggerSync(acc._id);
-                        }}
-                      >
-                        Sync
-                      </button>
+                      {acc.status === "expired" ? (
+                        <button
+                          className="reconnect-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (acc.provider === "dropbox") connectDropbox();
+                            else if (acc.provider === "onedrive") connectOneDrive();
+                            else if (acc.provider === "box") connectBox();
+                            else if (acc.provider === "s3") setS3ModalOpen(true);
+                            else connectGoogle();
+                          }}
+                          style={{ background: "linear-gradient(135deg, #ef4444, #f97316)", color: "#fff", border: "none" }}
+                        >
+                          🔑 Reconnect
+                        </button>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            triggerSync(acc._id);
+                          }}
+                        >
+                          Sync
+                        </button>
+                      )}
 
                       <button
                         className="danger"
