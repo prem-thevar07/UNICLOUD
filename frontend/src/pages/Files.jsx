@@ -5,6 +5,7 @@ import api from "../config/api";
 import "../styles/files.css";
 import MainLayout from "../layouts/MainLayout";
 import { logActivity } from "../utils/activityLogger";
+import FilePreviewModal from "../components/FilePreviewModal";
 
 /* ===============================
    CONSTANTS & HELPERS
@@ -334,6 +335,13 @@ const RecursiveFolderTreeNode = ({
 =============================== */
 const Files = () => {
   const [files, setFiles] = useState([]);
+  const [previewModalFile, setPreviewModalFile] = useState(null);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+
+  const handleOpenFileModal = (file) => {
+    setPreviewModalFile(file);
+    setIsPreviewModalOpen(true);
+  };
   const [accounts, setAccounts] = useState(() => {
     try {
       const cached = localStorage.getItem("unicloud_cached_accounts");
@@ -1486,7 +1494,7 @@ const Files = () => {
           <div
             className={`storage-overview-card master ${selectedAccounts.length === 0 ? "active" : ""}`}
             onClick={() => {
-              setActiveFolderFilter(null);
+              setSelectedFolderFilters([]);
               setSelectedAccounts([]);
             }}
           >
@@ -2296,30 +2304,30 @@ const Files = () => {
                                 }) : "-"}
                               </td>
                               <td className="file-actions-cell" onClick={(e) => e.stopPropagation()}>
-                                <a
-                                  href={getFileOpenUrl(file)}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="action-btn"
-                                  style={{
-                                    marginRight: "8px",
-                                    padding: "6px 12px",
-                                    background: "rgba(255, 255, 255, 0.06)",
-                                    border: "1px solid rgba(255, 255, 255, 0.1)",
-                                    borderRadius: "var(--radius-md)",
-                                    color: "var(--text-primary)",
-                                    fontSize: "12.5px",
-                                    fontWeight: "500",
-                                    textDecoration: "none",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    height: "30px",
-                                    transition: "all 0.15s ease"
-                                  }}
-                                  title={(file.name || "").toLowerCase().endsWith(".docx") || (file.name || "").toLowerCase().endsWith(".doc") ? "Open with Microsoft Word" : "Open File"}
-                                >
-                                  {(file.name || "").toLowerCase().endsWith(".docx") || (file.name || "").toLowerCase().endsWith(".doc") ? "Open" : "Open"}
-                                </a>
+                                <button
+                                   type="button"
+                                   onClick={() => handleOpenFileModal(file)}
+                                   className="action-btn"
+                                   style={{
+                                     marginRight: "8px",
+                                     padding: "6px 12px",
+                                     background: "rgba(99, 102, 241, 0.12)",
+                                     border: "1px solid rgba(99, 102, 241, 0.3)",
+                                     borderRadius: "var(--radius-md)",
+                                     color: "#818cf8",
+                                     fontSize: "12.5px",
+                                     fontWeight: "500",
+                                     textDecoration: "none",
+                                     display: "inline-flex",
+                                     alignItems: "center",
+                                     height: "30px",
+                                     cursor: "pointer",
+                                     transition: "all 0.15s ease"
+                                   }}
+                                   title="Open File"
+                                 >
+                                   👁️ Open
+                                 </button>
                                 <button className="action-icon-btn download" title="Download" onClick={() => handleSingleDownload(file)}>⬇️</button>
                                 <button className="action-icon-btn share" title="Share File" onClick={() => handleShareFile(file)}>🔗</button>
                               </td>
@@ -2448,6 +2456,14 @@ const Files = () => {
             </div>
           </div>
         )}
+
+        {/* UNICLOUD UNIVERSAL FILE PREVIEW MODAL */}
+        <FilePreviewModal
+          file={previewModalFile}
+          isOpen={isPreviewModalOpen}
+          onClose={() => setIsPreviewModalOpen(false)}
+          onDownload={handleSingleDownload}
+        />
       </div>
     </MainLayout>
   );

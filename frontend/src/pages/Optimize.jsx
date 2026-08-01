@@ -4,6 +4,7 @@ import { getFiles, deleteFileApi } from "../services/fileService";
 import API from "../config/api";
 import MainLayout from "../layouts/MainLayout";
 import TransferModal from "../components/TransferModal";
+import FilePreviewModal from "../components/FilePreviewModal";
 import "../styles/optimize.css";
 
 const providerIcons = {
@@ -17,6 +18,14 @@ const providerIcons = {
 const Optimize = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+
+  const [previewModalFile, setPreviewModalFile] = useState(null);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+
+  const handleOpenFileModal = (file) => {
+    setPreviewModalFile(file);
+    setIsPreviewModalOpen(true);
+  };
 
   const [loading, setLoading] = useState(true);
   const [allFiles, setAllFiles] = useState([]);
@@ -1034,11 +1043,11 @@ const Optimize = () => {
                       <td>{formatDate(file.createdAt)}</td>
                       <td className="opt-action-cell">
                         <button
-                          className={`btn-opt-action btn-opt-open ${isDocxFile(file) ? "btn-opt-word" : ""}`}
-                          onClick={() => handleOpenFile(file)}
-                          title={isDocxFile(file) ? "Open with Microsoft Word" : "Open File"}
+                          className="btn-opt-action btn-opt-open"
+                          onClick={() => handleOpenFileModal(file)}
+                          title="Open File"
                         >
-                          {isDocxFile(file) ? "📝 Open with Microsoft Word" : "👁️ Open"}
+                          👁️ Open
                         </button>
                         <button
                           className="btn-opt-action btn-opt-download"
@@ -1196,6 +1205,14 @@ const Optimize = () => {
           file={selectedTransferFile}
           connectedAccounts={connectedAccounts}
           onSuccess={handleTransferSuccess}
+        />
+
+        {/* UNICLOUD UNIVERSAL FILE PREVIEW MODAL */}
+        <FilePreviewModal
+          file={previewModalFile}
+          isOpen={isPreviewModalOpen}
+          onClose={() => setIsPreviewModalOpen(false)}
+          onDownload={handleDownloadFile}
         />
       </main>
     </MainLayout>

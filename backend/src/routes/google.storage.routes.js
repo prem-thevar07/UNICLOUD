@@ -503,10 +503,11 @@ router.get("/open/:accountId", auth, async (req, res) => {
 
     const { name, webViewLink } = fileMetadata.data;
 
-    // Default Google Drive Provided Preview (webViewLink) for ALL files (including .docx)
+    // Convert Google Drive /view link to /preview embed link for video/audio/pdf/doc player
     if (webViewLink) {
-      if (req.headers.authorization) return res.json({ link: webViewLink });
-      return res.redirect(webViewLink);
+      const embedPreviewUrl = webViewLink.replace(/\/view(\?.*)?$/, "/preview");
+      if (req.headers.authorization) return res.json({ link: embedPreviewUrl });
+      return res.redirect(embedPreviewUrl);
     }
 
     res.status(404).json({ message: "Preview not available" });

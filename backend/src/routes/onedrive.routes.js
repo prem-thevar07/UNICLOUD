@@ -325,12 +325,14 @@ router.get("/open/:id", auth, async (req, res) => {
 
     const name = driveItemRes.data.name || "file";
     const ext = name.split(".").pop().toLowerCase();
-    const isDocx = ext === "docx" || ext === "doc";
+    const isOfficeDoc = ["docx", "doc", "xlsx", "xls", "pptx", "ppt"].includes(ext);
     const downloadUrl = driveItemRes.data["@microsoft.graph.downloadUrl"];
 
-    if (isDocx && downloadUrl) {
-      // Force Microsoft Word Web Viewer for docx preview
-      const officeViewerUrl = `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(downloadUrl)}`;
+    if (isOfficeDoc && downloadUrl) {
+      // Use view.aspx for full view tab, embed.aspx for iframe
+      const isEmbedMode = req.query.embed === "true";
+      const mode = isEmbedMode ? "embed.aspx" : "view.aspx";
+      const officeViewerUrl = `https://view.officeapps.live.com/op/${mode}?src=${encodeURIComponent(downloadUrl)}`;
       if (req.headers.authorization) return res.json({ link: officeViewerUrl });
       return res.redirect(officeViewerUrl);
     }
