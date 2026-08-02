@@ -19,7 +19,16 @@ const formatSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
-const FilePreviewModal = ({ file, isOpen, onClose, onDownload }) => {
+const FilePreviewModal = ({
+  file,
+  isOpen,
+  onClose,
+  onDownload,
+  files = [],
+  onSelectFile,
+  onPrev,
+  onNext,
+}) => {
   const [zoom, setZoom] = useState(1);
   const [rotation, setRotation] = useState(0);
   const [linkCopied, setLinkCopied] = useState(false);
@@ -35,6 +44,78 @@ const FilePreviewModal = ({ file, isOpen, onClose, onDownload }) => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [vsCodeCopied, setVsCodeCopied] = useState(false);
+
+  // Google Photos style Edge Hover Nav States
+  const [showLeftNav, setShowLeftNav] = useState(false);
+  const [showRightNav, setShowRightNav] = useState(false);
+
+  // File List Navigation Logic
+  const fileList = Array.isArray(files) ? files : [];
+  const currentIndex = fileList.length > 0
+    ? fileList.findIndex((f) => (f.id && file?.id ? f.id === file.id : f.name === file?.name))
+    : -1;
+
+  const hasMultipleFiles = fileList.length > 1 || Boolean(onPrev || onNext);
+
+  const handleMouseMove = (e) => {
+    if (!hasMultipleFiles) return;
+    const { clientX } = e;
+    const screenWidth = window.innerWidth;
+    const threshold = Math.min(200, screenWidth * 0.22); // 200px or 22% of screen width
+
+    setShowLeftNav(clientX <= threshold);
+    setShowRightNav(clientX >= screenWidth - threshold);
+  };
+
+  const handleMouseLeave = () => {
+    setShowLeftNav(false);
+    setShowRightNav(false);
+  };
+
+  const handlePrev = (e) => {
+    if (e) e.stopPropagation();
+    if (onPrev) {
+      onPrev();
+      return;
+    }
+    if (fileList.length > 1 && currentIndex !== -1) {
+      const prevIdx = (currentIndex - 1 + fileList.length) % fileList.length;
+      if (onSelectFile) onSelectFile(fileList[prevIdx]);
+    }
+  };
+
+  const handleNext = (e) => {
+    if (e) e.stopPropagation();
+    if (onNext) {
+      onNext();
+      return;
+    }
+    if (fileList.length > 1 && currentIndex !== -1) {
+      const nextIdx = (currentIndex + 1) % fileList.length;
+      if (onSelectFile) onSelectFile(fileList[nextIdx]);
+    }
+  };
+
+  // Keyboard Navigation Listener
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e) => {
+      const targetTag = e.target?.tagName?.toLowerCase();
+      if (targetTag === "input" || targetTag === "textarea" || e.target?.isContentEditable) {
+        return;
+      }
+
+      if (e.key === "ArrowLeft") {
+        handlePrev();
+      } else if (e.key === "ArrowRight") {
+        handleNext();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, currentIndex, fileList, onPrev, onNext, onSelectFile]);
 
   // Reset state on file change
   useEffect(() => {
@@ -497,7 +578,47 @@ const FilePreviewModal = ({ file, isOpen, onClose, onDownload }) => {
         </header>
 
         {/* MAIN VIEWER CANVAS */}
-        <main className="preview-modal-body">
+        <main
+          className="preview-modal-body"
+          onMouseMove={handleMouseMove}
+          onMouseLeave={handleMouseLeave}
+        >
+          {/* LESSER THAN (<) PREVIOUS FILE BUTTON */}
+          {hasMultipleFiles && (
+            <button
+              className={`preview-nav-btn prev-btn ${showLeftNav ? "visible" : ""}`}
+              onClick={handlePrev}
+              title={
+                fileList.length > 0 && currentIndex !== -1
+                  ? `Previous: ${fileList[(currentIndex - 1 + fileList.length) % fileList.length]?.name || "File"}`
+                  : "Previous File (<)"
+              }
+              aria-label="Previous File"
+            >
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+              </svg>
+            </button>
+          )}
+
+          {/* GREATER THAN (>) NEXT FILE BUTTON */}
+          {hasMultipleFiles && (
+            <button
+              className={`preview-nav-btn next-btn ${showRightNav ? "visible" : ""}`}
+              onClick={handleNext}
+              title={
+                fileList.length > 0 && currentIndex !== -1
+                  ? `Next: ${fileList[(currentIndex + 1) % fileList.length]?.name || "File"}`
+                  : "Next File (>)"
+              }
+              aria-label="Next File"
+            >
+              <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </button>
+          )}
+
           {isCodeFile && (
             <div className="preview-code-editor-container">
               <div className="code-editor-toolbar">
@@ -642,9 +763,10 @@ const FilePreviewModal = ({ file, isOpen, onClose, onDownload }) => {
           )}
 
           {isImage && (
-            <div className="preview-image-wrapper">
+            <div className="preview-image-wrapper" key={file.id || file.name}>
               <img
-                src={iframeUrl}
+                key={file.id || file.name}
+                src={openUrl}
                 alt={file.name}
                 className="preview-image-element"
                 style={{
@@ -656,15 +778,15 @@ const FilePreviewModal = ({ file, isOpen, onClose, onDownload }) => {
           )}
 
           {isPdf && (
-            <iframe src={iframeUrl} title={file.name} className="preview-iframe-element" />
+            <iframe key={file.id || file.name} src={iframeUrl} title={file.name} className="preview-iframe-element" />
           )}
 
           {isVideo && (
-            <div className="preview-media-wrapper">
+            <div className="preview-media-wrapper" key={file.id || file.name}>
               {file.provider === "google" ? (
-                <iframe src={iframeUrl} title={file.name} className="preview-iframe-element" allow="autoplay" />
+                <iframe key={file.id || file.name} src={iframeUrl} title={file.name} className="preview-iframe-element" allow="autoplay" />
               ) : (
-                <video src={openUrl} controls autoPlay className="preview-video-element">
+                <video key={file.id || file.name} src={openUrl} controls autoPlay className="preview-video-element">
                   <source src={openUrl} />
                   Your browser does not support playing this video inline.
                 </video>
@@ -673,14 +795,14 @@ const FilePreviewModal = ({ file, isOpen, onClose, onDownload }) => {
           )}
 
           {isAudio && (
-            <div className="preview-audio-wrapper">
+            <div className="preview-audio-wrapper" key={file.id || file.name}>
               {file.provider === "google" ? (
-                <iframe src={iframeUrl} title={file.name} className="preview-iframe-element" />
+                <iframe key={file.id || file.name} src={iframeUrl} title={file.name} className="preview-iframe-element" />
               ) : (
                 <div className="preview-audio-card">
                   <div className="audio-wave-icon">🎵</div>
                   <h4 className="audio-title">{file.name}</h4>
-                  <audio src={openUrl} controls autoPlay className="preview-audio-element">
+                  <audio key={file.id || file.name} src={openUrl} controls autoPlay className="preview-audio-element">
                     <source src={openUrl} />
                     Your browser does not support the audio element.
                   </audio>
@@ -690,15 +812,15 @@ const FilePreviewModal = ({ file, isOpen, onClose, onDownload }) => {
           )}
 
           {isText && !isIpynb && !isCodeFile && (
-            <iframe src={iframeUrl} title={file.name} className="preview-iframe-element" />
+            <iframe key={file.id || file.name} src={iframeUrl} title={file.name} className="preview-iframe-element" />
           )}
 
           {isDocx && !isIpynb && (
-            <iframe src={iframeUrl} title={file.name} className="preview-iframe-element" />
+            <iframe key={file.id || file.name} src={iframeUrl} title={file.name} className="preview-iframe-element" />
           )}
 
           {!isImage && !isPdf && !isVideo && !isAudio && !isText && !isDocx && !isIpynb && !isCodeFile && (
-            <iframe src={iframeUrl} title={file.name} className="preview-iframe-element" />
+            <iframe key={file.id || file.name} src={iframeUrl} title={file.name} className="preview-iframe-element" />
           )}
         </main>
       </div>

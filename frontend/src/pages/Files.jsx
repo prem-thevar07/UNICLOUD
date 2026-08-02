@@ -2467,6 +2467,8 @@ const Files = () => {
         {/* UNICLOUD UNIVERSAL FILE PREVIEW MODAL */}
         <FilePreviewModal
           file={previewModalFile}
+          files={filteredFiles}
+          onSelectFile={setPreviewModalFile}
           isOpen={isPreviewModalOpen}
           onClose={() => setIsPreviewModalOpen(false)}
           onDownload={handleSingleDownload}

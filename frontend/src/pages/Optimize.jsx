@@ -1210,6 +1210,8 @@ const Optimize = () => {
         {/* UNICLOUD UNIVERSAL FILE PREVIEW MODAL */}
         <FilePreviewModal
           file={previewModalFile}
+          files={allFiles}
+          onSelectFile={setPreviewModalFile}
           isOpen={isPreviewModalOpen}
           onClose={() => setIsPreviewModalOpen(false)}
           onDownload={handleDownloadFile}

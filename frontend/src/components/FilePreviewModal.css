@@ -554,3 +554,81 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* =========================================================
+   LESSER THAN (<) AND GREATER THAN (>) NAVIGATION BUTTONS
+   Minimalist Translucent Chevrons (No Circle Background)
+========================================================= */
+.preview-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%) scale(0.9);
+  z-index: 100;
+  width: 50px;
+  height: 80px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  outline: none;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease, filter 0.2s ease;
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.7));
+}
+
+.preview-nav-btn.prev-btn {
+  left: 20px;
+}
+
+.preview-nav-btn.next-btn {
+  right: 20px;
+}
+
+/* Revealed when hovered near left/right screen edges */
+.preview-nav-btn.visible {
+  opacity: 0.75;
+  pointer-events: auto;
+  transform: translateY(-50%) scale(1);
+}
+
+/* Hover effect - pure bright white translucent icon with drop shadow glow */
+.preview-nav-btn.visible:hover {
+  opacity: 1;
+  color: #ffffff;
+  transform: translateY(-50%) scale(1.15);
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 16px rgba(255, 255, 255, 0.6));
+}
+
+.preview-nav-btn:active {
+  transform: translateY(-50%) scale(0.95);
+}
+
+.preview-nav-btn svg {
+  transition: transform 0.2s ease;
+}
+
+.preview-nav-btn.prev-btn:hover svg {
+  transform: translateX(-3px);
+}
+
+.preview-nav-btn.next-btn:hover svg {
+  transform: translateX(3px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .preview-nav-btn {
+    width: 36px;
+    height: 60px;
+  }
+  .preview-nav-btn.prev-btn {
+    left: 8px;
+  }
+  .preview-nav-btn.next-btn {
+    right: 8px;
+  }
+}
