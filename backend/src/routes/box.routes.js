@@ -202,26 +202,45 @@ router.get(["/download/:id", "/open/:id"], auth, async (req, res) => {
       return res.status(404).json({ message: "Account not found" });
     }
 
-    // Resilient Box stream fetcher with automatic 401 token refresh
+    // Resilient Box stream fetcher handling 302 redirect to dl.boxcloud.com without authorization headers
     const getBoxStream = async () => {
       let token = account.accessToken;
       const contentUrl = `https://api.box.com/2.0/files/${fileId}/content`;
-      try {
-        const streamRes = await axios.get(contentUrl, {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: "stream"
-        });
-        return { streamRes, token };
-      } catch (err) {
-        if (err.response?.status === 401 && account.refreshToken) {
-          token = await refreshBoxToken(account);
-          const streamRes = await axios.get(contentUrl, {
-            headers: { Authorization: `Bearer ${token}` },
-            responseType: "stream"
+      let attempts = 0;
+      while (attempts < 2) {
+        try {
+          // 1. Request presigned 302 download link from Box API
+          let downloadUrl = contentUrl;
+          try {
+            const redirectRes = await axios.get(contentUrl, {
+              headers: { Authorization: `Bearer ${token}` },
+              maxRedirects: 0,
+              validateStatus: (status) => status >= 200 && status < 400,
+            });
+            downloadUrl = redirectRes.headers.location || contentUrl;
+          } catch (redErr) {
+            if (redErr.response?.status === 302 && redErr.response?.headers?.location) {
+              downloadUrl = redErr.response.headers.location;
+            } else {
+              throw redErr;
+            }
+          }
+
+          // 2. Fetch stream from dl.boxcloud.com without Authorization header to avoid Box CDN timeout
+          const streamRes = await axios.get(downloadUrl, {
+            responseType: "stream",
+            timeout: 20000,
           });
+
           return { streamRes, token };
+        } catch (err) {
+          if (err.response?.status === 401 && attempts === 0 && account.refreshToken) {
+            token = await refreshBoxToken(account);
+            attempts++;
+          } else {
+            throw err;
+          }
         }
-        throw err;
       }
     };
 

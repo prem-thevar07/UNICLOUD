@@ -353,10 +353,28 @@ router.get("/open/:id", auth, async (req, res) => {
     const isMedia = ["mp3", "wav", "ogg", "m4a", "aac", "flac", "mp4", "webm", "mov", "ogv", "mkv"].includes(ext);
     const isCodeOrText = ["js", "jsx", "ts", "tsx", "py", "json", "html", "css", "cpp", "c", "java", "sql", "md", "txt", "sh", "env", "log", "xml", "yaml", "yml", "ipynb"].includes(ext);
 
-    // Direct byte stream URL for Images, Audio, Video, and Code/Text files
+    // Direct byte stream URL for Images, Audio, Video, PDFs, and Code/Text files with Content-Disposition: inline
     if ((isImage || isMedia || isCodeOrText) && downloadUrl) {
-      if (req.headers.authorization) return res.json({ link: downloadUrl });
-      return res.redirect(downloadUrl);
+      try {
+        const streamRes = await axios.get(downloadUrl, { responseType: "stream" });
+        const mimeMap = {
+          pdf: "application/pdf",
+          jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml", bmp: "image/bmp", ico: "image/x-icon",
+          mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg", m4a: "audio/mp4", aac: "audio/aac", flac: "audio/flac",
+          mp4: "video/mp4", webm: "video/webm", mov: "video/quicktime", ogv: "video/ogg", mkv: "video/x-matroska",
+          txt: "text/plain; charset=utf-8", html: "text/html; charset=utf-8", json: "application/json", xml: "text/xml",
+          js: "text/plain; charset=utf-8", py: "text/plain; charset=utf-8", ts: "text/plain; charset=utf-8", ipynb: "application/json"
+        };
+        const contentType = mimeMap[ext] || streamRes.headers["content-type"] || "application/octet-stream";
+
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(name)}"`);
+        return streamRes.data.pipe(res);
+      } catch (streamErr) {
+        console.warn("OneDrive inline stream error:", streamErr.message);
+        if (req.headers.authorization) return res.json({ link: downloadUrl });
+        return res.redirect(downloadUrl);
+      }
     }
 
     // Default OneDrive Provided Preview (Microsoft Graph Preview / webUrl)
