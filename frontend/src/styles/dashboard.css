@@ -5,12 +5,10 @@
 .dashboard-page {
   padding: 2rem 3rem;
   min-height: 100vh;
-  background: radial-gradient(
-    circle at 50% 0%,
-    rgba(99, 102, 241, 0.15),
-    rgba(0, 0, 0, 0) 50%
-  ),
-  #070a13;
+  background: radial-gradient(circle at 50% 0%,
+      rgba(99, 102, 241, 0.15),
+      rgba(0, 0, 0, 0) 50%),
+    #070a13;
   color: #ffffff;
   font-family: "Outfit", "Inter", system-ui, sans-serif;
 }
@@ -198,7 +196,9 @@
 }
 
 /* Card custom layout variants with graphic decorations */
-.decoration-files, .decoration-photos, .decoration-accounts {
+.decoration-files,
+.decoration-photos,
+.decoration-accounts {
   justify-content: space-between;
 }
 
@@ -288,9 +288,23 @@
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
-.floating-logo.d1 { top: 25px; left: 10px; transform: scale(1.1); }
-.floating-logo.d2 { bottom: 25px; right: 10px; transform: scale(1.2); }
-.floating-logo.d3 { top: 40px; right: 25px; transform: scale(0.9); }
+.floating-logo.d1 {
+  top: 25px;
+  left: 10px;
+  transform: scale(1.1);
+}
+
+.floating-logo.d2 {
+  bottom: 25px;
+  right: 10px;
+  transform: scale(1.2);
+}
+
+.floating-logo.d3 {
+  top: 40px;
+  right: 25px;
+  transform: scale(0.9);
+}
 
 /* ==========================================================================
    MIDDLE SECTION: STORAGE BREAKDOWN & INSIGHTS
@@ -364,14 +378,17 @@
 .breakdown-scroll-area::-webkit-scrollbar {
   width: 6px;
 }
+
 .breakdown-scroll-area::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.02);
   border-radius: 3px;
 }
+
 .breakdown-scroll-area::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 3px;
 }
+
 .breakdown-scroll-area::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.15);
 }
@@ -418,18 +435,49 @@
   border-radius: 999px;
 }
 
-.progress-bar-fill.gd { background: #6366f1; }
-.progress-bar-fill.gp { background: #10b981; }
-.progress-bar-fill.db { background: #0ea5e9; }
-.progress-bar-fill.od { background: #0284c7; }
-.progress-bar-fill.s3 { background: #f97316; }
-.progress-bar-fill.total { background: #6366f1; }
+.progress-bar-fill.gd {
+  background: #6366f1;
+}
 
-.gd-text { color: #818cf8 !important; }
-.gp-text { color: #34d399 !important; }
-.db-text { color: #38bdf8 !important; }
-.od-text { color: #38bdf8 !important; }
-.s3-text { color: #fdba74 !important; }
+.progress-bar-fill.gp {
+  background: #10b981;
+}
+
+.progress-bar-fill.db {
+  background: #0ea5e9;
+}
+
+.progress-bar-fill.od {
+  background: #0284c7;
+}
+
+.progress-bar-fill.s3 {
+  background: #f97316;
+}
+
+.progress-bar-fill.total {
+  background: #6366f1;
+}
+
+.gd-text {
+  color: #818cf8 !important;
+}
+
+.gp-text {
+  color: #34d399 !important;
+}
+
+.db-text {
+  color: #38bdf8 !important;
+}
+
+.od-text {
+  color: #38bdf8 !important;
+}
+
+.s3-text {
+  color: #fdba74 !important;
+}
 
 .provider-sizes {
   font-size: 13px;
@@ -531,10 +579,21 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
-.blue-theme:hover { border-color: rgba(59, 130, 246, 0.3); }
-.purple-theme:hover { border-color: rgba(139, 92, 246, 0.3); }
-.green-theme:hover { border-color: rgba(16, 185, 129, 0.3); }
-.red-theme:hover { border-color: rgba(239, 68, 68, 0.3); }
+.blue-theme:hover {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.purple-theme:hover {
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+.green-theme:hover {
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.red-theme:hover {
+  border-color: rgba(239, 68, 68, 0.3);
+}
 
 /* Storage Insights trend charts styles */
 .insights-card {
@@ -755,15 +814,15 @@
 
 /* Recent Activity timeline rules */
 .recent-activity-card {
-  padding: 1.5rem;
+  padding: 1.8rem;
 }
 
 .activity-timeline-list {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  margin-top: 1rem;
-  max-height: 480px;
+  margin-top: 0.5rem;
+  max-height: 500px;
   overflow-y: auto;
   padding-right: 8px;
 }
@@ -772,14 +831,17 @@
 .activity-timeline-list::-webkit-scrollbar {
   width: 6px;
 }
+
 .activity-timeline-list::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.02);
   border-radius: 3px;
 }
+
 .activity-timeline-list::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.08);
   border-radius: 3px;
 }
+
 .activity-timeline-list::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.15);
 }
@@ -801,11 +863,30 @@
   flex-shrink: 0;
 }
 
-.timeline-icon-container.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
-.timeline-icon-container.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
-.timeline-icon-container.red { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-.timeline-icon-container.blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
-.timeline-icon-container.orange { background: rgba(249, 115, 22, 0.1); color: #f97316; }
+.timeline-icon-container.green {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.timeline-icon-container.purple {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
+}
+
+.timeline-icon-container.red {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.timeline-icon-container.blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.timeline-icon-container.orange {
+  background: rgba(249, 115, 22, 0.1);
+  color: #f97316;
+}
 
 .timeline-details {
   display: flex;
@@ -835,20 +916,24 @@
    ========================================================================== */
 
 @media (max-width: 1200px) {
-  .dashboard-middle-grid, .dashboard-bottom-grid {
+
+  .dashboard-middle-grid,
+  .dashboard-bottom-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .dashboard-right-column {
     flex-direction: row;
   }
-  
-  .quick-access-card, .insights-card {
+
+  .quick-access-card,
+  .insights-card {
     flex: 1;
   }
 }
 
 @media (max-width: 768px) {
+
   /* 1. Main Page Flex Box Re-ordering for Mobile */
   .dashboard-page {
     display: flex !important;
@@ -878,7 +963,8 @@
   }
 
   .hero-subtitle {
-    display: none !important; /* Hide long subtitle on mobile to save space */
+    display: none !important;
+    /* Hide long subtitle on mobile to save space */
   }
 
   .current-date-badge {
@@ -908,7 +994,8 @@
   }
 
   .metric-card-decoration {
-    display: none !important; /* Hide background decorative graphics on mobile */
+    display: none !important;
+    /* Hide background decorative graphics on mobile */
   }
 
   .donut-chart-container {
@@ -964,7 +1051,8 @@
   }
 
   .recent-files-list-card {
-    order: 1 !important; /* Recent Files comes first! */
+    order: 1 !important;
+    /* Recent Files comes first! */
     padding: 12px !important;
     border-radius: 14px !important;
   }

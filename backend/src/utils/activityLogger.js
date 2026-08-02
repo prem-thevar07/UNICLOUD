@@ -15,7 +15,7 @@ export const logActivity = async (userId, type, message, meta = {}) => {
 /**
  * Fetch most recent N activity logs for a user.
  */
-export const getRecentActivity = async (userId, limit = 15) => {
+export const getRecentActivity = async (userId, limit = 100) => {
   return ActivityLog.find({ userId })
     .sort({ createdAt: -1 })
     .limit(limit)

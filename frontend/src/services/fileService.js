@@ -114,9 +114,9 @@ export const getActiveJobStatus = async () => {
   }
 };
 
-export const getActivity = async () => {
+export const getActivity = async (limit = 100) => {
   try {
-    const res = await api.get("/activity");
+    const res = await api.get(`/activity?limit=${limit}`);
     return res.data;
   } catch (err) {
     console.error("❌ getActivity error:", err);

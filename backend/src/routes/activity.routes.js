@@ -10,7 +10,8 @@ const router = express.Router();
 =============================== */
 router.get("/", auth, async (req, res) => {
   try {
-    const logs = await getRecentActivity(req.user.id, 15);
+    const limit = req.query.limit ? Math.min(parseInt(req.query.limit), 500) : 100;
+    const logs = await getRecentActivity(req.user.id, limit);
     res.json(logs);
   } catch (err) {
     console.error("❌ Activity fetch error:", err.message);

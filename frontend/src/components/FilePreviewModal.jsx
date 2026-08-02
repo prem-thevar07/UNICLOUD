@@ -21,7 +21,7 @@ const formatSize = (bytes) => {
 
 const FilePreviewModal = ({
   file,
-  isOpen,
+  isOpen = true,
   onClose,
   onDownload,
   files = [],

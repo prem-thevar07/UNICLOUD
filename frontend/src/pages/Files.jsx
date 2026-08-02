@@ -2368,7 +2368,7 @@ const Files = () => {
                                    }}
                                    title="Open File"
                                  >
-                                   👁️ Open
+                                   Open
                                  </button>
                                 <button className="action-icon-btn download" title="Download" onClick={() => handleSingleDownload(file)}>⬇️</button>
                                 <button className="action-icon-btn share" title="Share File" onClick={() => handleShareFile(file)}>🔗</button>

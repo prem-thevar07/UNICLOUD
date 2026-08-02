@@ -924,9 +924,14 @@
     order: 4 !important; /* Cloud Connections */
   }
 
+  /* SYSTEM CACHE SECOND LAST */
+  .profile-card-cache {
+    order: 5 !important; /* Second last, right above Delete Account */
+  }
+
   /* DANGER ZONE AT THE VERY BOTTOM OF THE MOBILE PAGE */
   .profile-card-danger {
-    order: 5 !important; /* Moved to very bottom */
+    order: 6 !important; /* Moved to very bottom */
     margin-top: 4px !important;
     background: rgba(239, 68, 68, 0.04) !important;
     border: 1px solid rgba(239, 68, 68, 0.2) !important;

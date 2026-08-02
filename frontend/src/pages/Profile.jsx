@@ -576,7 +576,7 @@ const Profile = () => {
             </div>
 
             {/* SYSTEM MAINTENANCE & CACHE */}
-            <div className="profile-glass-card">
+            <div className="profile-glass-card profile-card-cache">
               <h3>🧹 System Cache & Maintenance</h3>
               <p style={{ color: "#94a3b8", fontSize: "0.9rem", marginBottom: "1.2rem", lineHeight: "1.5" }}>
                 Clear local browser storage, cached folder trees, session tokens, and backend file index caches to ensure 100% fresh data synchronization across all cloud drives.

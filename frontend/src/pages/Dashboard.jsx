@@ -5,6 +5,7 @@ import { getFiles, getActivity } from "../services/fileService";
 
 import API from "../config/api";
 import MainLayout from "../layouts/MainLayout";
+import FilePreviewModal from "../components/FilePreviewModal";
 import "../styles/dashboard.css";
 
 const providerIcons = {
@@ -61,6 +62,9 @@ const Dashboard = () => {
   const [dupStats, setDupStats] = useState({ count: 0, size: 0 });
   const [largeStats, setLargeStats] = useState({ count: 0, size: 0 });
   const [activityLogs, setActivityLogs] = useState([]);
+  const [showAllActivityModal, setShowAllActivityModal] = useState(false);
+  const [activitySearch, setActivitySearch] = useState("");
+  const [previewModalFile, setPreviewModalFile] = useState(null);
 
   const token = localStorage.getItem("token");
 
@@ -160,7 +164,7 @@ const Dashboard = () => {
   // Fetch real activity logs from backend
   useEffect(() => {
     if (!token) return;
-    getActivity().then(setActivityLogs).catch(() => setActivityLogs([]));
+    getActivity(100).then(setActivityLogs).catch(() => setActivityLogs([]));
   }, [token]);
 
   const handleGoogleConnect = () => {
@@ -327,6 +331,7 @@ const Dashboard = () => {
         ...( activityIconMap[log.type] || { icon: "📋", colorClass: "blue" } ),
         text: log.message,
         time: getRelativeTime(log.createdAt),
+        fullDate: log.createdAt ? new Date(log.createdAt).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "",
       }))
     : [
         { id: "s1", icon: "🔌", colorClass: "blue",   text: "Connect an account to see your activity", time: "" },
@@ -546,8 +551,15 @@ const Dashboard = () => {
 
           {/* RIGHT: RECENT ACTIVITY */}
           <div className="card glass recent-activity-card">
-            <div className="card-header">
+            <div className="card-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <h3>Recent Activity</h3>
+              <button
+                className="btn-header-action"
+                style={{ padding: "4px 10px", fontSize: "0.75rem", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255, 255, 255, 0.12)", color: "#c7cad9", borderRadius: "8px", cursor: "pointer", transition: "all 0.15s ease" }}
+                onClick={() => setShowAllActivityModal(true)}
+              >
+                View All
+              </button>
             </div>
 
             <div className="activity-timeline-list">
@@ -568,8 +580,15 @@ const Dashboard = () => {
         <section className="dashboard-bottom-grid">
           {/* RECENT FILES */}
           <div className="card glass recent-files-list-card">
-            <div className="card-header">
+            <div className="card-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <h3>Recent Files</h3>
+              <button
+                className="btn-header-action"
+                style={{ padding: "4px 10px", fontSize: "0.75rem", background: "rgba(255, 255, 255, 0.06)", border: "1px solid rgba(255, 255, 255, 0.12)", color: "#c7cad9", borderRadius: "8px", cursor: "pointer", transition: "all 0.15s ease" }}
+                onClick={() => navigate("/files")}
+              >
+                View All ➔
+              </button>
             </div>
 
             <div className="recent-files-horizontal-row">
@@ -585,7 +604,7 @@ const Dashboard = () => {
                     <div 
                       key={file.id} 
                       className="recent-file-card glass"
-                      onClick={() => file.url && window.open(file.url, "_blank")}
+                      onClick={() => setPreviewModalFile(file)}
                     >
                       <div className="recent-card-top">
                         {extConfig ? (
@@ -723,6 +742,84 @@ const Dashboard = () => {
             </div>
           </div>
         </section>
+
+        {/* MODAL: ALL RECENT ACTIVITY HISTORY */}
+        {showAllActivityModal && (
+          <div className="modal-overlay-backdrop" onClick={() => setShowAllActivityModal(false)}>
+            <div
+              className="modal-content-card"
+              style={{ maxWidth: "680px", width: "92%", maxHeight: "85vh", display: "flex", flexDirection: "column" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                <h3 style={{ margin: 0, fontSize: "1.2rem", color: "#f8fafc", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span>📋</span> Recent Activity History ({timelineActivities.length})
+                </h3>
+                <button
+                  className="btn-header-action"
+                  onClick={() => setShowAllActivityModal(false)}
+                  style={{ padding: "4px 10px", fontSize: "0.8rem", background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", color: "#cbd5e1", borderRadius: "6px", cursor: "pointer" }}
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              {/* Search Bar */}
+              {timelineActivities.length > 0 && (
+                <div style={{ marginBottom: "1rem" }}>
+                  <input
+                    type="text"
+                    className="account-selector-pill"
+                    placeholder="Search activity logs..."
+                    value={activitySearch}
+                    onChange={(e) => setActivitySearch(e.target.value)}
+                    style={{ width: "100%", boxSizing: "border-box", padding: "8px 14px", fontSize: "0.85rem", background: "rgba(15, 23, 42, 0.7)", border: "1px solid rgba(255, 255, 255, 0.12)", color: "#ffffff", borderRadius: "8px", outline: "none" }}
+                  />
+                </div>
+              )}
+
+              {/* Timeline Items List */}
+              <div className="activity-timeline-list" style={{ flex: 1, overflowY: "auto", maxHeight: "55vh", paddingRight: "4px" }}>
+                {timelineActivities
+                  .filter((act) => {
+                    if (!activitySearch.trim()) return true;
+                    return act.text?.toLowerCase().includes(activitySearch.toLowerCase());
+                  })
+                  .map((act, idx) => (
+                    <div key={act.id || idx} className="timeline-item" style={{ padding: "12px 14px", marginBottom: "8px" }}>
+                      <div className={`timeline-icon-container ${act.colorClass}`}>{act.icon}</div>
+                      <div className="timeline-details" style={{ flex: 1 }}>
+                        <p style={{ margin: 0, fontSize: "0.88rem", color: "#f1f5f9", lineHeight: "1.4" }} dangerouslySetInnerHTML={{ __html: act.text }} />
+                        <span className="timeline-time" style={{ fontSize: "0.75rem", color: "#64748b", marginTop: "4px", display: "inline-block" }}>
+                          {act.fullDate || act.time}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem", paddingTop: "0.75rem", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                <button
+                  style={{ padding: "8px 22px", fontSize: "0.85rem", background: "#6366f1", border: "none", color: "#fff", borderRadius: "8px", fontWeight: "600", cursor: "pointer" }}
+                  onClick={() => setShowAllActivityModal(false)}
+                >
+                  Done
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* FILE PREVIEW MODAL */}
+        {previewModalFile && (
+          <FilePreviewModal
+            file={previewModalFile}
+            isOpen={true}
+            onClose={() => setPreviewModalFile(null)}
+            files={recentFiles}
+            onSelectFile={setPreviewModalFile}
+          />
+        )}
       </main>
     </MainLayout>
   );

@@ -1049,7 +1049,7 @@ const Optimize = () => {
                           onClick={() => handleOpenFileModal(file)}
                           title="Open File"
                         >
-                          👁️ Open
+                          Open
                         </button>
                         <button
                           className="btn-opt-action btn-opt-download"
