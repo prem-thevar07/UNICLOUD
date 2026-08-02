@@ -64,9 +64,25 @@ export const getAllFiles = async (userId, query = {}) => {
     const folderMap = {};
     try {
       const folders = await getAllFolders(userId);
-      folders.forEach(f => {
+      const folderById = {};
+      folders.forEach((f) => {
+        if (f.id) folderById[f.id] = f;
+      });
+
+      const resolveFolderPath = (fId, visited = new Set()) => {
+        if (!fId || fId === "root" || visited.has(fId)) return "";
+        visited.add(fId);
+        const f = folderById[fId];
+        if (!f) return "";
+        const parentId = f.parents?.[0];
+        const parentPath = parentId && parentId !== "root" ? resolveFolderPath(parentId, visited) : "";
+        return parentPath ? `${parentPath}/${f.name}` : `/${f.name}`;
+      };
+
+      folders.forEach((f) => {
         if (f.id && f.name) {
-          folderMap[f.id] = f.name;
+          const fullPath = resolveFolderPath(f.id);
+          folderMap[f.id] = fullPath || `/${f.name}`;
         }
       });
     } catch (err) {
@@ -127,8 +143,9 @@ export const getAllFiles = async (userId, query = {}) => {
               if (normalized) {
                 if (account.provider === "google") {
                   const parentId = file.parents?.[0];
-                  const parentName = parentId ? folderMap[parentId] : null;
-                  normalized.path = parentName ? `/${parentName}` : "/";
+                  const parentPath = parentId ? folderMap[parentId] : null;
+                  normalized.path = parentPath || "/";
+                  normalized.parentFolder = parentPath || "Root";
                 }
               }
               return normalized;
@@ -173,16 +190,26 @@ export const getAllFiles = async (userId, query = {}) => {
     }
 
     /* ===============================
-       5b️⃣ DATE FILTER (LOCAL FALLBACK FOR NON-GOOGLE)
+       5b️⃣ DATE FILTER (LOCAL FALLBACK FOR NON-GOOGLE & MULTI-PROVIDER)
     =============================== */
     if (startDate) {
-      const start = new Date(startDate);
-      allFiles = allFiles.filter((f) => !f.createdAt || new Date(f.createdAt) >= start);
+      const startMs = new Date(startDate).getTime();
+      allFiles = allFiles.filter((f) => {
+        const val = f.createdAt || f.createdTime || f.modifiedTime || f.server_modified || f.modified_at;
+        if (!val) return true;
+        const ts = new Date(val).getTime();
+        return isNaN(ts) ? true : ts >= startMs;
+      });
     }
 
     if (endDate) {
-      const end = new Date(endDate);
-      allFiles = allFiles.filter((f) => !f.createdAt || new Date(f.createdAt) <= end);
+      const endMs = new Date(endDate).getTime();
+      allFiles = allFiles.filter((f) => {
+        const val = f.createdAt || f.createdTime || f.modifiedTime || f.server_modified || f.modified_at;
+        if (!val) return true;
+        const ts = new Date(val).getTime();
+        return isNaN(ts) ? true : ts <= endMs;
+      });
     }
 
     /* ===============================

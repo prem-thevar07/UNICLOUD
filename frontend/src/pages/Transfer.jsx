@@ -31,6 +31,17 @@ const getFileIcon = (fileName, isFolder) => {
   return "📄";
 };
 
+const formatProviderName = (prov) => {
+  if (!prov || prov === "Cloud") return "Cloud";
+  const lower = String(prov).toLowerCase();
+  if (lower === "google" || lower === "google drive") return "Google Drive";
+  if (lower === "onedrive") return "OneDrive";
+  if (lower === "s3" || lower === "amazon s3") return "Amazon S3";
+  if (lower === "box") return "Box";
+  if (lower === "dropbox") return "Dropbox";
+  return prov.charAt(0).toUpperCase() + prov.slice(1);
+};
+
 const getRootLabel = (provider) => {
   switch (provider) {
     case "box": return "Box Root";
@@ -82,6 +93,8 @@ const Transfer = () => {
   // Modals
   const [showHowItWorks, setShowHowItWorks] = useState(false);
   const [showTransferGuide, setShowTransferGuide] = useState(false);
+  const [showAllActivityModal, setShowAllActivityModal] = useState(false);
+  const [activitySearch, setActivitySearch] = useState("");
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [isCreatingFolder, setIsCreatingFolder] = useState(false);
@@ -836,7 +849,7 @@ const Transfer = () => {
               <button
                 className="btn-header-action"
                 style={{ padding: "4px 10px", fontSize: "0.75rem" }}
-                onClick={() => setShowTransferGuide(true)}
+                onClick={() => setShowAllActivityModal(true)}
               >
                 View All
               </button>
@@ -857,7 +870,7 @@ const Transfer = () => {
                       <div>
                         <div className="activity-file-name">{item.fileName}</div>
                         <div className="activity-file-route">
-                          {item.sourceProvider || "Cloud"} ➔ {item.targetProvider || "Cloud"}
+                          {formatProviderName(item.sourceProvider)} ➔ {formatProviderName(item.targetProvider)}
                           {item.errorReason && <span style={{ color: "#ef4444", marginLeft: "6px" }}>({item.errorReason})</span>}
                         </div>
                       </div>
@@ -951,6 +964,103 @@ const Transfer = () => {
               <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1.5rem" }}>
                 <button className="btn-start-transfer-big" style={{ padding: "8px 20px", fontSize: "0.85rem" }} onClick={() => setShowTransferGuide(false)}>
                   Close Guide
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: ALL TRANSFER ACTIVITY LOGS */}
+        {showAllActivityModal && (
+          <div className="modal-overlay-backdrop" onClick={() => setShowAllActivityModal(false)}>
+            <div
+              className="modal-content-card"
+              style={{ maxWidth: "700px", width: "92%", maxHeight: "85vh", display: "flex", flexDirection: "column" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                <h3 style={{ margin: 0, fontSize: "1.2rem", color: "#f8fafc", display: "flex", alignItems: "center", gap: "8px" }}>
+                  <span>📋</span> All Transfer Logs ({transferHistory.length})
+                </h3>
+                <button
+                  className="btn-header-action"
+                  onClick={() => setShowAllActivityModal(false)}
+                  style={{ padding: "4px 10px", fontSize: "0.8rem" }}
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              {/* Search Filter for Activity Logs */}
+              {transferHistory.length > 0 && (
+                <div style={{ marginBottom: "1rem" }}>
+                  <input
+                    type="text"
+                    className="account-selector-pill"
+                    placeholder="Search logs by file name or provider..."
+                    value={activitySearch}
+                    onChange={(e) => setActivitySearch(e.target.value)}
+                    style={{ width: "100%", boxSizing: "border-box", padding: "8px 14px", fontSize: "0.85rem" }}
+                  />
+                </div>
+              )}
+
+              {/* Scrollable Logs List */}
+              <div className="activity-list-container" style={{ flex: 1, overflowY: "auto", maxHeight: "55vh", paddingRight: "4px" }}>
+                {transferHistory.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "3rem", color: "#94a3b8", fontSize: "0.9rem" }}>
+                    No transfer activity recorded yet.
+                  </div>
+                ) : (
+                  transferHistory
+                    .filter((item) => {
+                      if (!activitySearch.trim()) return true;
+                      const q = activitySearch.toLowerCase();
+                      return (
+                        item.fileName?.toLowerCase().includes(q) ||
+                        item.sourceProvider?.toLowerCase().includes(q) ||
+                        item.targetProvider?.toLowerCase().includes(q)
+                      );
+                    })
+                    .map((item, idx) => (
+                      <div key={item._id || idx} className="activity-item-row" style={{ padding: "12px 14px" }}>
+                        <div className="activity-item-left">
+                          <span className="activity-check-icon" style={item.status === "failed" ? { color: "#ef4444" } : {}}>
+                            {item.status === "failed" ? "❌" : "✓"}
+                          </span>
+                          <div>
+                            <div className="activity-file-name" style={{ fontSize: "0.9rem", fontWeight: "600" }}>{item.fileName}</div>
+                            <div className="activity-file-route" style={{ fontSize: "0.8rem", color: "#94a3b8", marginTop: "2px" }}>
+                              {formatProviderName(item.sourceProvider)} ➔ {formatProviderName(item.targetProvider)}
+                              {item.errorReason && <span style={{ color: "#ef4444", marginLeft: "6px" }}>({item.errorReason})</span>}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="activity-item-right" style={{ textAlign: "right" }}>
+                          <span style={{ color: "#a5b4fc", fontWeight: "500", fontSize: "0.85rem" }}>{formatBytes(item.fileSize)}</span>
+                          <span
+                            className="status-badge-completed"
+                            style={item.status === "failed" ? { background: "rgba(239, 68, 68, 0.15)", color: "#f87171", border: "1px solid rgba(239, 68, 68, 0.3)" } : {}}
+                          >
+                            {item.status === "failed" ? "Failed" : "Completed"}
+                          </span>
+                          <span style={{ color: "#64748b", fontSize: "0.75rem" }}>
+                            {item.timestamp ? new Date(item.timestamp).toLocaleString([], { dateStyle: "short", timeStyle: "short" }) : "Just now"}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
+
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "1rem", paddingTop: "0.75rem", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                <button
+                  className="btn-start-transfer-big"
+                  style={{ padding: "8px 22px", fontSize: "0.85rem" }}
+                  onClick={() => setShowAllActivityModal(false)}
+                >
+                  Done
                 </button>
               </div>
             </div>

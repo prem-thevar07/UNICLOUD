@@ -37,6 +37,12 @@ const activityLogSchema = new mongoose.Schema(
     // Extra metadata
     meta: {
       provider: { type: String }, // "google", "dropbox"
+      sourceProvider: { type: String },
+      targetProvider: { type: String },
+      fromProvider: { type: String },
+      toProvider: { type: String },
+      sourceEmail: { type: String },
+      targetEmail: { type: String },
       email: { type: String },
       fileName: { type: String },
       fileSize: { type: Number },

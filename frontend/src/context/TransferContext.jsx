@@ -22,6 +22,17 @@ export const TransferProvider = ({ children }) => {
     isPausedRef.current = isPaused;
   }, [isPaused]);
 
+  const formatProviderName = (prov) => {
+    if (!prov || prov === "Cloud") return "Cloud";
+    const lower = String(prov).toLowerCase();
+    if (lower === "google" || lower === "google drive") return "Google Drive";
+    if (lower === "onedrive") return "OneDrive";
+    if (lower === "s3" || lower === "amazon s3") return "Amazon S3";
+    if (lower === "box") return "Box";
+    if (lower === "dropbox") return "Dropbox";
+    return prov.charAt(0).toUpperCase() + prov.slice(1);
+  };
+
   // Load history & rehydrate activeJob on mount
   const fetchHistory = async () => {
     if (!localStorage.getItem("token")) return [];
@@ -32,11 +43,24 @@ export const TransferProvider = ({ children }) => {
       const formatted = rawList.map((item) => {
         const match = item.message ? item.message.match(/"([^"]+)"/) : null;
         const extractedName = match ? match[1] : item.meta?.fileName || item.message || "File";
+
+        let srcProv = item.meta?.sourceProvider || item.meta?.fromProvider;
+        let tgtProv = item.meta?.targetProvider || item.meta?.toProvider;
+
+        if ((!srcProv || srcProv === "Cloud") && item.message) {
+          const fromMatch = item.message.match(/from\s+([a-zA-Z0-9_-]+)/i);
+          if (fromMatch) srcProv = fromMatch[1];
+        }
+        if ((!tgtProv || tgtProv === "Cloud") && item.message) {
+          const toMatch = item.message.match(/to\s+([a-zA-Z0-9_-]+)/i);
+          if (toMatch) tgtProv = toMatch[1];
+        }
+
         return {
           _id: item._id,
           fileName: extractedName,
-          sourceProvider: item.meta?.sourceProvider || "Cloud",
-          targetProvider: item.meta?.targetProvider || "Cloud",
+          sourceProvider: formatProviderName(srcProv || "Cloud"),
+          targetProvider: formatProviderName(tgtProv || "Cloud"),
           fileSize: item.meta?.fileSize || 0,
           status: "completed",
           timestamp: item.createdAt || item.timestamp,
@@ -299,8 +323,8 @@ export const TransferProvider = ({ children }) => {
           const newHistoryItem = {
             _id: `temp_${Date.now()}_${i}`,
             fileName: fileObj.name,
-            sourceProvider: sourceAccount.provider,
-            targetProvider: targetAccount.provider,
+            sourceProvider: formatProviderName(sourceAccount.provider),
+            targetProvider: formatProviderName(targetAccount.provider),
             fileSize: fileSize,
             operation: transferMode,
             status: "completed",
@@ -318,8 +342,8 @@ export const TransferProvider = ({ children }) => {
           const failedHistoryItem = {
             _id: `temp_fail_${Date.now()}_${i}`,
             fileName: fileObj.name,
-            sourceProvider: sourceAccount.provider,
-            targetProvider: targetAccount.provider,
+            sourceProvider: formatProviderName(sourceAccount.provider),
+            targetProvider: formatProviderName(targetAccount.provider),
             fileSize: fileSize,
             operation: transferMode,
             status: "failed",

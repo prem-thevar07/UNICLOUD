@@ -164,7 +164,7 @@ const Optimize = () => {
       const cached = sessionStorage.getItem("unicloud_optimize_files_cache");
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed.some(f => f.parentFolder && f.parentFolder !== "Root")) {
           setAllFiles(parsed);
           analyzeFiles(parsed);
           setLoading(false); // Instant rendering!
@@ -754,8 +754,8 @@ const Optimize = () => {
                           )}
                           <span className="provider-email">{file.accountEmail}</span>
                         </span>
-                        <span className="dup-path">
-                          📂 {file.parentFolder || "Root"}
+                        <span className="dup-path" title={file.parentFolder || file.path || "Root"}>
+                          📂 {file.parentFolder || file.path || "Root"}
                         </span>
                         <span className="dup-date">
                           📅 {formatDate(file.createdAt)}
@@ -1039,7 +1039,9 @@ const Optimize = () => {
                         )}
                         <span>{file.accountEmail}</span>
                       </td>
-                      <td className="file-folder-cell">📂 {file.parentFolder || "Root"}</td>
+                      <td className="file-folder-cell" title={file.parentFolder || file.path || "Root"}>
+                        📂 {file.parentFolder || file.path || "Root"}
+                      </td>
                       <td>{formatDate(file.createdAt)}</td>
                       <td className="opt-action-cell">
                         <button

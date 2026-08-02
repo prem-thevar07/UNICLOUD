@@ -71,6 +71,8 @@ export const normalizeFile = (
 
       // 🔥 Extra (future use)
       mimeType: mime,
+      path: file.path || "/",
+      parentFolder: file.parentFolder || file.path || "Root"
     };
   }
 
@@ -101,6 +103,7 @@ export const normalizeFile = (
     }
 
     const dropboxUrl = file.webViewLink || `https://www.dropbox.com/home` + (file.path_display || "");
+    const folderPath = file.path_display ? (file.path_display.substring(0, file.path_display.lastIndexOf("/")) || "/") : "/";
 
     return {
       id: file.id,
@@ -111,7 +114,8 @@ export const normalizeFile = (
       accountId,
       accountEmail,
       thumbnail: file.thumbnailLink || null,
-      path: file.path_display ? file.path_display.substring(0, file.path_display.lastIndexOf("/")) || "/" : "/",
+      path: folderPath,
+      parentFolder: folderPath === "/" ? "Root" : folderPath,
       url: dropboxUrl,
       officialUrl: dropboxUrl,
       createdAt: file.server_modified || null,
@@ -161,8 +165,8 @@ export const normalizeFile = (
     }
 
     const rawPath = file.parentReference?.path || "";
-    const pathSegs = rawPath.replace(/^\/drive\/root:/, "").split("/").filter(Boolean);
-    const cleanPath = "/" + pathSegs.join("/");
+    const pathSegs = rawPath.replace(/^\/drive\/root:?/, "").split("/").filter(Boolean);
+    const cleanPath = pathSegs.length > 0 ? "/" + pathSegs.join("/") : "/";
 
     return {
       id: file.id,
@@ -174,6 +178,7 @@ export const normalizeFile = (
       accountEmail,
       thumbnail: type === "image" || type === "video" ? `/api/onedrive/thumbnail/${accountId}?fileId=${file.id}` : null,
       path: cleanPath,
+      parentFolder: cleanPath === "/" ? "Root" : cleanPath,
       url: `/api/onedrive/open/${accountId}?fileId=${file.id}`,
       officialUrl: file.webUrl || null,
       webContentLink: file["@microsoft.graph.downloadUrl"] || null,
@@ -212,7 +217,7 @@ export const normalizeFile = (
 
     const parts = file.Key.split("/");
     parts.pop(); // remove file name
-    const cleanPath = "/" + parts.join("/");
+    const cleanPath = parts.length > 0 ? "/" + parts.join("/") : "/";
     const s3DownloadUrl = `/api/s3/download/${accountId}?fileId=${encodeURIComponent(file.Key)}`;
     const s3OpenUrl = `/api/s3/open/${accountId}?fileId=${encodeURIComponent(file.Key)}`;
 
@@ -226,6 +231,7 @@ export const normalizeFile = (
       accountEmail,
       thumbnail: null,
       path: cleanPath,
+      parentFolder: cleanPath === "/" ? "Root" : cleanPath,
       url: s3OpenUrl,
       officialUrl: s3OpenUrl,
       webContentLink: s3DownloadUrl,
@@ -271,7 +277,7 @@ export const normalizeFile = (
       const pathSegs = file.path_collection.entries
         .filter(p => p.id !== "0")
         .map(p => p.name);
-      cleanPath = "/" + pathSegs.join("/");
+      cleanPath = pathSegs.length > 0 ? "/" + pathSegs.join("/") : "/";
     }
 
     return {
@@ -284,6 +290,7 @@ export const normalizeFile = (
       accountEmail,
       thumbnail: null,
       path: cleanPath,
+      parentFolder: cleanPath === "/" ? "Root" : cleanPath,
       url: `/api/box/open/${accountId}?fileId=${file.id}`,
       officialUrl: file.shared_link?.url || `https://app.box.com/file/${file.id}`,
       webContentLink: `/api/box/download/${accountId}?fileId=${file.id}`,

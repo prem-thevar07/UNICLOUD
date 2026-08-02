@@ -194,6 +194,7 @@ const RecursiveFolderTreeNode = ({
   level = 1,
   selectedFolderFilters = [],
   toggleFolderCheckbox,
+  onOpenFileModal,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -281,6 +282,7 @@ const RecursiveFolderTreeNode = ({
                 level={level + 1}
                 selectedFolderFilters={selectedFolderFilters}
                 toggleFolderCheckbox={toggleFolderCheckbox}
+                onOpenFileModal={onOpenFileModal}
               />
             ))}
 
@@ -289,6 +291,7 @@ const RecursiveFolderTreeNode = ({
               <div
                 key={file.id}
                 className="tree-file-node-item"
+                onClick={() => onOpenFileModal && onOpenFileModal(file)}
                 style={{
                   paddingLeft: `${(level + 1) * 14 + 18}px`,
                   paddingTop: "4px",
@@ -298,7 +301,7 @@ const RecursiveFolderTreeNode = ({
                   display: "flex",
                   alignItems: "center",
                   gap: "6px",
-                  cursor: "default",
+                  cursor: "pointer",
                 }}
               >
                 <span style={{ fontSize: "12px" }}>📄</span>
@@ -479,7 +482,7 @@ const Files = () => {
 
   useEffect(() => {
     applyFilters(true); // Reset pagination when filters change
-  }, [activeCategory, activeSubCategory, search, selectedAccounts, selectedFolderFilters, sortOption]);
+  }, [activeCategory, activeSubCategory, search, selectedAccounts, selectedFolderFilters, sortOption, timeline, customStartDate, customEndDate]);
 
 
 
@@ -595,12 +598,15 @@ const Files = () => {
       // 2. Fetch general files for whole accounts (or all accounts if no folder/account filter)
       let wholeAccountPromise = Promise.resolve({ data: {} });
       if (wholeAccounts.length > 0 || (selectedAccounts.length === 0 && activeFolders.length === 0)) {
+        const { startDateStr, endDateStr } = getTimelineDates();
         const getFilesParams = {
           view: "unified",
           mode: "all",
           pageSize: 100,
           search: debouncedSearch
         };
+        if (startDateStr) getFilesParams.startDate = startDateStr;
+        if (endDateStr) getFilesParams.endDate = endDateStr;
         if (wholeAccounts.length > 0) {
           getFilesParams.accounts = wholeAccounts.join(",");
         }
@@ -653,6 +659,7 @@ const Files = () => {
     isFetchingRef.current = true;
     setLoadingMoreCloud(true);
     try {
+      const { startDateStr, endDateStr } = getTimelineDates();
       const getFilesParams = {
         view: "unified",
         mode: "all",
@@ -660,6 +667,8 @@ const Files = () => {
         search: debouncedSearch,
         pageTokens: JSON.stringify(pageTokens)
       };
+      if (startDateStr) getFilesParams.startDate = startDateStr;
+      if (endDateStr) getFilesParams.endDate = endDateStr;
 
       if (selectedAccounts.length > 0) {
         getFilesParams.accounts = selectedAccounts.join(",");
@@ -705,6 +714,21 @@ const Files = () => {
       data = data.filter((f) =>
         f.name?.toLowerCase().includes(search.toLowerCase())
       );
+    }
+
+    // Filter by Date Range (Timeline & Custom Range)
+    const { startDateStr, endDateStr } = getTimelineDates();
+    if (startDateStr || endDateStr) {
+      const startMs = startDateStr ? new Date(startDateStr).getTime() : null;
+      const endMs = endDateStr ? new Date(endDateStr).getTime() : null;
+
+      data = data.filter((f) => {
+        const fileTs = getFileTimestamp(f);
+        if (!fileTs) return false;
+        if (startMs && fileTs < startMs) return false;
+        if (endMs && fileTs > endMs) return false;
+        return true;
+      });
     }
 
     // Filter by category
@@ -1436,8 +1460,10 @@ const Files = () => {
                           }
                         }}
                         onClick={() => {
-                          if (!isFolder && child.fileObj) {
-                            window.open(getFileOpenUrl(child.fileObj), "_blank");
+                          if (!isFolder) {
+                            const targetFile = child.fileObj || child;
+                            handleOpenFileModal(targetFile);
+                            setHoveredPath([]);
                           }
                         }}
                       >
@@ -1813,21 +1839,35 @@ const Files = () => {
 
           {timeline === "custom" && (
             <div className="custom-date-inputs" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <input
-                type="date"
-                className="filter-select"
-                value={customStartDate}
-                onChange={(e) => setCustomStartDate(e.target.value)}
-                style={{ padding: "4px 8px", height: "35px" }}
-              />
-              <span style={{ color: "var(--text-muted)", fontSize: "12px" }}>to</span>
-              <input
-                type="date"
-                className="filter-select"
-                value={customEndDate}
-                onChange={(e) => setCustomEndDate(e.target.value)}
-                style={{ padding: "4px 8px", height: "35px" }}
-              />
+              <div className="date-picker-box">
+                <input
+                  type="date"
+                  className="filter-select date-input-field"
+                  value={customStartDate}
+                  onChange={(e) => setCustomStartDate(e.target.value)}
+                />
+                <svg className="custom-cal-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
+              <span style={{ color: "var(--text-muted)", fontSize: "12px", fontWeight: "600" }}>to</span>
+              <div className="date-picker-box">
+                <input
+                  type="date"
+                  className="filter-select date-input-field"
+                  value={customEndDate}
+                  onChange={(e) => setCustomEndDate(e.target.value)}
+                />
+                <svg className="custom-cal-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+              </div>
             </div>
           )}
 
@@ -2002,6 +2042,7 @@ const Files = () => {
                               level={1}
                               selectedFolderFilters={selectedFolderFilters}
                               toggleFolderCheckbox={toggleFolderCheckbox}
+                              onOpenFileModal={handleOpenFileModal}
                             />
                           ))}
                           {!foldersLoading && accountFolders.length === 0 && (

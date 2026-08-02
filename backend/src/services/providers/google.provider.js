@@ -131,13 +131,14 @@ export const fetchGoogleFolders = async (account) => {
 
     const drive = google.drive({ version: "v3", auth: oauth2Client });
     const res = await drive.files.list({
-      pageSize: 100,
-      q: "'root' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false",
-      fields: "files(id, name, createdTime)",
+      pageSize: 1000,
+      q: "mimeType = 'application/vnd.google-apps.folder' and trashed = false",
+      fields: "files(id, name, parents, createdTime)",
     });
     return (res.data.files || []).map(f => ({
       id: f.id,
       name: f.name,
+      parents: f.parents || [],
       provider: "google",
       accountId: String(account._id),
       accountEmail: account.email

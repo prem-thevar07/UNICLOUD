@@ -75,6 +75,38 @@ export const fetchBoxStorage = async (account) => {
   }
 };
 
+// Helper to recursively crawl Box folders up to 50 subfolders deep for general file fetching
+const fetchBoxFilesRecursive = async (account, startFolderId = "0") => {
+  const allFiles = [];
+  const folderQueue = [startFolderId];
+  const visitedFolders = new Set();
+  const maxFolders = 50;
+
+  while (folderQueue.length > 0 && visitedFolders.size < maxFolders) {
+    const currentId = folderQueue.shift();
+    if (visitedFolders.has(currentId)) continue;
+    visitedFolders.add(currentId);
+
+    try {
+      const url = `https://api.box.com/2.0/folders/${currentId}/items?limit=1000&fields=id,type,name,size,created_at,modified_at,extension,path_collection,shared_link`;
+      const res = await makeBoxRequest(account, url);
+      const entries = res.data?.entries || [];
+
+      for (const entry of entries) {
+        if (entry.type === "file") {
+          allFiles.push(entry);
+        } else if (entry.type === "folder" && !visitedFolders.has(entry.id)) {
+          folderQueue.push(entry.id);
+        }
+      }
+    } catch (err) {
+      console.warn(`⚠️ Error crawling Box folder ${currentId}:`, err.message);
+    }
+  }
+
+  return allFiles;
+};
+
 // List Box files
 export const fetchBoxFiles = async (account, pageToken = null, options = {}) => {
   try {
@@ -83,41 +115,46 @@ export const fetchBoxFiles = async (account, pageToken = null, options = {}) => 
     const pageSize = options.pageSize ? Number(options.pageSize) : 100;
     const offset = pageToken ? Number(pageToken) : 0;
 
-    let url = "";
-    // If we want a specific folder, list its items directly
+    const cacheKey = `box:files:${account._id}:folder:${folderId}:q:${searchStr}:size:${pageSize}:token:${pageToken || "root"}`;
+    const cachedData = fileCache.get(cacheKey);
+    if (cachedData) {
+      console.log(`⚡ Serving cached files for Box account: ${account.email}`);
+      return cachedData;
+    }
+
+    let files = [];
+    let nextPageToken = null;
+
+    // If a specific subfolder is selected
     if (options.folderId && options.folderId !== "0") {
-      url = `https://api.box.com/2.0/folders/${folderId}/items?limit=${pageSize}&offset=${offset}&fields=id,type,name,size,created_at,modified_at,extension,path_collection,shared_link`;
+      const url = `https://api.box.com/2.0/folders/${folderId}/items?limit=${pageSize}&offset=${offset}&fields=id,type,name,size,created_at,modified_at,extension,path_collection,shared_link`;
+      const res = await makeBoxRequest(account, url);
+      const items = res.data.entries || [];
+      files = items.filter(item => item.type === "file");
+      const totalCount = res.data.total_count || items.length || 0;
+      const nextOffset = offset + pageSize;
+      nextPageToken = nextOffset < totalCount ? String(nextOffset) : null;
     } else if (searchStr) {
-      // If searching
-      url = `https://api.box.com/2.0/search?query=${encodeURIComponent(searchStr)}&type=file&limit=${pageSize}&offset=${offset}&fields=id,type,name,size,created_at,modified_at,extension,path_collection,shared_link`;
+      // If searching with a specific search query string
+      const url = `https://api.box.com/2.0/search?query=${encodeURIComponent(searchStr)}&type=file&limit=${pageSize}&offset=${offset}&fields=id,type,name,size,created_at,modified_at,extension,path_collection,shared_link`;
+      const res = await makeBoxRequest(account, url);
+      const items = res.data.entries || [];
+      files = items.filter(item => item.type === "file");
+      const totalCount = res.data.total_count || items.length || 0;
+      const nextOffset = offset + pageSize;
+      nextPageToken = nextOffset < totalCount ? String(nextOffset) : null;
     } else {
-      // General fetch/root: list recursively using search or root folder listing
-      // To match recursive behavior of Google/Dropbox, use Box search query for files
-      url = `https://api.box.com/2.0/search?query=*&type=file&limit=${pageSize}&offset=${offset}&fields=id,type,name,size,created_at,modified_at,extension,path_collection,shared_link`;
+      // General fetch / root: crawl all folders recursively to include subfolder files
+      files = await fetchBoxFilesRecursive(account, "0");
     }
 
-    let res = await makeBoxRequest(account, url);
-    let items = res.data.entries || [];
-    
-    // Real-time fallback: If search returned nothing (indexing delay) at root, fetch root items directly
-    if (items.length === 0 && (!options.folderId || options.folderId === "0") && !searchStr) {
-      console.log("⚠️ Box search returned empty. Falling back to real-time root folder items query...");
-      const fallbackUrl = `https://api.box.com/2.0/folders/0/items?limit=${pageSize}&offset=${offset}&fields=id,type,name,size,created_at,modified_at,extension,path_collection,shared_link`;
-      const fallbackRes = await makeBoxRequest(account, fallbackUrl);
-      items = fallbackRes.data.entries || [];
-    }
-
-    // Filters only file objects
-    const files = items.filter(item => item.type === "file");
-
-    const totalCount = res.data.total_count || items.length || 0;
-    const nextOffset = offset + pageSize;
-    const nextPageToken = nextOffset < totalCount ? String(nextOffset) : null;
-
-    return {
+    const result = {
       files,
       nextPageToken
     };
+
+    fileCache.set(cacheKey, result);
+    return result;
   } catch (err) {
     console.error("❌ Box fetch files failed:", err.response?.data || err.message);
     throw err;
