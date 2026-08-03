@@ -104,7 +104,7 @@ export class GoogleDriveAdapter extends ProviderAdapter {
       name: file.name || "Unnamed Photo",
       mimeType: file.mimeType || "image/jpeg",
       size: Number(file.size) || 0,
-      thumbnailUrl: file.thumbnailLink || null,
+      thumbnailUrl: file.thumbnailLink || (file.id ? `https://drive.google.com/thumbnail?id=${file.id}&sz=w400` : null),
       previewUrl: `/api/google/open/${this.accountId}?fileId=${file.id}`,
       originalUrl: file.webContentLink || file.webViewLink || null,
       createdDate: created,

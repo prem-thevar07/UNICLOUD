@@ -85,12 +85,19 @@ const Photos = () => {
       }
 
       try {
+        let typeFilter = selectedTypeFilter !== "all" ? selectedTypeFilter : undefined;
+        if (!typeFilter) {
+          if (activeCategory === "videos" || quickPill === "videos") {
+            typeFilter = "video";
+          }
+        }
+
         const payload = {
           cursor: isLoadMore ? nextCursor : undefined,
           limit: 60,
           accountIds: selectedAccountIds.length > 0 ? selectedAccountIds : undefined,
           folder: selectedFolderFilter !== "all" ? selectedFolderFilter : undefined,
-          type: selectedTypeFilter !== "all" ? selectedTypeFilter : undefined,
+          type: typeFilter,
         };
 
         const res = await API.post("/photos", payload);
@@ -115,7 +122,7 @@ const Photos = () => {
         loadingMoreRef.current = false;
       }
     },
-    [nextCursor, hasMore, selectedAccountIds, selectedFolderFilter, selectedTypeFilter]
+    [nextCursor, hasMore, selectedAccountIds, selectedFolderFilter, selectedTypeFilter, activeCategory, quickPill]
   );
 
   // Load initial accounts & sync trigger on mount
@@ -156,10 +163,11 @@ const Photos = () => {
     if (accounts.length > 0) {
       setNextCursor(null);
       setHasMore(true);
+      setPhotos([]);
       fetchTimeline(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccountIds, selectedFolderFilter, selectedTypeFilter]);
+  }, [selectedAccountIds, selectedFolderFilter, selectedTypeFilter, activeCategory, quickPill]);
 
   /* ==========================================================================
      BACKGROUND PRE-FETCHING OBSERVER (70% THRESHOLD / 800px ROOT MARGIN)
@@ -878,29 +886,43 @@ const Photos = () => {
                   <span>Memories & Highlights</span>
                 </div>
                 <div className="photos-memories-scroll-row">
-                  {memoryHighlights.map((mem) => (
-                    <div
-                      key={mem.id}
-                      className="memory-card"
-                      onClick={() => setPreviewModalFile(mem.photo)}
-                    >
-                      <img
-                        src={mem.cover}
-                        alt={mem.title}
-                        className="memory-card-img"
-                        loading="lazy"
-                        referrerPolicy="no-referrer"
-                        onError={(e) => {
-                          e.target.onerror = null;
-                          e.target.src = getFallbackPhotoSrc(mem.photo);
-                        }}
-                      />
-                      <div className="memory-card-overlay">
-                        <div className="memory-card-title">{mem.title}</div>
-                        <div className="memory-card-date">{mem.date}</div>
+                  {memoryHighlights.map((mem) => {
+                    const isMemVid = mem.photo?.mimeType?.startsWith("video/") || mem.photo?.name?.match(/\.(mp4|mov|avi|webm|mkv)$/i);
+                    const hasMemHttpThumb = mem.cover && (mem.cover.startsWith("http://") || mem.cover.startsWith("https://"));
+                    return (
+                      <div
+                        key={mem.id}
+                        className="memory-card"
+                        onClick={() => setPreviewModalFile(mem.photo)}
+                      >
+                        {isMemVid && !hasMemHttpThumb ? (
+                          <video
+                            src={`${getFallbackPhotoSrc(mem.photo)}#t=0.5`}
+                            preload="metadata"
+                            muted
+                            playsInline
+                            className="memory-card-img"
+                          />
+                        ) : (
+                          <img
+                            src={mem.cover}
+                            alt={mem.title}
+                            className="memory-card-img"
+                            loading="lazy"
+                            referrerPolicy="no-referrer"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = getFallbackPhotoSrc(mem.photo);
+                            }}
+                          />
+                        )}
+                        <div className="memory-card-overlay">
+                          <div className="memory-card-title">{mem.title}</div>
+                          <div className="memory-card-date">{mem.date}</div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -941,6 +963,7 @@ const Photos = () => {
                           const isSelected = selectedPhotoIds.includes(p.id);
                           const isFav = favorites.includes(p.id);
                           const isVid = p.mimeType?.startsWith("video/") || p.name?.match(/\.(mp4|mov|avi|webm|mkv)$/i);
+                          const isGoogle = p.provider === "google" || p.provider === "google-photos";
 
                           return (
                             <div
@@ -948,17 +971,27 @@ const Photos = () => {
                               className={`photo-card-item ${isSelected ? "selected" : ""}`}
                               onClick={() => setPreviewModalFile(p)}
                             >
-                              <img
-                                src={getPhotoThumbnail(p)}
-                                alt={p.name}
-                                className="photo-card-img"
-                                loading="lazy"
-                                referrerPolicy="no-referrer"
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = getFallbackPhotoSrc(p);
-                                }}
-                              />
+                              {isVid && !isGoogle ? (
+                                <video
+                                  src={`${getFallbackPhotoSrc(p)}#t=0.5`}
+                                  preload="metadata"
+                                  muted
+                                  playsInline
+                                  className="photo-card-img"
+                                />
+                              ) : (
+                                <img
+                                  src={getPhotoThumbnail(p)}
+                                  alt={p.name}
+                                  className="photo-card-img"
+                                  loading="lazy"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    e.target.onerror = null;
+                                    e.target.src = getFallbackPhotoSrc(p);
+                                  }}
+                                />
+                              )}
 
                               {/* Selection Badge */}
                               <div
@@ -1000,18 +1033,18 @@ const Photos = () => {
                                     className="photo-minimal-logo"
                                     title={p.provider}
                                   />
-                                  <span title={accountMap[p.accountId] || p.provider}>
+                                  <span className="photo-minimal-account" title={accountMap[p.accountId] || p.provider}>
                                     {accountMap[p.accountId] ? accountMap[p.accountId].split("@")[0] : p.provider}
                                   </span>
                                   <span className="photo-minimal-dot">•</span>
-                                  <span>
+                                  <span className="photo-minimal-date">
                                     {new Date(p.createdTime || Date.now()).toLocaleDateString([], {
                                       month: "short",
                                       day: "numeric",
                                     })}
                                   </span>
                                   <span className="photo-minimal-dot">•</span>
-                                  <span>{formatSize(p.size)}</span>
+                                  <span className="photo-minimal-size">{formatSize(p.size)}</span>
                                 </div>
                               </div>
                             </div>
@@ -1121,7 +1154,15 @@ function getPhotoThumbnail(photo) {
   const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001/api";
   const cleanBase = baseUrl.endsWith("/api") ? baseUrl.slice(0, -4) : baseUrl;
 
-  const rawThumb = photo.thumbnailLink || photo.thumbnail;
+  // 1. Google Drive CDN thumbnail (instant <30ms load for all photos & videos)
+  if (photo.provider === "google" || photo.provider === "google-photos") {
+    if (photo.thumbnailUrl && photo.thumbnailUrl.startsWith("http")) return photo.thumbnailUrl;
+    if (photo.thumbnailLink && photo.thumbnailLink.startsWith("http")) return photo.thumbnailLink;
+    const fileId = photo.providerFileId || photo.id;
+    if (fileId) return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w400`;
+  }
+
+  const rawThumb = photo.thumbnailUrl || photo.thumbnailLink || photo.thumbnail;
   if (rawThumb) {
     if (rawThumb.startsWith("/api/")) {
       const sep = rawThumb.includes("?") ? "&" : "?";
