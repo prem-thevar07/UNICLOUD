@@ -50,6 +50,16 @@ class SyncManagerService {
         ],
       });
 
+      // Clean up any bad or stale google-photos records with invalid drive.google.com URLs
+      await PhotoMetadata.deleteMany({
+        provider: "google-photos",
+        $or: [
+          { thumbnailUrl: { $regex: "drive.google.com" } },
+          { thumbnailUrl: "" },
+          { thumbnailUrl: null },
+        ],
+      });
+
       // Update lastSyncedAt on CloudAccount document
       account.lastSyncedAt = new Date();
       await account.save();

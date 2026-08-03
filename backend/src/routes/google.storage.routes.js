@@ -1,11 +1,17 @@
 import express from "express";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import axios from "axios";
 import { google } from "googleapis";
 import CloudAccount from "../models/CloudAccount.js";
 import auth from "../middleware/auth.middleware.js";
 import { oauth2Client } from "../config/google.js";
 import { fileCache } from "../utils/cache.js";
+import {
+  createPickerSession,
+  getPickerSessionStatus,
+  importPickerMediaItems,
+} from "../services/providers/googlePhotosPicker.provider.js";
 
 const router = express.Router();
 
@@ -39,8 +45,7 @@ router.get("/connect", (req, res) => {
         "https://www.googleapis.com/auth/drive.readonly",
         "https://www.googleapis.com/auth/drive.file",
         "https://www.googleapis.com/auth/userinfo.email",
-        "https://www.googleapis.com/auth/photoslibrary.readonly.originals",
-        "https://www.googleapis.com/auth/photoslibrary.appendonly",
+        "https://www.googleapis.com/auth/photospicker.mediaitems.readonly",
       ],
       state: userId,
     });
@@ -544,6 +549,143 @@ router.get("/open/:accountId", auth, async (req, res) => {
   } catch (err) {
     console.error("❌ Google open proxy error:", err.message);
     res.status(500).json({ message: "Failed to open Google Drive file: " + err.message });
+  }
+});
+
+/* ===============================
+   📸 GOOGLE PHOTOS PICKER API ROUTES
+=============================== */
+router.post("/picker/session/:accountId", auth, async (req, res) => {
+  try {
+    const { accountId } = req.params;
+    const account = await CloudAccount.findOne({
+      _id: accountId,
+      userId: req.user.id,
+      provider: "google",
+    });
+
+    if (!account) {
+      return res.status(404).json({ message: "Google account not found" });
+    }
+
+    const sessionData = await createPickerSession(account);
+    res.json(sessionData);
+  } catch (err) {
+    console.error("❌ Picker Session Route Error:", err.message);
+    res.status(500).json({ message: "Failed to create Google Photos Picker session", error: err.message });
+  }
+});
+
+router.get("/picker/session/:accountId/:sessionId", auth, async (req, res) => {
+  try {
+    const { accountId, sessionId } = req.params;
+    const account = await CloudAccount.findOne({
+      _id: accountId,
+      userId: req.user.id,
+      provider: "google",
+    });
+
+    if (!account) {
+      return res.status(404).json({ message: "Google account not found" });
+    }
+
+    const status = await getPickerSessionStatus(account, sessionId);
+    res.json(status);
+  } catch (err) {
+    console.error("❌ Picker Status Route Error:", err.message);
+    res.status(500).json({ message: "Failed to get Picker session status", error: err.message });
+  }
+});
+
+router.post("/picker/import/:accountId", auth, async (req, res) => {
+  try {
+    const { accountId } = req.params;
+    const { sessionId } = req.body;
+
+    if (!sessionId) {
+      return res.status(400).json({ message: "Session ID is required" });
+    }
+
+    const account = await CloudAccount.findOne({
+      _id: accountId,
+      userId: req.user.id,
+      provider: "google",
+    });
+
+    if (!account) {
+      return res.status(404).json({ message: "Google account not found" });
+    }
+
+    const result = await importPickerMediaItems(req.user.id, account, sessionId);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    console.error("❌ Picker Import Route Error:", err.message);
+    res.status(500).json({ message: "Failed to import selected Google Photos", error: err.message });
+  }
+});
+
+router.get("/photos/proxy/:accountId", auth, async (req, res) => {
+  try {
+    let { url } = req.query;
+    if (!url) return res.status(400).send("Missing URL");
+
+    // Google Photos baseUrl requires dimension parameters (e.g. =w400) or it returns 400 Bad Request
+    if (!url.includes("=")) {
+      url = `${url}=w400`;
+    }
+
+    console.log("🔍 PROXY FETCHING GOOGLE PHOTO URL:", url);
+
+    const account = await CloudAccount.findOne({
+      _id: req.params.accountId,
+      userId: req.user.id,
+      provider: "google",
+    });
+
+    if (!account) return res.status(404).send("Account not found");
+
+    let token = account.accessToken;
+    if (!token || (account.tokenExpiry && new Date(account.tokenExpiry) <= new Date())) {
+      try {
+        const client = new google.auth.OAuth2(
+          process.env.GOOGLE_CLIENT_ID,
+          process.env.GOOGLE_CLIENT_SECRET
+        );
+        client.setCredentials({ refresh_token: account.refreshToken });
+        const newTokens = await client.getAccessToken();
+        token = newTokens.token;
+        account.accessToken = token;
+        account.tokenExpiry = new Date(Date.now() + 3500 * 1000);
+        await account.save();
+      } catch (e) {
+        console.warn("⚠️ Token refresh error in proxy:", e.message);
+      }
+    }
+
+    const headers = {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+    };
+
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
+    let imgRes;
+    try {
+      imgRes = await axios.get(url, { headers, responseType: "stream" });
+    } catch (e1) {
+      // Fallback retry without Auth header if Bearer token is rejected
+      delete headers["Authorization"];
+      imgRes = await axios.get(url, { headers, responseType: "stream" });
+    }
+
+    res.setHeader("Content-Type", imgRes.headers["content-type"] || "image/jpeg");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    imgRes.data.pipe(res);
+  } catch (err) {
+    console.error("❌ Google Photos proxy error:", err.response?.status, err.message);
+    res.status(500).send("Failed to proxy photo: " + err.message);
   }
 });
 

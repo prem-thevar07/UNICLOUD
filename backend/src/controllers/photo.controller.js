@@ -71,3 +71,23 @@ export const searchPhotos = async (req, res) => {
     res.status(500).json({ message: "Search failed: " + err.message });
   }
 };
+
+/**
+ * DELETE /api/photos/google-photos (Purge all imported Google Photos items)
+ */
+export const purgeGooglePhotos = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await PhotoMetadata.deleteMany({
+      userId,
+      provider: "google-photos",
+    });
+    res.json({
+      message: "Successfully purged imported Google Photos items",
+      deletedCount: result.deletedCount,
+    });
+  } catch (err) {
+    console.error("❌ Purge Google Photos Error:", err);
+    res.status(500).json({ message: "Failed to purge Google Photos items: " + err.message });
+  }
+};

@@ -4,14 +4,171 @@ import MainLayout from "../layouts/MainLayout";
 import FilePreviewModal from "../components/FilePreviewModal";
 import "../styles/photos.css";
 
-const providerIcons = {
-  google: "/assets/drive.png",
-  "google-photos": "/assets/drive.png",
-  dropbox: "/assets/dropbox.png",
-  onedrive: "/assets/onedrive.png",
-  s3: "/assets/s3.png",
-  box: "/assets/box.png",
-};
+/* ==========================================================================
+   VECTOR SVG ICON COMPONENTS (NO EMOJIS)
+   ========================================================================== */
+const IconPhotosApp = () => (
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="4" ry="4" />
+    <circle cx="8.5" cy="8.5" r="1.5" />
+    <polyline points="21 15 16 10 5 21" />
+  </svg>
+);
+
+const IconGoogleDrive = () => (
+  <svg width="18" height="18" viewBox="0 0 87.3 78" fill="currentColor">
+    <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5l5.4 9.35z" fill="#0066DA" />
+    <path d="M43.65 25L29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44c-.8 1.4-1.2 2.95-1.2 4.5h27.5L43.65 25z" fill="#00AC47" />
+    <path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l5.4-9.35c.8-1.4 1.2-2.95 1.2-4.5H55.95l6.5 11.25 11.1 5.9z" fill="#EA4335" />
+    <path d="M43.65 25L57.4 1.2c-1.35-.8-2.9-1.2-4.45-1.2H34.4c-1.55 0-3.1.4-4.5 1.2L43.65 25z" fill="#00832D" />
+    <path d="M55.95 53H27.5L13.75 76.8c1.35.8 2.9 1.2 4.45 1.2h50.9c1.55 0 3.1-.4 4.5-1.2L55.95 53z" fill="#2684FC" />
+    <path d="M73.55 28.3L48.15 4.35C46.8 3.55 45.25 3.15 43.7 3.15h.05L57.4 26.9l16.15 26.1h.05c1.55 0 3.1-.4 4.45-1.2l5.4-9.35c.8-1.4 1.2-2.95 1.2-4.5 0-1.6-.4-3.1-1.15-4.55l-9.95-14.6z" fill="#FFBA00" />
+  </svg>
+);
+
+const IconGooglePhotos = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <path d="M12 12V3a4.5 4.5 0 0 1 4.5 4.5A4.5 4.5 0 0 1 12 12z" fill="#EA4335" />
+    <path d="M12 12h9a4.5 4.5 0 0 1-4.5 4.5A4.5 4.5 0 0 1 12 12z" fill="#4285F4" />
+    <path d="M12 12v9a4.5 4.5 0 0 1-4.5-4.5A4.5 4.5 0 0 1 12 12z" fill="#34A853" />
+    <path d="M12 12H3a4.5 4.5 0 0 1 4.5-4.5A4.5 4.5 0 0 1 12 12z" fill="#FBBC05" />
+  </svg>
+);
+
+const IconOneDrive = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="#0078D4">
+    <path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
+  </svg>
+);
+
+const IconDropbox = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="#0061FF">
+    <path d="M6 2l6 3.75L6 9.5 0 5.75 6 2zm12 0l6 3.75-6 3.75-6-3.75L18 2zM0 13.25L6 9.5l6 3.75-6 3.75-6-3.75zm24 0l-6-3.75-6 3.75 6 3.75 6-3.75zM6 18.25l6-3.75 6 3.75-6 3.75-6-3.75z" />
+  </svg>
+);
+
+const IconS3 = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="#E53935">
+    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const IconSearch = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="11" cy="11" r="8" />
+    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+  </svg>
+);
+
+const IconGrid = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="3" width="7" height="7" rx="1" />
+    <rect x="14" y="14" width="7" height="7" rx="1" />
+    <rect x="3" y="14" width="7" height="7" rx="1" />
+  </svg>
+);
+
+const IconList = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="8" y1="6" x2="21" y2="6" />
+    <line x1="8" y1="12" x2="21" y2="12" />
+    <line x1="8" y1="18" x2="21" y2="18" />
+    <line x1="3" y1="6" x2="3.01" y2="6" />
+    <line x1="3" y1="12" x2="3.01" y2="12" />
+    <line x1="3" y1="18" x2="3.01" y2="18" />
+  </svg>
+);
+
+const IconHeart = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l8.78-8.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+  </svg>
+);
+
+const IconVideo = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="23 7 16 12 23 17 23 7" />
+    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+  </svg>
+);
+
+const IconCamera = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+    <circle cx="12" cy="13" r="4" />
+  </svg>
+);
+
+const IconFolder = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+const IconTrash = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+  </svg>
+);
+
+const IconPlus = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="5" x2="12" y2="19" />
+    <line x1="5" y1="12" x2="19" y2="12" />
+  </svg>
+);
+
+const IconFilter = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </svg>
+);
+
+const IconCalendar = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+    <line x1="16" y1="2" x2="16" y2="6" />
+    <line x1="8" y1="2" x2="8" y2="6" />
+    <line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+const IconSparkles = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+  </svg>
+);
+
+const IconDuplicate = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+  </svg>
+);
+
+const IconCloud = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z" />
+  </svg>
+);
+
+const IconLayers = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
+  </svg>
+);
+
+const IconDatabase = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <ellipse cx="12" cy="5" rx="9" ry="3" />
+    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
+    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+  </svg>
+);
 
 const Photos = () => {
   // Real Data & Timeline Engine States
@@ -24,17 +181,17 @@ const Photos = () => {
 
   // Category & Filter States
   const [activeCategory, setActiveCategory] = useState("all_photos");
-  const [selectedAccountIds, setSelectedAccountIds] = useState([]);
+  const [selectedSourceKeys, setSelectedSourceKeys] = useState([]);
   const [selectedFolderFilter, setSelectedFolderFilter] = useState("all");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState("all");
   const [quickPill, setQuickPill] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("grid");
+  const [isViewFromOpen, setIsViewFromOpen] = useState(false);
 
   // Selection & Modal States
   const [selectedPhotoIds, setSelectedPhotoIds] = useState([]);
   const [previewModalFile, setPreviewModalFile] = useState(null);
-  const [activeScrubberMonth, setActiveScrubberMonth] = useState("");
 
   const [favorites, setFavorites] = useState(() => {
     try {
@@ -47,6 +204,8 @@ const Photos = () => {
 
   const searchInputRef = useRef(null);
   const observerRef = useRef(null);
+  const loadingMoreRef = useRef(false);
+  const dropdownRef = useRef(null);
 
   // Save favorites to localStorage
   useEffect(() => {
@@ -57,19 +216,78 @@ const Photos = () => {
     }
   }, [favorites]);
 
-  // Global Keyboard Shortcut (Ctrl+K or Cmd+K) to focus search
+  // Close custom dropdown when clicking outside
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "k") {
-        e.preventDefault();
-        searchInputRef.current?.focus();
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsViewFromOpen(false);
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const loadingMoreRef = useRef(false);
+  /* ==========================================================================
+     FETCH USER CLOUD ACCOUNTS (RUNS ONCE ON MOUNT)
+     ========================================================================== */
+  useEffect(() => {
+    let isMounted = true;
+    const loadAccounts = async () => {
+      try {
+        const res = await API.get("/accounts");
+        const list = res.data.accounts || res.data || [];
+        if (isMounted) setAccounts(list);
+      } catch (err) {
+        console.error("Failed to fetch cloud accounts:", err);
+      }
+    };
+    loadAccounts();
+    return () => { isMounted = false; };
+  }, []);
+
+  /* ==========================================================================
+     SYNTHESIZE DISTINCT SOURCE CARDS (DRIVE VS GOOGLE PHOTOS VS OTHERS)
+     ========================================================================== */
+  const sourceCards = useMemo(() => {
+    const list = [];
+    accounts.forEach((acc) => {
+      const email = acc.accountEmail || acc.email || "connected";
+      if (acc.provider === "google") {
+        // 1. Google Drive Card
+        const driveCount = photos.filter((p) => p.accountId === acc._id && p.provider === "google").length;
+        list.push({
+          id: acc._id,
+          key: `${acc._id}_google`,
+          provider: "google",
+          name: "Google Drive",
+          email,
+          count: driveCount,
+        });
+
+        // 2. Google Photos Card (Distinct Card as requested by user)
+        const photosCount = photos.filter((p) => p.accountId === acc._id && p.provider === "google-photos").length;
+        list.push({
+          id: acc._id,
+          key: `${acc._id}_google-photos`,
+          provider: "google-photos",
+          name: "Google Photos",
+          email,
+          count: photosCount,
+        });
+      } else {
+        const count = photos.filter((p) => p.accountId === acc._id).length;
+        list.push({
+          id: acc._id,
+          key: acc._id,
+          provider: acc.provider,
+          name: getProviderName(acc.provider),
+          email,
+          count,
+        });
+      }
+    });
+    return list;
+  }, [accounts, photos]);
 
   /* ==========================================================================
      FETCH TIMELINE BATCH FROM TIMELINE ENGINE SERVICE
@@ -82,421 +300,264 @@ const Photos = () => {
         setLoadingMore(true);
       } else {
         setLoading(true);
+        setNextCursor(null);
+        setHasMore(true);
       }
 
       try {
-        let typeFilter = selectedTypeFilter !== "all" ? selectedTypeFilter : undefined;
-        if (!typeFilter) {
-          if (activeCategory === "videos" || quickPill === "videos") {
-            typeFilter = "video";
-          }
+        const params = { limit: 60 };
+        if (isLoadMore && nextCursor) {
+          params.cursor = nextCursor;
         }
 
-        const payload = {
-          cursor: isLoadMore ? nextCursor : undefined,
-          limit: 60,
-          accountIds: selectedAccountIds.length > 0 ? selectedAccountIds : undefined,
-          folder: selectedFolderFilter !== "all" ? selectedFolderFilter : undefined,
-          type: typeFilter,
-        };
+        if (selectedFolderFilter !== "all") {
+          params.folder = selectedFolderFilter;
+        }
 
-        const res = await API.post("/photos", payload);
-        const newFiles = res.data.files || [];
-        const returnedCursor = res.data.nextCursor || null;
-        const returnedHasMore = Boolean(res.data.hasMore) && Boolean(returnedCursor);
+        if (selectedTypeFilter !== "all") {
+          params.type = selectedTypeFilter;
+        } else if (activeCategory === "videos") {
+          params.type = "video";
+        }
+
+        const res = await API.get("/photos", { params });
+
+        const newItems = res.data.files || res.data.photos || res.data.items || [];
+        const nextCurs = res.data.nextCursor || res.data.pagination?.nextCursor || null;
+        const more = res.data.hasMore ?? res.data.pagination?.hasMore ?? Boolean(nextCurs);
 
         if (isLoadMore) {
-          setPhotos((prev) => deduplicatePhotos([...prev, ...newFiles]));
+          setPhotos((prev) => deduplicatePhotos([...prev, ...newItems]));
         } else {
-          setPhotos(deduplicatePhotos(newFiles));
+          setPhotos(newItems);
         }
 
-        setNextCursor(returnedCursor);
-        setHasMore(returnedHasMore && newFiles.length > 0);
+        setNextCursor(nextCurs);
+        setHasMore(more);
       } catch (err) {
-        console.error("❌ Timeline Engine Fetch Error:", err);
-        setHasMore(false);
+        console.error("❌ Failed to fetch photos timeline:", err);
       } finally {
         setLoading(false);
         setLoadingMore(false);
         loadingMoreRef.current = false;
       }
     },
-    [nextCursor, hasMore, selectedAccountIds, selectedFolderFilter, selectedTypeFilter, activeCategory, quickPill]
+    [nextCursor, hasMore, selectedFolderFilter, selectedTypeFilter, activeCategory]
   );
 
-  // Load initial accounts & sync trigger on mount
   useEffect(() => {
-    const initEngine = async () => {
-      setLoading(true);
-      try {
-        const accRes = await API.get("/accounts");
-        const accs = Array.isArray(accRes.data) ? accRes.data : [];
-        setAccounts(accs);
-
-        // Fetch initial timeline batch from Timeline Engine
-        const res = await API.post("/photos", { limit: 60 });
-        const newFiles = res.data.files || [];
-
-        setPhotos(deduplicatePhotos(newFiles));
-        setNextCursor(res.data.nextCursor || null);
-        setHasMore(Boolean(res.data.hasMore) && Boolean(res.data.nextCursor));
-
-        // Trigger asynchronous background metadata index sync and re-fetch once completed
-        API.post("/photos/sync")
-          .then(() => {
-            fetchTimeline(false);
-          })
-          .catch(() => {});
-      } catch (err) {
-        console.error("❌ Initial Timeline Engine load error:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    initEngine();
-  }, []);
-
-  // When filters or accounts change, reset cursor and fetch from scratch
-  useEffect(() => {
-    if (accounts.length > 0) {
-      setNextCursor(null);
-      setHasMore(true);
-      setPhotos([]);
-      fetchTimeline(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedAccountIds, selectedFolderFilter, selectedTypeFilter, activeCategory, quickPill]);
+    fetchTimeline(false);
+  }, [selectedFolderFilter, selectedTypeFilter, activeCategory]);
 
   /* ==========================================================================
-     BACKGROUND PRE-FETCHING OBSERVER (70% THRESHOLD / 800px ROOT MARGIN)
+     BACKGROUND PRE-FETCH SENTINEL OBSERVER (70% VIEWPORT THRESHOLD)
      ========================================================================== */
   const sentinelRef = useCallback(
     (node) => {
-      if (loading || !hasMore || !nextCursor) return;
+      if (loading || loadingMore) return;
       if (observerRef.current) observerRef.current.disconnect();
 
       observerRef.current = new IntersectionObserver(
         (entries) => {
-          if (entries[0].isIntersecting && !loadingMoreRef.current && hasMore && nextCursor) {
+          if (entries[0].isIntersecting && hasMore && nextCursor) {
             fetchTimeline(true);
           }
         },
-        { rootMargin: "600px" }
+        { rootMargin: "600px", threshold: 0.7 }
       );
 
       if (node) observerRef.current.observe(node);
     },
-    [loading, hasMore, nextCursor, fetchTimeline]
+    [loading, loadingMore, hasMore, nextCursor, fetchTimeline]
   );
 
   /* ==========================================================================
-     SINGLE & MULTI ACCOUNT TOGGLE LOGIC
-     ========================================================================== */
-  const toggleAccountSelection = (accId) => {
-    if (accId === "all") {
-      setSelectedAccountIds([]);
-      setSelectedFolderFilter("all");
-      return;
-    }
-
-    setSelectedAccountIds((prev) => {
-      if (prev.includes(accId)) {
-        return prev.filter((id) => id !== accId);
-      } else {
-        return [...prev, accId];
-      }
-    });
-    setSelectedFolderFilter("all");
-  };
-
-  /* ==========================================================================
-     COMPUTED METRICS FROM INDEXED TIMELINE
-     ========================================================================== */
-  const metrics = useMemo(() => {
-    const isVid = (p) => p.mimeType?.startsWith("video/") || p.name?.match(/\.(mp4|mov|avi|webm|mkv)$/i);
-    const videosList = photos.filter(isVid);
-    const photosList = photos.filter((p) => !isVid(p));
-    const totalBytes = photos.reduce((sum, p) => sum + (p.size || 0), 0);
-
-    const sigMap = {};
-    let dupCount = 0;
-    photos.forEach((p) => {
-      if (p.size && p.name) {
-        const sig = `${p.name.toLowerCase()}:${p.size}`;
-        if (!sigMap[sig]) sigMap[sig] = [];
-        sigMap[sig].push(p);
-      }
-    });
-    Object.values(sigMap).forEach((group) => {
-      if (group.length > 1) dupCount += group.length - 1;
-    });
-
-    let latestSyncDate = null;
-    accounts.forEach((acc) => {
-      if (acc.lastSyncedAt) {
-        const d = new Date(acc.lastSyncedAt);
-        if (!latestSyncDate || d > latestSyncDate) latestSyncDate = d;
-      }
-    });
-
-    const getRelativeSyncTime = (d) => {
-      if (!d) return "Just now";
-      const diffMins = Math.floor((new Date() - d) / (1000 * 60));
-      if (diffMins < 1) return "Just now";
-      if (diffMins < 60) return `${diffMins} min ago`;
-      const diffHours = Math.floor(diffMins / 60);
-      if (diffHours < 24) return `${diffHours} hours ago`;
-      return `${Math.floor(diffHours / 24)} days ago`;
-    };
-
-    return {
-      photosCount: photosList.length,
-      videosCount: videosList.length,
-      accountsCount: accounts.length,
-      totalBytes,
-      duplicatesCount: dupCount,
-      lastSyncText: getRelativeSyncTime(latestSyncDate),
-    };
-  }, [photos, accounts]);
-
-  /* ==========================================================================
-     ACCOUNT LOOKUP MAP (ID TO EMAIL / NAME)
-     ========================================================================== */
-  const accountMap = useMemo(() => {
-    const map = {};
-    accounts.forEach((acc) => {
-      map[acc._id] = acc.email || acc.name || acc.accountName || acc.provider;
-    });
-    return map;
-  }, [accounts]);
-
-  /* ==========================================================================
-     MEMORIES & HIGHLIGHTS CAROUSEL
-     ========================================================================== */
-  const memoryHighlights = useMemo(() => {
-    if (photos.length === 0) return [];
-    
-    const highlights = [];
-    const now = new Date();
-
-    const oneYearAgoPhoto = photos.find((p) => {
-      const pDate = new Date(p.createdTime || p.createdAt || now);
-      return pDate.getFullYear() === now.getFullYear() - 1;
-    });
-    if (oneYearAgoPhoto) {
-      highlights.push({
-        id: "mem_1yr",
-        title: "One year ago",
-        date: new Date(oneYearAgoPhoto.createdTime || oneYearAgoPhoto.createdAt).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }),
-        cover: getPhotoThumbnail(oneYearAgoPhoto),
-        photo: oneYearAgoPhoto,
-      });
-    }
-
-    const folderPhoto = photos.find((p) => p.parentFolder && p.parentFolder !== "Root");
-    if (folderPhoto) {
-      highlights.push({
-        id: "mem_folder",
-        title: folderPhoto.parentFolder,
-        date: new Date(folderPhoto.createdTime || folderPhoto.createdAt || now).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }),
-        cover: getPhotoThumbnail(folderPhoto),
-        photo: folderPhoto,
-      });
-    }
-
-    const recentVideos = photos.filter((p) => p.mimeType?.startsWith("video/"));
-    if (recentVideos.length > 0) {
-      const vid = recentVideos[0];
-      highlights.push({
-        id: "mem_event",
-        title: "Recent Video Memories",
-        date: new Date(vid.createdTime || vid.createdAt || now).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" }),
-        cover: getPhotoThumbnail(vid),
-        photo: vid,
-      });
-    }
-
-    return highlights;
-  }, [photos]);
-
-  /* ==========================================================================
-     DYNAMIC FOLDERS TREE FOR SIDEBAR
-     ========================================================================== */
-  const folderTree = useMemo(() => {
-    const tree = {};
-    const relevantPhotos = selectedAccountIds.length > 0
-      ? photos.filter((p) => selectedAccountIds.includes(p.accountId))
-      : photos;
-
-    relevantPhotos.forEach((p) => {
-      const providerKey = p.provider === "google-photos" ? "google" : p.provider || "other";
-      if (!tree[providerKey]) tree[providerKey] = {};
-
-      let folderName = p.parentFolder;
-      if (!folderName || folderName === "Root" || folderName === "/") {
-        folderName = "Root";
-      }
-
-      if (!tree[providerKey][folderName]) tree[providerKey][folderName] = 0;
-      tree[providerKey][folderName]++;
-    });
-    return tree;
-  }, [photos, selectedAccountIds]);
-
-  /* ==========================================================================
-     TIMELINE YEARS & MONTHS SCRUBBER (STRICT REVERSE CHRONOLOGICAL)
-     ========================================================================== */
-  const timelineYears = useMemo(() => {
-    const yearMap = {};
-    photos.forEach((p) => {
-      const d = new Date(p.createdTime || Date.now());
-      const yr = d.getFullYear();
-      const moName = d.toLocaleString([], { month: "long" });
-      const moNum = d.getMonth();
-
-      if (!yearMap[yr]) yearMap[yr] = {};
-      if (!yearMap[yr][moName]) yearMap[yr][moName] = moNum;
-    });
-
-    return Object.keys(yearMap)
-      .sort((a, b) => b - a)
-      .map((yr) => {
-        const monthsSorted = Object.entries(yearMap[yr])
-          .sort((a, b) => b[1] - a[1])
-          .map(([moName]) => moName);
-
-        return {
-          year: yr,
-          months: monthsSorted,
-        };
-      });
-  }, [photos]);
-
-  /* ==========================================================================
-     DYNAMIC FILTERING & SEARCH LOGIC
+     FILTERED PHOTOS & REAL DYNAMIC METRICS
      ========================================================================== */
   const filteredPhotos = useMemo(() => {
     return photos.filter((p) => {
-      const pDate = new Date(p.createdTime || Date.now());
-      const isVid = p.mimeType?.startsWith("video/") || p.name?.match(/\.(mp4|mov|avi|webm|mkv)$/i);
-      const ext = (p.name || "").split(".").pop()?.toLowerCase();
-
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchName = p.name?.toLowerCase().includes(q);
-        const matchFolder = (p.parentFolder || "").toLowerCase().includes(q);
-        if (!matchName && !matchFolder) return false;
+      // 1. Source Card Filter (Google Drive vs Google Photos vs OneDrive vs Dropbox)
+      if (selectedSourceKeys.length > 0) {
+        const pSourceKey = p.provider === "google-photos" ? `${p.accountId}_google-photos` : p.provider === "google" ? `${p.accountId}_google` : p.accountId;
+        if (!selectedSourceKeys.includes(pSourceKey)) {
+          return false;
+        }
       }
 
+      // 2. Active Category Filter
       if (activeCategory === "favorites" && !favorites.includes(p.id)) return false;
-      if (activeCategory === "videos" && !isVid) return false;
+      if (activeCategory === "videos" && !p.mimeType?.startsWith("video/") && !p.name?.match(/\.(mp4|mov|avi|webm|mkv)$/i)) return false;
       if (activeCategory === "screenshots" && !p.name?.toLowerCase().includes("screen")) return false;
-      if (activeCategory === "raw" && !["cr2", "nef", "arw", "dng", "raw"].includes(ext)) return false;
+      if (activeCategory === "raw" && !["cr2", "nef", "arw", "dng", "raw"].includes((p.name || "").split(".").pop()?.toLowerCase())) return false;
+      if (activeCategory === "duplicates") {
+        const isDup = photos.filter((x) => x.size === p.size && x.name === p.name).length > 1;
+        if (!isDup) return false;
+      }
 
+      // 3. Quick Presets
       if (quickPill === "today") {
-        if (pDate.toDateString() !== new Date().toDateString()) return false;
+        const todayStr = new Date().toDateString();
+        const pDate = new Date(p.photoTakenDate || p.createdDate || p.createdTime || 0).toDateString();
+        if (todayStr !== pDate) return false;
+      } else if (quickPill === "yesterday") {
+        const yest = new Date();
+        yest.setDate(yest.getDate() - 1);
+        const yestStr = yest.toDateString();
+        const pDate = new Date(p.photoTakenDate || p.createdDate || p.createdTime || 0).toDateString();
+        if (yestStr !== pDate) return false;
+      } else if (quickPill === "this_week") {
+        const now = new Date();
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        const pDate = new Date(p.photoTakenDate || p.createdDate || p.createdTime || 0);
+        if (pDate < weekAgo) return false;
+      } else if (quickPill === "this_month") {
+        const now = new Date();
+        const pDate = new Date(p.photoTakenDate || p.createdDate || p.createdTime || 0);
+        if (pDate.getMonth() !== now.getMonth() || pDate.getFullYear() !== now.getFullYear()) return false;
       } else if (quickPill === "favorites" && !favorites.includes(p.id)) {
         return false;
-      } else if (quickPill === "videos" && !isVid) {
+      } else if (quickPill === "videos" && !p.mimeType?.startsWith("video/") && !p.name?.match(/\.(mp4|mov|avi|webm|mkv)$/i)) {
         return false;
+      }
+
+      // 4. Search Query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const nameMatch = p.name?.toLowerCase().includes(q);
+        const folderMatch = p.folderPath?.toLowerCase().includes(q);
+        const providerMatch = p.provider?.toLowerCase().includes(q);
+        if (!nameMatch && !folderMatch && !providerMatch) return false;
       }
 
       return true;
     });
-  }, [photos, activeCategory, searchQuery, favorites, quickPill]);
+  }, [photos, selectedSourceKeys, activeCategory, favorites, quickPill, searchQuery]);
 
-  /* ==========================================================================
-     GROUPED TIMELINE SECTIONS (NEWEST TO OLDEST)
-     ========================================================================== */
+  // Derived Dynamic Folder Tree from Real Photos
+  const folderTree = useMemo(() => {
+    const tree = {};
+    photos.forEach((p) => {
+      const folderName = p.folderPath?.split("/").filter(Boolean).pop() || "Root";
+      const key = p.provider || "google";
+      if (!tree[key]) tree[key] = {};
+      tree[key][folderName] = (tree[key][folderName] || 0) + 1;
+    });
+    return tree;
+  }, [photos]);
+
+  // Grouped Photo Sections by Timeline Date
   const groupedPhotoSections = useMemo(() => {
-    const sorted = [...filteredPhotos].sort((a, b) => {
-      const da = new Date(a.createdTime || 0).getTime();
-      const db = new Date(b.createdTime || 0).getTime();
-      return db - da;
+    const groups = {};
+    filteredPhotos.forEach((p) => {
+      const d = new Date(p.photoTakenDate || p.createdDate || p.createdTime || Date.now());
+      const label = d.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+      if (!groups[label]) groups[label] = { label, date: d, items: [] };
+      groups[label].items.push(p);
     });
 
-    const groupsMap = new Map();
-    const todayStr = new Date().toDateString();
-
-    const yest = new Date();
-    yest.setDate(yest.getDate() - 1);
-    const yestStr = yest.toDateString();
-
-    sorted.forEach((p) => {
-      const d = new Date(p.createdTime || Date.now());
-      const dateStr = d.toDateString();
-      
-      let label = d.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" });
-      if (dateStr === todayStr) {
-        label = `Today — ${d.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" })}`;
-      } else if (dateStr === yestStr) {
-        label = `Yesterday — ${d.toLocaleDateString([], { month: "long", day: "numeric", year: "numeric" })}`;
-      }
-
-      if (!groupsMap.has(label)) {
-        groupsMap.set(label, {
-          label,
-          timestamp: d.getTime(),
-          items: [],
-        });
-      }
-      groupsMap.get(label).items.push(p);
-    });
-
-    return Array.from(groupsMap.values()).sort((a, b) => b.timestamp - a.timestamp);
+    return Object.values(groups).sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [filteredPhotos]);
+
+  // Memories Carousel Derived 100% Dynamically from Real MongoDB Photos
+  const memoryHighlights = useMemo(() => {
+    if (!photos || photos.length === 0) return [];
+    const titles = ["One year ago", "Recent Highlight", "Cloud Memory", "Saved Moment"];
+    return photos.slice(0, 4).map((p, idx) => {
+      const d = new Date(p.photoTakenDate || p.createdDate || p.createdTime || Date.now());
+      const dateStr = d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      return {
+        id: p.id || `mem-${idx}`,
+        title: titles[idx % titles.length],
+        date: dateStr,
+        photo: p,
+        cover: getPhotoThumbnail(p),
+      };
+    });
+  }, [photos]);
+
+  // Real Dynamic Metrics Bar & Storage Calculations
+  const metrics = useMemo(() => {
+    const photosCount = photos.filter((p) => !p.mimeType?.startsWith("video/")).length;
+    const videosCount = photos.filter((p) => p.mimeType?.startsWith("video/")).length;
+    const totalUsedBytes = photos.reduce((acc, p) => acc + (Number(p.size) || 0), 0);
+    const totalQuotaBytes = accounts.reduce((acc, a) => acc + (Number(a.storage?.total) || 15 * 1024 * 1024 * 1024), 0) || (15 * 1024 * 1024 * 1024);
+    const duplicatesCount = photos.filter((p, i, self) => self.findIndex((x) => x.size === p.size && x.name === p.name) !== i).length;
+    const usedPercent = Math.min(Math.round((totalUsedBytes / (totalQuotaBytes || 1)) * 100), 100);
+
+    return {
+      photosCount: photosCount.toLocaleString(),
+      videosCount: videosCount.toLocaleString(),
+      accountsCount: accounts.length,
+      totalUsedBytes,
+      totalQuotaBytes,
+      usedPercent: isNaN(usedPercent) ? 0 : usedPercent,
+      duplicatesCount: duplicatesCount.toLocaleString(),
+      screenshotsCount: photos.filter((p) => p.name?.toLowerCase().includes("screen")).length.toLocaleString(),
+      rawCount: photos.filter((p) => ["cr2", "nef", "arw", "dng", "raw"].includes((p.name || "").split(".").pop()?.toLowerCase())).length.toLocaleString(),
+    };
+  }, [photos, accounts]);
 
   /* ==========================================================================
      HANDLERS & ACTIONS
      ========================================================================== */
-  const togglePhotoSelection = (id) => {
-    setSelectedPhotoIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  const toggleFavorite = (id, e) => {
-    if (e) e.stopPropagation();
-    setFavorites((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  const handleSelectAllGroup = (items) => {
-    const itemIds = items.map((i) => i.id);
-    const allSelected = itemIds.every((id) => selectedPhotoIds.includes(id));
-    if (allSelected) {
-      setSelectedPhotoIds((prev) => prev.filter((id) => !itemIds.includes(id)));
+  const handleToggleSelectAllSources = () => {
+    if (selectedSourceKeys.length === sourceCards.length) {
+      setSelectedSourceKeys([]);
     } else {
-      setSelectedPhotoIds((prev) => [...new Set([...prev, ...itemIds])]);
+      setSelectedSourceKeys(sourceCards.map((s) => s.key));
     }
   };
 
-  const handleBatchDownload = () => {
-    const selectedItems = photos.filter((p) => selectedPhotoIds.includes(p.id));
-    selectedItems.forEach((item) => {
-      if (item.webContentLink || item.url) {
-        window.open(item.webContentLink || item.url, "_blank");
+  const handleToggleSourceSelect = (key) => {
+    setSelectedSourceKeys((prev) => {
+      if (prev.length === 0) {
+        // If all were active, unchecking one leaves all others active
+        return sourceCards.map((s) => s.key).filter((k) => k !== key);
       }
+      return prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
     });
   };
 
-  const handleScrubberClick = (monthName, yearStr) => {
-    setActiveScrubberMonth(`${monthName}-${yearStr}`);
-    const headers = document.querySelectorAll(".gallery-date-group-header");
-    for (const h of headers) {
-      if (h.textContent.toLowerCase().includes(monthName.toLowerCase())) {
-        h.scrollIntoView({ behavior: "smooth", block: "start" });
-        break;
-      }
+  const handleSelectViewFromSource = (key) => {
+    if (key === "all") {
+      setSelectedSourceKeys([]);
+    } else {
+      setSelectedSourceKeys([key]);
+    }
+    setIsViewFromOpen(false);
+  };
+
+  const handleToggleFavorite = (e, photoId) => {
+    e.stopPropagation();
+    setFavorites((prev) => (prev.includes(photoId) ? prev.filter((id) => id !== photoId) : [...prev, photoId]));
+  };
+
+  const handleSelectGroup = (items) => {
+    const groupIds = items.map((i) => i.id);
+    const allSelected = groupIds.every((id) => selectedPhotoIds.includes(id));
+
+    if (allSelected) {
+      setSelectedPhotoIds((prev) => prev.filter((id) => !groupIds.includes(id)));
+    } else {
+      setSelectedPhotoIds((prev) => Array.from(new Set([...prev, ...groupIds])));
+    }
+  };
+
+  const handleBatchDownload = async () => {
+    const selectedItems = photos.filter((p) => selectedPhotoIds.includes(p.id));
+    for (const item of selectedItems) {
+      const token = localStorage.getItem("token") || "";
+      const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001/api";
+      const cleanBase = baseUrl.endsWith("/api") ? baseUrl.slice(0, -4) : baseUrl;
+      const idKey = item.provider === "dropbox" ? "path" : "fileId";
+      const downloadUrl = `${cleanBase}/api/${item.provider}/download/${item.accountId}?${idKey}=${encodeURIComponent(item.id)}&name=${encodeURIComponent(item.name || "file")}&token=${encodeURIComponent(token)}`;
+      window.open(downloadUrl, "_blank");
     }
   };
 
   const resetAllFilters = () => {
     setActiveCategory("all_photos");
-    setSelectedAccountIds([]);
+    setSelectedSourceKeys([]);
     setSelectedFolderFilter("all");
     setSelectedTypeFilter("all");
     setQuickPill("all");
@@ -504,276 +565,386 @@ const Photos = () => {
     setSelectedPhotoIds([]);
   };
 
+  const [pickerLoading, setPickerLoading] = useState(false);
+
+  const handleOpenGooglePhotosPicker = async () => {
+    const googleAcc = accounts.find((a) => a.provider === "google");
+    if (!googleAcc) {
+      alert("Please connect a Google Account first to import photos from Google Photos.");
+      return;
+    }
+
+    try {
+      setPickerLoading(true);
+      const res = await API.post(`/google/picker/session/${googleAcc._id}`);
+      const { id: sessionId, pickerUri } = res.data;
+
+      if (!pickerUri) {
+        alert("Failed to get Google Photos Picker URI.");
+        return;
+      }
+
+      const pickerWin = window.open(pickerUri, "GooglePhotosPicker", "width=600,height=700,top=100,left=300");
+
+      let pollCount = 0;
+      const maxPolls = 300; // 15 mins
+
+      const checkTimer = setInterval(async () => {
+        pollCount++;
+        if (pollCount > maxPolls) {
+          clearInterval(checkTimer);
+          setPickerLoading(false);
+          return;
+        }
+
+        try {
+          const statusRes = await API.get(`/google/picker/session/${googleAcc._id}/${sessionId}`);
+          if (statusRes.data?.mediaItemsSet) {
+            clearInterval(checkTimer);
+            setPickerLoading(false);
+            try {
+              if (pickerWin && !pickerWin.closed) pickerWin.close();
+            } catch (e) { }
+
+            const importRes = await API.post(`/google/picker/import/${googleAcc._id}`, { sessionId });
+            if (importRes.data?.importedCount > 0) {
+              fetchTimeline(false);
+            }
+          }
+        } catch (e) {
+          console.error("Picker status check error:", e);
+        }
+      }, 3000);
+    } catch (err) {
+      console.error("❌ Failed to launch Google Photos Picker:", err);
+      alert(err.response?.data?.message || err.message || "Google Photos Picker launch failed.");
+      setPickerLoading(false);
+    }
+  };
+
+  const getProviderSvg = (provider) => {
+    switch (provider) {
+      case "google": return <IconGoogleDrive />;
+      case "google-photos": return <IconGooglePhotos />;
+      case "onedrive": return <IconOneDrive />;
+      case "dropbox": return <IconDropbox />;
+      case "s3": return <IconS3 />;
+      default: return <IconCloud />;
+    }
+  };
+
+  const [purgingGooglePhotos, setPurgingGooglePhotos] = useState(false);
+
+  const handlePurgeGooglePhotos = async () => {
+    const confirmPurge = window.confirm(
+      "Are you sure you want to delete all imported Google Photos items from your timeline database? This will remove all imported Google Photos media from your timeline."
+    );
+    if (!confirmPurge) return;
+
+    try {
+      setPurgingGooglePhotos(true);
+      const res = await API.delete("/photos/google-photos");
+      alert(res.data.message || "Imported Google Photos items purged successfully.");
+      fetchTimeline(false);
+    } catch (err) {
+      console.error("❌ Failed to purge Google Photos:", err);
+      alert(err.response?.data?.message || "Failed to purge Google Photos items.");
+    } finally {
+      setPurgingGooglePhotos(false);
+    }
+  };
+
+  const getProviderName = (provider) => {
+    switch (provider) {
+      case "google": return "Google Drive";
+      case "google-photos": return "Google Photos";
+      case "onedrive": return "OneDrive";
+      case "dropbox": return "Dropbox";
+      case "s3": return "Amazon S3";
+      default: return "Cloud Account";
+    }
+  };
+
+  // Label text for custom View From trigger
+  const selectedViewFromText = useMemo(() => {
+    if (selectedSourceKeys.length === 0 || selectedSourceKeys.length === sourceCards.length) {
+      return `Multiple Accounts (${sourceCards.length})`;
+    }
+    if (selectedSourceKeys.length === 1) {
+      const match = sourceCards.find((s) => s.key === selectedSourceKeys[0]);
+      return match ? `${match.name} (${match.email})` : "Custom Selection";
+    }
+    return `${selectedSourceKeys.length} Sources Selected`;
+  }, [selectedSourceKeys, sourceCards]);
+
   return (
     <MainLayout>
       <div className="photos-app-wrapper">
         <div className="photos-layout-grid">
-          
+
           {/* ==========================================================================
-             LEFT SIDEBAR (ACCOUNTS, BROWSE, FOLDERS, TIMELINE, STORAGE)
+             LEFT SIDEBAR (SPLIT INTO 2 EQUAL VISIBLE PANELS)
              ========================================================================== */}
-          <aside className="photos-sidebar">
-            
-            {/* CONNECTED ACCOUNTS SECTION */}
-            <div>
-              <div className="sidebar-section-title">
-                <span>CONNECTED ACCOUNTS</span>
-                <span style={{ fontSize: "11px", color: "#818cf8" }}>
-                  {selectedAccountIds.length === 0 ? "All Selected" : `${selectedAccountIds.length} Selected`}
-                </span>
-              </div>
-              <div className="sidebar-accounts-list">
-                <div
-                  className={`sidebar-account-item ${selectedAccountIds.length === 0 ? "active" : ""}`}
-                  onClick={() => toggleAccountSelection("all")}
-                >
-                  <div className="sidebar-account-left">
-                    <span style={{ fontSize: "14px" }}>☁️</span>
-                    <div>
-                      <div className="sidebar-account-name">All Cloud Accounts</div>
-                      <div className="sidebar-account-subtext">{photos.length} media items</div>
-                    </div>
-                  </div>
-                  <div className="sidebar-account-status">{selectedAccountIds.length === 0 ? "✓" : ""}</div>
-                </div>
+          <aside className="photos-sidebar-container">
 
-                {accounts.map((acc) => {
-                  const isSel = selectedAccountIds.includes(acc._id);
-                  const accMediaCount = photos.filter((p) => p.accountId === acc._id).length;
-                  const providerName = acc.provider === "google" ? "Google Drive" : acc.provider === "dropbox" ? "Dropbox" : acc.provider === "onedrive" ? "OneDrive" : acc.provider === "s3" ? "Amazon S3" : "Box";
-                  
-                  return (
-                    <div
-                      key={acc._id}
-                      className={`sidebar-account-item ${isSel ? "active" : ""}`}
-                      onClick={() => toggleAccountSelection(acc._id)}
-                    >
-                      <div className="sidebar-account-left">
-                        <img src={providerIcons[acc.provider]} alt={providerName} className="sidebar-account-logo" />
-                        <div style={{ minWidth: 0 }}>
-                          <div className="sidebar-account-name">{providerName}</div>
-                          <div className="sidebar-account-subtext">{accMediaCount} items</div>
-                        </div>
+            {/* UPPER PANEL: SOURCES & CLOUD ACCOUNTS (WITH DISTINCT GOOGLE PHOTOS CARD) */}
+            <div className="photos-sidebar-panel sidebar-sources-panel">
+              <div className="sidebar-section-header">
+                <span className="sidebar-title">SOURCES <span className="info-tooltip"></span></span>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <button className="add-account-btn" onClick={() => window.location.href = "/manage-accounts"}>
+                    <IconPlus /> Add Account
+                  </button>
+                  <button className="import-google-photos-top-btn" onClick={handleOpenGooglePhotosPicker} disabled={pickerLoading} title="Import photos directly from Google Photos">
+                    <IconGooglePhotos /> <span>{pickerLoading ? "Importing..." : "Import Photos"}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* CUSTOM VIEW FROM DROPDOWN MENU */}
+              <div className="view-from-wrapper" ref={dropdownRef}>
+                <label className="sidebar-field-label">View From</label>
+                <div className="custom-view-from-container">
+                  <div
+                    className="custom-view-from-trigger"
+                    onClick={() => setIsViewFromOpen((prev) => !prev)}
+                  >
+                    <span>{selectedViewFromText}</span>
+                    <span style={{ fontSize: "10px", color: "#818cf8" }}>{isViewFromOpen ? "▲" : "▼"}</span>
+                  </div>
+
+                  {isViewFromOpen && (
+                    <div className="custom-view-from-menu">
+                      <div
+                        className={`custom-view-from-option ${selectedSourceKeys.length === 0 ? "selected" : ""}`}
+                        onClick={() => handleSelectViewFromSource("all")}
+                      >
+                        <span>Multiple Accounts ({sourceCards.length})</span>
+                        {selectedSourceKeys.length === 0 && <span style={{ color: "#818cf8" }}>✓</span>}
                       </div>
-                      <div className="sidebar-account-status">{isSel ? "✓" : "+"}</div>
+                      {sourceCards.map((sc) => {
+                        const isSel = selectedSourceKeys.length === 1 && selectedSourceKeys[0] === sc.key;
+                        return (
+                          <div
+                            key={sc.key}
+                            className={`custom-view-from-option ${isSel ? "selected" : ""}`}
+                            onClick={() => handleSelectViewFromSource(sc.key)}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              {getProviderSvg(sc.provider)}
+                              <span>{sc.name} ({sc.email})</span>
+                            </div>
+                            {isSel && <span style={{ color: "#818cf8" }}>✓</span>}
+                          </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* BROWSE SECTION */}
-            <div>
-              <div className="sidebar-section-title">
-                <span>BROWSE</span>
-              </div>
-              <div className="sidebar-menu-list">
-                <div
-                  className={`sidebar-menu-item ${activeCategory === "all_photos" ? "active" : ""}`}
-                  onClick={() => setActiveCategory("all_photos")}
-                >
-                  <div className="sidebar-menu-item-left">
-                    <span>🖼️</span>
-                    <span>All Photos</span>
-                  </div>
-                  <span className="sidebar-badge-count">{photos.length}</span>
-                </div>
-
-                <div
-                  className={`sidebar-menu-item ${activeCategory === "favorites" ? "active" : ""}`}
-                  onClick={() => setActiveCategory("favorites")}
-                >
-                  <div className="sidebar-menu-item-left">
-                    <span>⭐</span>
-                    <span>Favorites</span>
-                  </div>
-                  <span className="sidebar-badge-count">{favorites.length}</span>
-                </div>
-
-                <div
-                  className={`sidebar-menu-item ${activeCategory === "videos" ? "active" : ""}`}
-                  onClick={() => setActiveCategory("videos")}
-                >
-                  <div className="sidebar-menu-item-left">
-                    <span>🎬</span>
-                    <span>Videos</span>
-                  </div>
-                  <span className="sidebar-badge-count">{metrics.videosCount}</span>
-                </div>
-
-                <div
-                  className={`sidebar-menu-item ${activeCategory === "screenshots" ? "active" : ""}`}
-                  onClick={() => setActiveCategory("screenshots")}
-                >
-                  <div className="sidebar-menu-item-left">
-                    <span>📸</span>
-                    <span>Screenshots</span>
-                  </div>
-                  <span className="sidebar-badge-count">
-                    {photos.filter((p) => p.name?.toLowerCase().includes("screen")).length}
-                  </span>
-                </div>
-
-                <div
-                  className={`sidebar-menu-item ${activeCategory === "raw" ? "active" : ""}`}
-                  onClick={() => setActiveCategory("raw")}
-                >
-                  <div className="sidebar-menu-item-left">
-                    <span>🎞️</span>
-                    <span>RAW Photos</span>
-                  </div>
-                  <span className="sidebar-badge-count">
-                    {photos.filter((p) => ["cr2", "nef", "arw", "dng", "raw"].includes((p.name || "").split(".").pop()?.toLowerCase())).length}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* DYNAMIC FOLDERS TREE FOR SELECTED ACCOUNT(S) */}
-            {Object.keys(folderTree).length > 0 && (
-              <div>
-                <div className="sidebar-section-title">
-                  <span>FOLDERS</span>
-                  {selectedFolderFilter !== "all" && (
-                    <span
-                      style={{ fontSize: "10px", color: "#818cf8", cursor: "pointer" }}
-                      onClick={() => setSelectedFolderFilter("all")}
-                    >
-                      Clear Filter
-                    </span>
                   )}
                 </div>
-                <div className="sidebar-tree-container">
-                  {Object.entries(folderTree).map(([providerKey, foldersMap]) => (
-                    <div key={providerKey} style={{ marginBottom: "6px" }}>
-                      <div className="sidebar-tree-node" style={{ fontWeight: "700", color: "#a5b4fc" }}>
-                        <span>📁 {providerKey.toUpperCase()}</span>
-                      </div>
-                      <div className="sidebar-tree-children">
-                        {Object.entries(foldersMap).map(([folderName, count]) => (
-                          <div
-                            key={folderName}
-                            className={`sidebar-tree-node ${selectedFolderFilter === folderName ? "active" : ""}`}
-                            onClick={() => setSelectedFolderFilter(selectedFolderFilter === folderName ? "all" : folderName)}
-                            style={selectedFolderFilter === folderName ? { background: "rgba(99, 102, 241, 0.2)", color: "#ffffff", fontWeight: "600" } : {}}
-                          >
-                            <span>📂 {folderName}</span>
-                            <span className="sidebar-badge-count">{count}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
-            )}
 
-            {/* DYNAMIC SCALED TIMELINE TREE */}
-            {timelineYears.length > 0 && (
-              <div>
-                <div className="sidebar-section-title">
-                  <span>TIMELINE</span>
-                </div>
-                <div className="sidebar-tree-container">
-                  {timelineYears.map((yrObj) => (
-                    <div key={yrObj.year} style={{ marginBottom: "4px" }}>
-                      <div className="sidebar-tree-node" style={{ fontWeight: "700" }}>
-                        <span>📅 {yrObj.year}</span>
-                      </div>
-                      <div className="sidebar-tree-children">
-                        {yrObj.months.map((mo) => (
-                          <div
-                            key={mo}
-                            className="sidebar-tree-node"
-                            onClick={() => handleScrubberClick(mo, yrObj.year)}
-                          >
-                            <span>{mo}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              {/* SELECT ALL ROW */}
+              <div className="sidebar-select-all-row">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={sourceCards.length > 0 && (selectedSourceKeys.length === 0 || selectedSourceKeys.length === sourceCards.length)}
+                    onChange={handleToggleSelectAllSources}
+                  />
+                  <span className="checkbox-text">SELECT ALL</span>
+                </label>
+                <span className="count-pill">
+                  {selectedSourceKeys.length === 0 ? sourceCards.length : selectedSourceKeys.length} / {sourceCards.length}
+                </span>
               </div>
-            )}
 
-            {/* SIDEBAR BOTTOM STORAGE WIDGET */}
-            <div className="sidebar-storage-card">
-              <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "600" }}>Total Storage Used</div>
-              <div style={{ fontSize: "13px", fontWeight: "700", color: "#ffffff", marginTop: "2px" }}>
-                {formatSize(metrics.totalBytes)} / {formatSize(accounts.reduce((s, a) => s + (a.storage?.total || 0), 0) || 15 * 1024 * 1024 * 1024)}
+              {/* DISTINCT SOURCE CARDS LIST (GOOGLE DRIVE & GOOGLE PHOTOS CARDS INDIVIDUALLY) */}
+              <div className="sidebar-accounts-scroll-list">
+                {sourceCards.length === 0 ? (
+                  <div style={{ fontSize: "11px", color: "#64748b", padding: "8px" }}>No connected cloud sources</div>
+                ) : (
+                  sourceCards.map((sc) => {
+                    const isChecked = selectedSourceKeys.length === 0 || selectedSourceKeys.includes(sc.key);
+
+                    return (
+                      <div
+                        key={sc.key}
+                        className={`sidebar-account-card ${isChecked ? "selected" : ""}`}
+                        onClick={() => handleToggleSourceSelect(sc.key)}
+                      >
+                        <label className="checkbox-label" onClick={(e) => e.stopPropagation()}>
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handleToggleSourceSelect(sc.key)}
+                          />
+                          <div className="account-icon-and-meta">
+                            <span className="provider-icon-badge">
+                              {getProviderSvg(sc.provider)}
+                            </span>
+                            <div className="account-text-info">
+                              <span className="account-provider-name">{sc.name}</span>
+                              <span className="account-email-handle">{sc.email}</span>
+                            </div>
+                          </div>
+                        </label>
+                        <div className="account-card-right">
+                          <span className="account-item-count">{sc.count}</span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
-              <div className="sidebar-storage-bar-bg">
-                <div
-                  className="sidebar-storage-bar-fill"
-                  style={{
-                    width: `${Math.min((metrics.totalBytes / (accounts.reduce((s, a) => s + (a.storage?.total || 0), 0) || 15 * 1024 * 1024 * 1024)) * 100, 100).toFixed(1)}%`,
-                  }}
-                />
+
+            </div>
+
+            {/* LOWER PANEL: BROWSE, FOLDERS, TIMELINE, STORAGE */}
+            <div className="photos-sidebar-panel sidebar-browse-panel">
+              <div className="sidebar-group">
+                <div className="sidebar-group-title">BROWSE</div>
+                <nav className="sidebar-nav-list">
+                  <button className={`nav-item ${activeCategory === "all_photos" ? "active" : ""}`} onClick={() => setActiveCategory("all_photos")}>
+                    <IconGrid /> <span>All Photos</span> <span className="nav-badge">{photos.length}</span>
+                  </button>
+                  <button className={`nav-item ${activeCategory === "favorites" ? "active" : ""}`} onClick={() => setActiveCategory("favorites")}>
+                    <IconHeart /> <span>Favorites</span> <span className="nav-badge">{favorites.length}</span>
+                  </button>
+                  <button className={`nav-item ${activeCategory === "videos" ? "active" : ""}`} onClick={() => setActiveCategory("videos")}>
+                    <IconVideo /> <span>Videos</span> <span className="nav-badge">{metrics.videosCount}</span>
+                  </button>
+                  <button className={`nav-item ${activeCategory === "screenshots" ? "active" : ""}`} onClick={() => setActiveCategory("screenshots")}>
+                    <IconCamera /> <span>Screenshots</span> <span className="nav-badge">{metrics.screenshotsCount}</span>
+                  </button>
+                  <button className={`nav-item ${activeCategory === "raw" ? "active" : ""}`} onClick={() => setActiveCategory("raw")}>
+                    <IconLayers /> <span>RAW Photos</span> <span className="nav-badge">{metrics.rawCount}</span>
+                  </button>
+                  <button className={`nav-item ${activeCategory === "duplicates" ? "active" : ""}`} onClick={() => setActiveCategory("duplicates")}>
+                    <IconDuplicate /> <span>Duplicates</span> <span className="nav-badge">{metrics.duplicatesCount}</span>
+                  </button>
+                </nav>
+              </div>
+
+              {/* DYNAMIC FOLDERS TREE */}
+              {Object.keys(folderTree).length > 0 && (
+                <div className="sidebar-group">
+                  <div className="sidebar-group-title">
+                    <span>FOLDERS</span>
+                    {selectedFolderFilter !== "all" && (
+                      <span
+                        style={{ fontSize: "10px", color: "#818cf8", cursor: "pointer", marginLeft: "auto" }}
+                        onClick={() => setSelectedFolderFilter("all")}
+                      >
+                        Clear
+                      </span>
+                    )}
+                  </div>
+                  <div className="sidebar-folder-list">
+                    {Object.entries(folderTree).flatMap(([provKey, foldersMap]) =>
+                      Object.entries(foldersMap).map(([folderName, count]) => (
+                        <div
+                          key={`${provKey}-${folderName}`}
+                          className={`folder-item ${selectedFolderFilter === folderName ? "active" : ""}`}
+                          onClick={() => setSelectedFolderFilter(selectedFolderFilter === folderName ? "all" : folderName)}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <IconFolder /> <span>{folderName}</span> <span className="nav-badge">{count}</span>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* DYNAMIC REAL STORAGE GAUGE */}
+              <div className="sidebar-group storage-gauge-group">
+                <div className="sidebar-group-title">STORAGE</div>
+                <div className="storage-card">
+                  <div className="radial-progress-box">
+                    <svg className="radial-progress-svg" viewBox="0 0 36 36">
+                      <path className="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                      <path
+                        className="circle-val"
+                        strokeDasharray={`${metrics.usedPercent}, 100`}
+                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                    </svg>
+                    <span className="radial-percent-text">{metrics.usedPercent}%</span>
+                  </div>
+                  <div className="storage-text-meta">
+                    <div className="storage-used-label">Used <strong>{formatSize(metrics.totalUsedBytes)}</strong></div>
+                    <div className="storage-total-label">Total <strong>{formatSize(metrics.totalQuotaBytes)}</strong></div>
+                  </div>
+                </div>
+                <button className="manage-storage-btn" onClick={() => window.location.href = "/optimize"}>Manage Storage</button>
+                <button
+                  className="purge-google-photos-btn"
+                  onClick={handlePurgeGooglePhotos}
+                  disabled={purgingGooglePhotos}
+                  title="Remove all imported Google Photos items completely from your timeline database"
+                >
+                  <IconTrash />
+                  <span>{purgingGooglePhotos ? "Purging..." : "Clear Google Photos Library"}</span>
+                </button>
               </div>
             </div>
 
           </aside>
 
           {/* ==========================================================================
-             RIGHT MAIN VIEWPORT (HEADER, METRICS, GALLERY, SCRUBBER)
+             RIGHT MAIN VIEWPORT (HEADER, METRICS, MEMORIES, GALLERY)
              ========================================================================== */}
           <main className="photos-main-content">
-            
-            {/* TOP HEADER & GLOBAL SEARCH BAR */}
+
+            {/* TOP HEADER */}
             <div className="photos-top-header">
               <div className="photos-title-box">
-                <h1>Photos</h1>
-                <p>Browse, search and manage your memories across all clouds</p>
+                <div className="title-row">
+                  <div className="title-icon-badge"><IconPhotosApp /></div>
+                  <h1>Photos</h1>
+                </div>
+                <p>Browse, search and manage your memories across all your cloud accounts.</p>
               </div>
 
-              <div className="photos-search-view-row">
-                <div className="photos-search-box">
-                  <span className="photos-search-icon">🔍</span>
+              <div className="photos-header-actions">
+                <div className="photos-search-box" style={{ width: "260px", position: "relative" }}>
+                  <IconSearch />
                   <input
                     ref={searchInputRef}
                     type="text"
                     className="photos-search-input"
-                    placeholder="Search photos, people, places..."
+                    placeholder="Search photos..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
-                  <span className="photos-shortcut-badge">⌘ K</span>
                 </div>
 
                 <div className="photos-view-mode-group">
-                  <button
-                    className={`photos-view-btn ${viewMode === "grid" ? "active" : ""}`}
-                    onClick={() => setViewMode("grid")}
-                    title="Grid View"
-                  >
-                    ⊞
+                  <button className={`photos-view-btn ${viewMode === "grid" ? "active" : ""}`} onClick={() => setViewMode("grid")}>
+                    <IconGrid />
                   </button>
-                  <button
-                    className={`photos-view-btn ${viewMode === "list" ? "active" : ""}`}
-                    onClick={() => setViewMode("list")}
-                    title="List View"
-                  >
-                    ≡
+                  <button className={`photos-view-btn ${viewMode === "list" ? "active" : ""}`} onClick={() => setViewMode("list")}>
+                    <IconList />
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* DROPDOWN FILTERS & QUICK PRESET PILLS */}
+            {/* FILTER CONTROLS BAR */}
             <div className="photos-filter-section">
               <div className="photos-dropdown-filters">
-                <div
+                <select
                   className="photos-select-pill"
-                  style={{ display: "flex", alignItems: "center", gap: "6px" }}
+                  value={selectedSourceKeys.length === 1 ? selectedSourceKeys[0] : "all"}
+                  onChange={(e) => handleSelectViewFromSource(e.target.value)}
                 >
-                  <span>☁️</span>
-                  <span>
-                    {selectedAccountIds.length === 0
-                      ? "All Accounts Selected"
-                      : `${selectedAccountIds.length} Account(s) Selected`}
-                  </span>
-                </div>
+                  <option value="all">☁️ All Accounts ({sourceCards.length})</option>
+                  {sourceCards.map((sc) => (
+                    <option key={sc.key} value={sc.key}>
+                      {sc.name} ({sc.email})
+                    </option>
+                  ))}
+                </select>
 
                 <select
                   className="photos-select-pill"
@@ -781,13 +952,11 @@ const Photos = () => {
                   onChange={(e) => setSelectedFolderFilter(e.target.value)}
                 >
                   <option value="all">📁 All Folders</option>
-                  {Object.values(folderTree)
-                    .flatMap((obj) => Object.keys(obj))
-                    .map((fn) => (
-                      <option key={fn} value={fn}>
-                        📂 {fn}
-                      </option>
-                    ))}
+                  {Array.from(new Set(Object.values(folderTree).flatMap((obj) => Object.keys(obj)))).map((fn) => (
+                    <option key={fn} value={fn}>
+                      📂 {fn}
+                    </option>
+                  ))}
                 </select>
 
                 <select
@@ -800,319 +969,236 @@ const Photos = () => {
                   <option value="video">🎬 Videos Only</option>
                 </select>
 
-                <button className="photos-pill-btn" onClick={resetAllFilters}>
-                  🔄 Reset
-                </button>
+                {(selectedSourceKeys.length > 0 || selectedFolderFilter !== "all" || selectedTypeFilter !== "all" || searchQuery || quickPill !== "all") && (
+                  <button className="photos-select-pill" onClick={resetAllFilters} style={{ background: "rgba(239, 68, 68, 0.15)", color: "#fca5a5", border: "1px solid rgba(239, 68, 68, 0.3)" }}>
+                    Reset Filters
+                  </button>
+                )}
               </div>
 
               <div className="photos-quick-pills-row">
-                {["all", "today", "favorites", "videos", "screenshots", "raw"].map((pillKey) => {
+                {["all", "today", "yesterday", "this_week", "this_month", "favorites", "videos"].map((pillKey) => {
                   const labelMap = {
                     all: "All Media",
                     today: "Today",
-                    favorites: "⭐ Favorites",
-                    videos: "🎬 Videos",
-                    screenshots: "📸 Screenshots",
-                    raw: "🎞️ RAW",
+                    yesterday: "Yesterday",
+                    this_week: "This Week",
+                    this_month: "This Month",
+                    favorites: "Favorites",
+                    videos: "Videos",
                   };
                   return (
-                    <div
+                    <button
                       key={pillKey}
-                      className={`quick-filter-chip ${quickPill === pillKey ? "active" : ""}`}
+                      className={`quick-pill-btn ${quickPill === pillKey ? "active" : ""}`}
                       onClick={() => setQuickPill(pillKey)}
                     >
+                      {pillKey === "favorites" && <IconHeart />}
+                      {pillKey === "videos" && <IconVideo />}
                       {labelMap[pillKey]}
-                    </div>
+                    </button>
                   );
                 })}
               </div>
             </div>
 
-            {/* TOP METRIC CARDS */}
+            {/* REAL DYNAMIC METRICS STATS BAR */}
             <div className="photos-metrics-grid">
               <div className="photos-metric-card">
-                <div className="photos-metric-icon purple">🖼️</div>
-                <div>
-                  <div className="photos-metric-val">{metrics.photosCount}</div>
-                  <div className="photos-metric-lbl">Photos items</div>
+                <div className="metric-icon-box blue"><IconPhotosApp /></div>
+                <div className="metric-text-box">
+                  <span className="metric-label">Photos</span>
+                  <span className="metric-value">{metrics.photosCount}</span>
+                  <span className="metric-subtext">items</span>
                 </div>
               </div>
 
               <div className="photos-metric-card">
-                <div className="photos-metric-icon pink">🎬</div>
-                <div>
-                  <div className="photos-metric-val">{metrics.videosCount}</div>
-                  <div className="photos-metric-lbl">Videos items</div>
+                <div className="metric-icon-box pink"><IconVideo /></div>
+                <div className="metric-text-box">
+                  <span className="metric-label">Videos</span>
+                  <span className="metric-value">{metrics.videosCount}</span>
+                  <span className="metric-subtext">items</span>
                 </div>
               </div>
 
               <div className="photos-metric-card">
-                <div className="photos-metric-icon blue">☁️</div>
-                <div>
-                  <div className="photos-metric-val">{metrics.accountsCount}</div>
-                  <div className="photos-metric-lbl">Connected drives</div>
+                <div className="metric-icon-box purple"><IconCloud /></div>
+                <div className="metric-text-box">
+                  <span className="metric-label">Accounts</span>
+                  <span className="metric-value">{metrics.accountsCount}</span>
+                  <span className="metric-subtext">connected</span>
                 </div>
               </div>
 
               <div className="photos-metric-card">
-                <div className="photos-metric-icon green">📊</div>
-                <div>
-                  <div className="photos-metric-val">{formatSize(metrics.totalBytes)}</div>
-                  <div className="photos-metric-lbl">Storage used</div>
+                <div className="metric-icon-box green"><IconDatabase /></div>
+                <div className="metric-text-box">
+                  <span className="metric-label">Storage Used</span>
+                  <span className="metric-value">{formatSize(metrics.totalUsedBytes)}</span>
+                  <span className="metric-subtext">of {formatSize(metrics.totalQuotaBytes)}</span>
                 </div>
               </div>
 
               <div className="photos-metric-card">
-                <div className="photos-metric-icon amber">👯</div>
-                <div>
-                  <div className="photos-metric-val">{metrics.duplicatesCount}</div>
-                  <div className="photos-metric-lbl">Duplicates</div>
-                </div>
-              </div>
-
-              <div className="photos-metric-card">
-                <div className="photos-metric-icon cyan">🔄</div>
-                <div>
-                  <div className="photos-metric-val" style={{ fontSize: "0.95rem" }}>{metrics.lastSyncText}</div>
-                  <div className="photos-metric-lbl">All accounts synced</div>
+                <div className="metric-icon-box orange"><IconDuplicate /></div>
+                <div className="metric-text-box">
+                  <span className="metric-label">Duplicates</span>
+                  <span className="metric-value">{metrics.duplicatesCount}</span>
+                  <span className="metric-subtext">items</span>
                 </div>
               </div>
             </div>
 
-            {/* MEMORIES & HIGHLIGHTS CAROUSEL */}
+            {/* MEMORIES SECTION (DERIVED 100% FROM REAL MONGODB PHOTOS) */}
             {memoryHighlights.length > 0 && (
               <div className="photos-memories-section">
                 <div className="photos-section-header">
-                  <span>Memories & Highlights</span>
+                  <div className="memories-header-title">
+                    <span>Memories</span>
+                    <IconSparkles />
+                    <span className="memories-subtitle">Rediscover your best moments</span>
+                  </div>
                 </div>
-                <div className="photos-memories-scroll-row">
-                  {memoryHighlights.map((mem) => {
-                    const isMemVid = mem.photo?.mimeType?.startsWith("video/") || mem.photo?.name?.match(/\.(mp4|mov|avi|webm|mkv)$/i);
-                    const hasMemHttpThumb = mem.cover && (mem.cover.startsWith("http://") || mem.cover.startsWith("https://"));
-                    return (
-                      <div
-                        key={mem.id}
-                        className="memory-card"
-                        onClick={() => setPreviewModalFile(mem.photo)}
-                      >
-                        {isMemVid && !hasMemHttpThumb ? (
-                          <video
-                            src={`${getFallbackPhotoSrc(mem.photo)}#t=0.5`}
-                            preload="metadata"
-                            muted
-                            playsInline
-                            className="memory-card-img"
-                          />
-                        ) : (
-                          <img
-                            src={mem.cover}
-                            alt={mem.title}
-                            className="memory-card-img"
-                            loading="lazy"
-                            referrerPolicy="no-referrer"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.src = getFallbackPhotoSrc(mem.photo);
-                            }}
-                          />
-                        )}
-                        <div className="memory-card-overlay">
-                          <div className="memory-card-title">{mem.title}</div>
-                          <div className="memory-card-date">{mem.date}</div>
-                        </div>
+
+                <div className="photos-memories-grid">
+                  {memoryHighlights.map((mem) => (
+                    <div key={mem.id} className="memory-card" onClick={() => setPreviewModalFile(mem.photo)}>
+                      <img src={mem.cover} alt={mem.title} className="memory-card-img" referrerPolicy="no-referrer" />
+                      <div className="memory-card-overlay">
+                        <h4 className="memory-title">{mem.title}</h4>
+                        <p className="memory-date">{mem.date}</p>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
-            {/* MEDIA GALLERY GRID & RIGHT TIMELINE SCRUBBER */}
+            {/* GALLERY TIMELINE GRID */}
             <div className="photos-gallery-wrapper">
-              
-              {/* GALLERY SCROLL AREA */}
-              <div className="photos-gallery-scroll-area">
-                {loading ? (
-                  <div className="gallery-cards-grid">
-                    {Array.from({ length: 12 }).map((_, i) => (
-                      <div key={i} className="skeleton-card" />
-                    ))}
-                  </div>
-                ) : filteredPhotos.length === 0 ? (
-                  <div style={{ textAlign: "center", padding: "4rem 1rem", color: "#94a3b8" }}>
-                    <div style={{ fontSize: "2.5rem", marginBottom: "12px" }}>🖼️</div>
-                    <h3 style={{ margin: "0 0 6px 0", color: "#f8fafc" }}>No media items found</h3>
-                    <p style={{ margin: 0, fontSize: "0.88rem" }}>Try adjusting your search query or reset active filters.</p>
-                  </div>
-                ) : (
-                  groupedPhotoSections.map((sec) => (
-                    <div key={sec.label}>
-                      <div className="gallery-date-group-header">
-                        <span>📅 {sec.label}</span>
-                        <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "600" }}>({sec.items.length})</span>
-                        <button
-                          style={{ marginLeft: "auto", background: "transparent", border: "none", color: "#818cf8", fontSize: "11px", cursor: "pointer" }}
-                          onClick={() => handleSelectAllGroup(sec.items)}
-                        >
-                          Select Group
-                        </button>
-                      </div>
-
-                      <div className="gallery-cards-grid">
-                        {sec.items.map((p) => {
-                          const isSelected = selectedPhotoIds.includes(p.id);
-                          const isFav = favorites.includes(p.id);
-                          const isVid = p.mimeType?.startsWith("video/") || p.name?.match(/\.(mp4|mov|avi|webm|mkv)$/i);
-                          const isGoogle = p.provider === "google" || p.provider === "google-photos";
-
-                          return (
-                            <div
-                              key={p.id}
-                              className={`photo-card-item ${isSelected ? "selected" : ""}`}
-                              onClick={() => setPreviewModalFile(p)}
-                            >
-                              {isVid && !isGoogle ? (
-                                <video
-                                  src={`${getFallbackPhotoSrc(p)}#t=0.5`}
-                                  preload="metadata"
-                                  muted
-                                  playsInline
-                                  className="photo-card-img"
-                                />
-                              ) : (
-                                <img
-                                  src={getPhotoThumbnail(p)}
-                                  alt={p.name}
-                                  className="photo-card-img"
-                                  loading="lazy"
-                                  referrerPolicy="no-referrer"
-                                  onError={(e) => {
-                                    e.target.onerror = null;
-                                    e.target.src = getFallbackPhotoSrc(p);
-                                  }}
-                                />
-                              )}
-
-                              {/* Selection Badge */}
-                              <div
-                                className="photo-card-select-badge"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  togglePhotoSelection(p.id);
-                                }}
-                              >
-                                {isSelected ? "✓" : ""}
-                              </div>
-
-                              {/* Favorite Star Badge */}
-                              <div
-                                className="photo-card-favorite-star"
-                                onClick={(e) => toggleFavorite(p.id, e)}
-                                title={isFav ? "Remove from Favorites" : "Add to Favorites"}
-                              >
-                                {isFav ? "⭐" : ""}
-                              </div>
-
-                              {/* Video Indicator Overlay */}
-                              {isVid && (
-                                <div className="photo-card-video-overlay">
-                                  <span>▶</span>
-                                  <span>Video</span>
-                                </div>
-                              )}
-
-                              {/* Ultra-Minimalist Bottom Metadata Overlay */}
-                              <div className="photo-card-minimal-overlay">
-                                <div className="photo-minimal-title" title={p.name}>
-                                  {p.name}
-                                </div>
-                                <div className="photo-minimal-meta">
-                                  <img
-                                    src={providerIcons[p.provider] || "/assets/logo.png"}
-                                    alt={p.provider}
-                                    className="photo-minimal-logo"
-                                    title={p.provider}
-                                  />
-                                  <span className="photo-minimal-account" title={accountMap[p.accountId] || p.provider}>
-                                    {accountMap[p.accountId] ? accountMap[p.accountId].split("@")[0] : p.provider}
-                                  </span>
-                                  <span className="photo-minimal-dot">•</span>
-                                  <span className="photo-minimal-date">
-                                    {new Date(p.createdTime || Date.now()).toLocaleDateString([], {
-                                      month: "short",
-                                      day: "numeric",
-                                    })}
-                                  </span>
-                                  <span className="photo-minimal-dot">•</span>
-                                  <span className="photo-minimal-size">{formatSize(p.size)}</span>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))
-                )}
-
-                {/* SENTINEL ELEMENT FOR BACKGROUND PRE-FETCHING (70% THRESHOLD) */}
-                <div ref={sentinelRef} style={{ height: "40px", margin: "20px 0", textAlign: "center" }}>
-                  {loadingMore && (
-                    <div style={{ color: "#a5b4fc", fontSize: "0.85rem", fontWeight: "600" }}>
-                      ⚡ Pre-fetching next cursor batch from Timeline Engine...
-                    </div>
-                  )}
-                </div>
+              <div className="timeline-group-header">
+                <h3>
+                  {groupedPhotoSections[0]?.label || "Media Timeline"}
+                  <span className="group-count"> ({filteredPhotos.length} items)</span>
+                </h3>
               </div>
 
-              {/* DYNAMICALLY SCALED RIGHT VERTICAL TIMELINE SCRUBBER */}
-              {timelineYears.length > 0 && (
-                <aside className="photos-timeline-scrubber">
-                  {timelineYears.map((yObj) => (
-                    <div key={yObj.year} style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-                      <div className="scrubber-year">• {yObj.year}</div>
-                      {yObj.months.map((m) => (
-                        <button
-                          key={m}
-                          className={`scrubber-month-btn ${activeScrubberMonth === `${m}-${yObj.year}` ? "active" : ""}`}
-                          onClick={() => handleScrubberClick(m, yObj.year)}
-                        >
-                          {m.slice(0, 3)}
-                        </button>
-                      ))}
-                    </div>
+              {loading ? (
+                <div className="gallery-cards-grid">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <div key={i} className="skeleton-card" />
                   ))}
-                </aside>
+                </div>
+              ) : filteredPhotos.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "4rem 1rem", color: "#94a3b8" }}>
+                  <IconPhotosApp />
+                  <h3 style={{ margin: "12px 0 6px 0", color: "#f8fafc" }}>No media items found</h3>
+                  <p style={{ margin: 0, fontSize: "0.88rem" }}>Try adjusting your account selection or search filters.</p>
+                </div>
+              ) : (
+                groupedPhotoSections.map((sec) => (
+                  <div key={sec.label} className="timeline-date-section">
+                    <div className="gallery-date-subheader" style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span>{sec.label} ({sec.items.length})</span>
+                      <button
+                        style={{ background: "transparent", border: "none", color: "#818cf8", fontSize: "11px", cursor: "pointer" }}
+                        onClick={() => handleSelectGroup(sec.items)}
+                      >
+                        Select Group
+                      </button>
+                    </div>
+
+                    <div className="gallery-cards-grid">
+                      {sec.items.map((p) => {
+                        const isSelected = selectedPhotoIds.includes(p.id);
+                        const isFav = favorites.includes(p.id);
+
+                        return (
+                          <div
+                            key={p.id}
+                            id={`photo-card-${p.id}`}
+                            className={`photo-card-item ${isSelected ? "selected" : ""}`}
+                            onClick={() => setPreviewModalFile(p)}
+                          >
+                            <div className="photo-card-media-wrapper">
+                              <img
+                                src={getPhotoThumbnail(p)}
+                                alt={p.name}
+                                className="photo-card-img"
+                                loading="lazy"
+                                referrerPolicy="no-referrer"
+                                onError={(e) => {
+                                  e.target.onerror = null;
+                                  e.target.src = getFallbackPhotoSrc(p);
+                                }}
+                              />
+
+                              <button
+                                className={`photo-favorite-btn ${isFav ? "active" : ""}`}
+                                onClick={(e) => handleToggleFavorite(e, p.id)}
+                              >
+                                <IconHeart />
+                              </button>
+                            </div>
+
+                            <div className="photo-card-minimal-overlay">
+                              <div className="photo-card-filename" title={p.name}>{p.name}</div>
+                              <div className="photo-card-meta-row">
+                                <span className="photo-provider-badge">{p.provider}</span>
+                                <span className="photo-size-badge">{formatSize(p.size, p)}</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))
               )}
 
+              <div ref={sentinelRef} style={{ height: "40px", margin: "20px 0" }} />
             </div>
 
           </main>
         </div>
 
-        {/* FLOATING MULTI-SELECT ACTION TOOLBAR */}
+        {/* FLOATING BATCH ACTION TOOLBAR */}
         {selectedPhotoIds.length > 0 && (
-          <div className="photos-floating-toolbar">
-            <div className="toolbar-selected-count">
-              <span style={{ cursor: "pointer" }} onClick={() => setSelectedPhotoIds([])}>✕</span>
-              <span>{selectedPhotoIds.length} items selected</span>
-            </div>
-
-            <button className="toolbar-btn" onClick={handleBatchDownload}>
-              <span>📥</span> Download
+          <div style={{
+            position: "fixed",
+            bottom: "2rem",
+            left: "50%",
+            transform: "translateX(-50%)",
+            background: "rgba(15, 23, 42, 0.95)",
+            backdropFilter: "blur(16px)",
+            border: "1px solid rgba(99, 102, 241, 0.4)",
+            borderRadius: "16px",
+            padding: "10px 20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "16px",
+            boxShadow: "0 10px 30px rgba(0, 0, 0, 0.5)",
+            zIndex: 100,
+            color: "#ffffff"
+          }}>
+            <span style={{ fontSize: "13px", fontWeight: "600" }}>{selectedPhotoIds.length} items selected</span>
+            <button
+              onClick={handleBatchDownload}
+              style={{ background: "#6366f1", color: "#fff", border: "none", padding: "6px 12px", borderRadius: "8px", fontSize: "12px", fontWeight: "600", cursor: "pointer" }}
+            >
+              Download
             </button>
-
-            <button className="toolbar-btn" onClick={() => setSelectedPhotoIds([])}>
-              <span>⭐</span> Favorite
-            </button>
-
-            <button className="toolbar-btn danger" onClick={() => setSelectedPhotoIds([])}>
-              <span>🗑️</span> Clear
+            <button
+              onClick={() => setSelectedPhotoIds([])}
+              style={{ background: "rgba(255,255,255,0.1)", color: "#cbd5e1", border: "none", padding: "6px 12px", borderRadius: "8px", fontSize: "12px", cursor: "pointer" }}
+            >
+              Cancel
             </button>
           </div>
         )}
 
-        {/* IN-APP FILE PREVIEW MODAL */}
+        {/* FILE PREVIEW MODAL */}
         {previewModalFile && (
           <FilePreviewModal
             file={previewModalFile}
@@ -1129,22 +1215,13 @@ const Photos = () => {
 
 export default Photos;
 
-/* ==========================================================================
-   HELPER FUNCTIONS
-   ========================================================================== */
 function deduplicatePhotos(items) {
   const seen = new Set();
-  const unique = items.filter((item) => {
+  return items.filter((item) => {
     if (!item || !item.id) return false;
     if (seen.has(item.id)) return false;
     seen.add(item.id);
     return true;
-  });
-
-  return unique.sort((a, b) => {
-    const da = new Date(a.createdTime || 0).getTime();
-    const db = new Date(b.createdTime || 0).getTime();
-    return db - da;
   });
 }
 
@@ -1154,8 +1231,25 @@ function getPhotoThumbnail(photo) {
   const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001/api";
   const cleanBase = baseUrl.endsWith("/api") ? baseUrl.slice(0, -4) : baseUrl;
 
-  // 1. Google Drive CDN thumbnail (instant <30ms load for all photos & videos)
-  if (photo.provider === "google" || photo.provider === "google-photos") {
+  if (photo.provider === "google-photos") {
+    let cleanTarget = photo.thumbnailUrl || photo.previewUrl || (photo.baseUrl ? `${photo.baseUrl}=w400` : null);
+    if (cleanTarget) {
+      if (cleanTarget.includes("url=")) {
+        try {
+          const queryStr = cleanTarget.includes("?") ? cleanTarget.split("?")[1] : "";
+          const qUrl = new URLSearchParams(queryStr).get("url");
+          if (qUrl) cleanTarget = qUrl;
+        } catch (e) { }
+      }
+      if (cleanTarget.startsWith("http")) {
+        const baseWithoutParams = cleanTarget.split("=")[0];
+        cleanTarget = `${baseWithoutParams}=w400`;
+        return `${cleanBase}/api/google/photos/proxy/${photo.accountId}?url=${encodeURIComponent(cleanTarget)}&token=${encodeURIComponent(token)}`;
+      }
+    }
+  }
+
+  if (photo.provider === "google") {
     if (photo.thumbnailUrl && photo.thumbnailUrl.startsWith("http")) return photo.thumbnailUrl;
     if (photo.thumbnailLink && photo.thumbnailLink.startsWith("http")) return photo.thumbnailLink;
     const fileId = photo.providerFileId || photo.id;
@@ -1177,18 +1271,42 @@ function getPhotoThumbnail(photo) {
 }
 
 function getFallbackPhotoSrc(photo) {
-  if (!photo || !photo.provider || !photo.accountId || !photo.id) return "/assets/logo.png";
+  if (!photo) return "/assets/logo.png";
   const token = localStorage.getItem("token") || "";
   const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001/api";
   const cleanBase = baseUrl.endsWith("/api") ? baseUrl.slice(0, -4) : baseUrl;
+
+  if (photo.provider === "google-photos") {
+    let target = photo.thumbnailUrl || photo.previewUrl || (photo.baseUrl ? `${photo.baseUrl}=w400` : null);
+    if (target) {
+      if (target.includes("url=")) {
+        try {
+          const queryStr = target.includes("?") ? target.split("?")[1] : "";
+          const qUrl = new URLSearchParams(queryStr).get("url");
+          if (qUrl) target = qUrl;
+        } catch (e) { }
+      }
+      if (target.startsWith("http")) {
+        const clean = target.split("=")[0];
+        return `${clean}=w400`;
+      }
+    }
+    return "/assets/logo.png";
+  }
+
+  if (!photo.provider || !photo.accountId || !photo.id) return "/assets/logo.png";
   const idKey = photo.provider === "dropbox" ? "path" : "fileId";
-  const providerPath = photo.provider === "google-photos" ? "google" : photo.provider;
-  return `${cleanBase}/api/${providerPath}/open/${photo.accountId}?${idKey}=${encodeURIComponent(photo.id)}&name=${encodeURIComponent(photo.name || "image")}&token=${encodeURIComponent(token)}`;
+  return `${cleanBase}/api/${photo.provider}/open/${photo.accountId}?${idKey}=${encodeURIComponent(photo.id)}&name=${encodeURIComponent(photo.name || "image")}&token=${encodeURIComponent(token)}`;
 }
 
-function formatSize(bytes) {
-  if (!bytes) return "0 B";
-  const sizes = ["B", "KB", "MB", "GB", "TB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return (bytes / Math.pow(1024, i)).toFixed(1) + " " + sizes[i];
+function formatSize(bytes, photo = null) {
+  if (bytes && !isNaN(bytes) && Number(bytes) > 0) {
+    const sizes = ["B", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return (bytes / Math.pow(1024, i)).toFixed(1) + " " + sizes[i];
+  }
+  if (photo && photo.width && photo.height) {
+    return `${photo.width} × ${photo.height}`;
+  }
+  return "Photo";
 }

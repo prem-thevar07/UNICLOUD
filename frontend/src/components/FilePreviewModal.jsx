@@ -10,13 +10,17 @@ const providerIcons = {
   s3: "https://cdn.svgporn.com/logos/aws-s3.svg",
 };
 
-const formatSize = (bytes) => {
-  if (!bytes || isNaN(bytes)) return "-";
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+const formatSize = (bytes, file = null) => {
+  if (bytes && !isNaN(bytes) && Number(bytes) > 0) {
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  }
+  if (file && file.width && file.height) {
+    return `${file.width} × ${file.height}`;
+  }
+  return "Photo";
 };
 
 const FilePreviewModal = ({
@@ -186,10 +190,35 @@ const FilePreviewModal = ({
     return `https://colab.research.google.com/#upload`;
   };
 
+  const getGooglePhotosUrl = (f) => {
+    if (!f) return "";
+    let target = f.previewUrl || f.thumbnailUrl || (f.baseUrl ? `${f.baseUrl}=w1600` : "");
+    if (target.includes("url=")) {
+      try {
+        const queryStr = target.includes("?") ? target.split("?")[1] : "";
+        const qUrl = new URLSearchParams(queryStr).get("url");
+        if (qUrl) target = qUrl;
+      } catch (e) {}
+    }
+    if (target.startsWith("http")) {
+      const baseWithoutParams = target.split("=")[0];
+      target = `${baseWithoutParams}=w1600`;
+      const envBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001";
+      const cleanBase = envBase.endsWith("/api") ? envBase.slice(0, -4) : envBase;
+      const accId = f.accountId || (typeof f.account === "object" ? f.account?._id : f.account) || "default";
+      return `${cleanBase}/api/google/photos/proxy/${accId}?url=${encodeURIComponent(target)}&token=${encodeURIComponent(token)}`;
+    }
+    return target;
+  };
+
   const idParamKey = file?.provider === "dropbox" ? "path" : "fileId";
   const accId = file?.accountId || (typeof file?.account === "object" ? file?.account?._id : file?.account) || "default";
   const rawPath = file ? `/api/${file.provider}/open/${accId}?${idParamKey}=${encodeURIComponent(file.id)}&name=${encodeURIComponent(file.name || "file")}` : "";
-  const openUrl = file ? `${getCleanApiUrl(rawPath)}&token=${encodeURIComponent(token)}` : "";
+  const openUrl = file
+    ? file.provider === "google-photos"
+      ? getGooglePhotosUrl(file)
+      : `${getCleanApiUrl(rawPath)}&token=${encodeURIComponent(token)}`
+    : "";
   const iframeUrl = file ? `${openUrl}&embed=true` : "";
 
   // Fetch & Parse Jupyter Notebook JSON if isIpynb
@@ -463,7 +492,7 @@ const FilePreviewModal = ({
               </h3>
               <div className="preview-file-meta">
                 <span className="preview-badge provider-badge">{file.provider?.toUpperCase()}</span>
-                {file.size && <span className="preview-badge size-badge">{formatSize(file.size)}</span>}
+                <span className="preview-badge size-badge">{formatSize(file.size, file)}</span>
                 {file.accountEmail && <span className="preview-badge email-badge">{file.accountEmail}</span>}
               </div>
             </div>
@@ -769,6 +798,20 @@ const FilePreviewModal = ({
                 src={openUrl}
                 alt={file.name}
                 className="preview-image-element"
+                referrerPolicy="no-referrer"
+                onError={(e) => {
+                  let fallback = file.thumbnailUrl || (file.baseUrl ? `${file.baseUrl}=w400` : "");
+                  if (fallback.includes("url=")) {
+                    try {
+                      const parsed = new URL(fallback, "http://localhost");
+                      const qUrl = parsed.searchParams.get("url");
+                      if (qUrl) fallback = qUrl;
+                    } catch (err) {}
+                  }
+                  if (fallback && e.target.src !== fallback) {
+                    e.target.src = fallback;
+                  }
+                }}
                 style={{
                   transform: `scale(${zoom}) rotate(${rotation}deg)`,
                   transition: "transform 0.2s ease-in-out",
