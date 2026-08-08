@@ -173,6 +173,11 @@ export const refreshGoogleToken = async (account) => {
     return account.accessToken;
   } catch (err) {
     console.error("❌ Failed to refresh Google token:", err.response?.data || err.message);
+    const isInvalid = err.message?.includes("invalid_grant") || err.response?.data?.error === "invalid_grant";
+    if (isInvalid && account) {
+      account.status = "expired";
+      await account.save().catch(() => {});
+    }
     throw err;
   }
 };

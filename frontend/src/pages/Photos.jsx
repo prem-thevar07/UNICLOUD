@@ -16,14 +16,7 @@ const IconPhotosApp = () => (
 );
 
 const IconGoogleDrive = () => (
-  <svg width="18" height="18" viewBox="0 0 87.3 78" fill="currentColor">
-    <path d="M6.6 66.85l3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8H0c0 1.55.4 3.1 1.2 4.5l5.4 9.35z" fill="#0066DA" />
-    <path d="M43.65 25L29.9 1.2c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44c-.8 1.4-1.2 2.95-1.2 4.5h27.5L43.65 25z" fill="#00AC47" />
-    <path d="M73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l5.4-9.35c.8-1.4 1.2-2.95 1.2-4.5H55.95l6.5 11.25 11.1 5.9z" fill="#EA4335" />
-    <path d="M43.65 25L57.4 1.2c-1.35-.8-2.9-1.2-4.45-1.2H34.4c-1.55 0-3.1.4-4.5 1.2L43.65 25z" fill="#00832D" />
-    <path d="M55.95 53H27.5L13.75 76.8c1.35.8 2.9 1.2 4.45 1.2h50.9c1.55 0 3.1-.4 4.5-1.2L55.95 53z" fill="#2684FC" />
-    <path d="M73.55 28.3L48.15 4.35C46.8 3.55 45.25 3.15 43.7 3.15h.05L57.4 26.9l16.15 26.1h.05c1.55 0 3.1-.4 4.45-1.2l5.4-9.35c.8-1.4 1.2-2.95 1.2-4.5 0-1.6-.4-3.1-1.15-4.55l-9.95-14.6z" fill="#FFBA00" />
-  </svg>
+  <img src="/assets/drive.png" alt="Google Drive" style={{ width: "18px", height: "18px", objectFit: "contain", flexShrink: 0 }} />
 );
 
 const IconGooglePhotos = () => (
@@ -48,8 +41,25 @@ const IconDropbox = () => (
 );
 
 const IconS3 = () => (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="#E53935">
-    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  <img
+    src="/assets/s3.svg"
+    alt="Amazon S3"
+    style={{
+      width: "22px",
+      height: "22px",
+      objectFit: "contain",
+      borderRadius: "4px",
+      flexShrink: 0
+    }}
+  />
+);
+
+const IconBox = () => (
+  <svg width="28" height="15" viewBox="0 0 444.893 245.414" fill="none">
+    <g fill="#0075C9">
+      <path d="M239.038 72.43c-33.081 0-61.806 18.6-76.322 45.904-14.516-27.305-43.24-45.902-76.32-45.902-19.443 0-37.385 6.424-51.821 17.266V16.925h-.008C34.365 7.547 26.713 0 17.286 0 7.858 0 .208 7.547.008 16.925H0v143.333h.036c.768 47.051 39.125 84.967 86.359 84.967 33.08 0 61.805-18.603 76.32-45.908 14.517 27.307 43.241 45.906 76.321 45.906 47.715 0 86.396-38.684 86.396-86.396.001-47.718-38.682-86.397-86.394-86.397zM86.395 210.648c-28.621 0-51.821-23.201-51.821-51.82 0-28.623 23.201-51.823 51.821-51.823 28.621 0 51.822 23.2 51.822 51.823 0 28.619-23.201 51.82-51.822 51.82zm152.643 0c-28.622 0-51.821-23.201-51.821-51.822 0-28.623 23.2-51.821 51.821-51.821 28.619 0 51.822 23.198 51.822 51.821-.001 28.621-23.203 51.822-51.822 51.822z"/>
+      <path d="M441.651 218.033l-44.246-59.143 44.246-59.144-.008-.007c5.473-7.62 3.887-18.249-3.652-23.913-7.537-5.658-18.187-4.221-23.98 3.157l-.004-.002-38.188 51.047-38.188-51.047-.006.009c-5.793-7.385-16.441-8.822-23.981-3.16-7.539 5.664-9.125 16.293-3.649 23.911l-.008.005 44.245 59.144-44.245 59.143.008.005c-5.477 7.62-3.89 18.247 3.649 23.909 7.54 5.664 18.188 4.225 23.981-3.155l.006.007 38.188-51.049 38.188 51.049.004-.002c5.794 7.377 16.443 8.814 23.98 3.154 7.539-5.662 9.125-16.291 3.652-23.91l.008-.008z"/>
+    </g>
   </svg>
 );
 
@@ -162,6 +172,25 @@ const IconLayers = () => (
   </svg>
 );
 
+const IconClose = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </svg>
+);
+
+const IconCheckTick = () => (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+    <polyline points="20 6 9 17 4 12" />
+  </svg>
+);
+
+const CheckIndicator = ({ checked }) => (
+  <span style={{ width: "16px", height: "16px", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+    {checked ? <IconCheckTick /> : null}
+  </span>
+);
+
 const IconDatabase = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <ellipse cx="12" cy="5" rx="9" ry="3" />
@@ -169,6 +198,32 @@ const IconDatabase = () => (
     <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
   </svg>
 );
+
+const getProviderName = (provider) => {
+  switch (provider) {
+    case "google": return "Google Drive";
+    case "google-photos": return "Google Photos";
+    case "onedrive": return "OneDrive";
+    case "dropbox": return "Dropbox";
+    case "box": return "Box";
+    case "s3": return "Amazon S3";
+    default: return provider ? provider.charAt(0).toUpperCase() + provider.slice(1) : "Cloud Account";
+  }
+};
+
+const getProviderSvg = (provider) => {
+  switch (provider) {
+    case "google": return <IconGoogleDrive />;
+    case "google-photos": return <IconGooglePhotos />;
+    case "onedrive": return <IconOneDrive />;
+    case "dropbox": return <IconDropbox />;
+    case "s3": return <IconS3 />;
+    case "box": return <IconBox />;
+    default: return <IconCloud />;
+  }
+};
+
+
 
 const Photos = () => {
   // Real Data & Timeline Engine States
@@ -181,13 +236,16 @@ const Photos = () => {
 
   // Category & Filter States
   const [activeCategory, setActiveCategory] = useState("all_photos");
-  const [selectedSourceKeys, setSelectedSourceKeys] = useState([]);
+  const [selectedSourceKeys, setSelectedSourceKeys] = useState(null);
   const [selectedFolderFilter, setSelectedFolderFilter] = useState("all");
   const [selectedTypeFilter, setSelectedTypeFilter] = useState("all");
   const [quickPill, setQuickPill] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("grid");
   const [isViewFromOpen, setIsViewFromOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
+  const [expandedAccountKeys, setExpandedAccountKeys] = useState([]);
+  const [selectAccountModalOpen, setSelectAccountModalOpen] = useState(false);
 
   // Selection & Modal States
   const [selectedPhotoIds, setSelectedPhotoIds] = useState([]);
@@ -207,6 +265,10 @@ const Photos = () => {
   const loadingMoreRef = useRef(false);
   const dropdownRef = useRef(null);
 
+  const accountFilterRef = useRef(null);
+  const folderFilterRef = useRef(null);
+  const typeFilterRef = useRef(null);
+
   // Save favorites to localStorage
   useEffect(() => {
     try {
@@ -216,11 +278,18 @@ const Photos = () => {
     }
   }, [favorites]);
 
-  // Close custom dropdown when clicking outside
+  // Close custom dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setIsViewFromOpen(false);
+      }
+      if (
+        accountFilterRef.current && !accountFilterRef.current.contains(e.target) &&
+        folderFilterRef.current && !folderFilterRef.current.contains(e.target) &&
+        typeFilterRef.current && !typeFilterRef.current.contains(e.target)
+      ) {
+        setOpenDropdown(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -251,7 +320,7 @@ const Photos = () => {
   const sourceCards = useMemo(() => {
     const list = [];
     accounts.forEach((acc) => {
-      const email = acc.accountEmail || acc.email || "connected";
+      const email = acc.accountEmail || acc.email || acc.username || "Google Account";
       if (acc.provider === "google") {
         // 1. Google Drive Card
         const driveCount = photos.filter((p) => p.accountId === acc._id && p.provider === "google").length;
@@ -262,9 +331,10 @@ const Photos = () => {
           name: "Google Drive",
           email,
           count: driveCount,
+          status: acc.status,
         });
 
-        // 2. Google Photos Card (Distinct Card as requested by user)
+        // 2. Google Photos Card (Distinct Card)
         const photosCount = photos.filter((p) => p.accountId === acc._id && p.provider === "google-photos").length;
         list.push({
           id: acc._id,
@@ -273,6 +343,7 @@ const Photos = () => {
           name: "Google Photos",
           email,
           count: photosCount,
+          status: acc.status,
         });
       } else {
         const count = photos.filter((p) => p.accountId === acc._id).length;
@@ -283,41 +354,81 @@ const Photos = () => {
           name: getProviderName(acc.provider),
           email,
           count,
+          status: acc.status,
         });
       }
     });
     return list;
   }, [accounts, photos]);
 
+  const handleSelectPreviewFile = useCallback((targetFile) => {
+    if (!targetFile) {
+      setPreviewModalFile(null);
+      return;
+    }
+
+    const pSourceKey = targetFile.provider === "google-photos"
+      ? `${targetFile.accountId}_google-photos`
+      : targetFile.provider === "google"
+        ? `${targetFile.accountId}_google`
+        : targetFile.accountId;
+
+    const sourceCard = sourceCards.find((s) => s.key === pSourceKey || s.id === targetFile.accountId || s.key === targetFile.accountId);
+    const email = targetFile.accountEmail || sourceCard?.email || targetFile.email || "";
+
+    setPreviewModalFile({
+      ...targetFile,
+      accountEmail: email
+    });
+  }, [sourceCards]);
+
+  const activeSourceKeys = useMemo(() => {
+    return selectedSourceKeys ?? sourceCards.map((s) => s.key);
+  }, [selectedSourceKeys, sourceCards]);
+
+  const nextCursorRef = useRef(null);
+  const hasMoreRef = useRef(true);
+
   /* ==========================================================================
      FETCH TIMELINE BATCH FROM TIMELINE ENGINE SERVICE
      ========================================================================== */
   const fetchTimeline = useCallback(
     async (isLoadMore = false) => {
+      const currentCursor = nextCursorRef.current;
       if (isLoadMore) {
-        if (loadingMoreRef.current || !hasMore || !nextCursor) return;
+        if (loadingMoreRef.current || !hasMoreRef.current || !currentCursor) return;
         loadingMoreRef.current = true;
         setLoadingMore(true);
       } else {
         setLoading(true);
         setNextCursor(null);
+        nextCursorRef.current = null;
         setHasMore(true);
+        hasMoreRef.current = true;
       }
 
       try {
         const params = { limit: 60 };
-        if (isLoadMore && nextCursor) {
-          params.cursor = nextCursor;
+        if (isLoadMore && currentCursor) {
+          params.cursor = currentCursor;
         }
 
-        if (selectedFolderFilter !== "all") {
+        if (selectedSourceKeys && selectedSourceKeys.length > 0) {
+          params.accountIds = selectedSourceKeys.join(",");
+        }
+
+        if (selectedFolderFilter && selectedFolderFilter !== "all") {
           params.folder = selectedFolderFilter;
         }
 
         if (selectedTypeFilter !== "all") {
           params.type = selectedTypeFilter;
-        } else if (activeCategory === "videos") {
+        } else if (activeCategory === "videos" || quickPill === "videos") {
           params.type = "video";
+        }
+
+        if (["today", "yesterday", "this_week", "this_month"].includes(quickPill)) {
+          params.preset = quickPill;
         }
 
         const res = await API.get("/photos", { params });
@@ -333,7 +444,10 @@ const Photos = () => {
         }
 
         setNextCursor(nextCurs);
+        nextCursorRef.current = nextCurs;
+
         setHasMore(more);
+        hasMoreRef.current = more;
       } catch (err) {
         console.error("❌ Failed to fetch photos timeline:", err);
       } finally {
@@ -342,33 +456,33 @@ const Photos = () => {
         loadingMoreRef.current = false;
       }
     },
-    [nextCursor, hasMore, selectedFolderFilter, selectedTypeFilter, activeCategory]
+    [selectedSourceKeys, selectedFolderFilter, selectedTypeFilter, activeCategory, quickPill]
   );
 
   useEffect(() => {
     fetchTimeline(false);
-  }, [selectedFolderFilter, selectedTypeFilter, activeCategory]);
+  }, [selectedSourceKeys, selectedFolderFilter, selectedTypeFilter, activeCategory, quickPill]);
 
   /* ==========================================================================
-     BACKGROUND PRE-FETCH SENTINEL OBSERVER (70% VIEWPORT THRESHOLD)
+     BACKGROUND PRE-FETCH SENTINEL OBSERVER (600PX VIEWPORT THRESHOLD)
      ========================================================================== */
   const sentinelRef = useCallback(
     (node) => {
-      if (loading || loadingMore) return;
       if (observerRef.current) observerRef.current.disconnect();
+      if (!node) return;
 
       observerRef.current = new IntersectionObserver(
         (entries) => {
-          if (entries[0].isIntersecting && hasMore && nextCursor) {
+          if (entries[0].isIntersecting && hasMoreRef.current && nextCursorRef.current && !loadingMoreRef.current) {
             fetchTimeline(true);
           }
         },
-        { rootMargin: "600px", threshold: 0.7 }
+        { rootMargin: "600px", threshold: 0 }
       );
 
-      if (node) observerRef.current.observe(node);
+      observerRef.current.observe(node);
     },
-    [loading, loadingMore, hasMore, nextCursor, fetchTimeline]
+    [fetchTimeline]
   );
 
   /* ==========================================================================
@@ -377,11 +491,20 @@ const Photos = () => {
   const filteredPhotos = useMemo(() => {
     return photos.filter((p) => {
       // 1. Source Card Filter (Google Drive vs Google Photos vs OneDrive vs Dropbox)
-      if (selectedSourceKeys.length > 0) {
-        const pSourceKey = p.provider === "google-photos" ? `${p.accountId}_google-photos` : p.provider === "google" ? `${p.accountId}_google` : p.accountId;
-        if (!selectedSourceKeys.includes(pSourceKey)) {
-          return false;
-        }
+      const pSourceKey = p.provider === "google-photos" ? `${p.accountId}_google-photos` : p.provider === "google" ? `${p.accountId}_google` : p.accountId;
+      if (!activeSourceKeys.includes(pSourceKey)) {
+        return false;
+      }
+
+      // 1.5 Folder Filter
+      if (selectedFolderFilter !== "all") {
+        const itemFolder = p.parentFolder || p.album || p.folderPath?.split("/").filter(Boolean).pop() || "Root";
+        const targetFolder = selectedFolderFilter.toLowerCase();
+        const matchesFolder = itemFolder.toLowerCase() === targetFolder ||
+                              p.parentFolder?.toLowerCase() === targetFolder ||
+                              p.album?.toLowerCase() === targetFolder ||
+                              (p.folderPath && p.folderPath.toLowerCase().includes(targetFolder));
+        if (!matchesFolder) return false;
       }
 
       // 2. Active Category Filter
@@ -414,6 +537,8 @@ const Photos = () => {
         const now = new Date();
         const pDate = new Date(p.photoTakenDate || p.createdDate || p.createdTime || 0);
         if (pDate.getMonth() !== now.getMonth() || pDate.getFullYear() !== now.getFullYear()) return false;
+      } else if (quickPill === "google_photos" && p.provider !== "google-photos") {
+        return false;
       } else if (quickPill === "favorites" && !favorites.includes(p.id)) {
         return false;
       } else if (quickPill === "videos" && !p.mimeType?.startsWith("video/") && !p.name?.match(/\.(mp4|mov|avi|webm|mkv)$/i)) {
@@ -431,19 +556,27 @@ const Photos = () => {
 
       return true;
     });
-  }, [photos, selectedSourceKeys, activeCategory, favorites, quickPill, searchQuery]);
+  }, [photos, activeSourceKeys, selectedFolderFilter, activeCategory, favorites, quickPill, searchQuery]);
 
-  // Derived Dynamic Folder Tree from Real Photos
+  // Derived Dynamic Folder Tree from Real Photos (Mapped by Account Source Key)
   const folderTree = useMemo(() => {
     const tree = {};
     photos.forEach((p) => {
-      const folderName = p.folderPath?.split("/").filter(Boolean).pop() || "Root";
-      const key = p.provider || "google";
-      if (!tree[key]) tree[key] = {};
-      tree[key][folderName] = (tree[key][folderName] || 0) + 1;
+      const folderName = p.parentFolder || p.album || p.folderPath?.split("/").filter(Boolean).pop() || "Root";
+      const sourceKey = p.provider === "google-photos" ? `${p.accountId}_google-photos` : p.provider === "google" ? `${p.accountId}_google` : p.accountId;
+      if (!tree[sourceKey]) tree[sourceKey] = {};
+      tree[sourceKey][folderName] = (tree[sourceKey][folderName] || 0) + 1;
     });
     return tree;
   }, [photos]);
+
+
+
+  const toggleAccountExpand = (key) => {
+    setExpandedAccountKeys((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key]
+    );
+  };
 
   // Grouped Photo Sections by Timeline Date
   const groupedPhotoSections = useMemo(() => {
@@ -501,30 +634,55 @@ const Photos = () => {
      HANDLERS & ACTIONS
      ========================================================================== */
   const handleToggleSelectAllSources = () => {
-    if (selectedSourceKeys.length === sourceCards.length) {
+    if (activeSourceKeys.length === sourceCards.length) {
       setSelectedSourceKeys([]);
     } else {
-      setSelectedSourceKeys(sourceCards.map((s) => s.key));
+      setSelectedSourceKeys(null);
     }
   };
 
   const handleToggleSourceSelect = (key) => {
     setSelectedSourceKeys((prev) => {
-      if (prev.length === 0) {
-        // If all were active, unchecking one leaves all others active
-        return sourceCards.map((s) => s.key).filter((k) => k !== key);
+      const current = prev ?? sourceCards.map((s) => s.key);
+      if (current.includes(key)) {
+        const next = current.filter((k) => k !== key);
+        return next.length === sourceCards.length ? null : next;
+      } else {
+        const next = [...current, key];
+        return next.length === sourceCards.length ? null : next;
       }
-      return prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key];
     });
   };
 
   const handleSelectViewFromSource = (key) => {
     if (key === "all") {
-      setSelectedSourceKeys([]);
+      setSelectedSourceKeys(null);
     } else {
       setSelectedSourceKeys([key]);
     }
     setIsViewFromOpen(false);
+  };
+
+  const handleAccountHeaderClick = (scKey, e) => {
+    e.stopPropagation();
+    toggleAccountExpand(scKey);
+    if (activeSourceKeys.length === 1 && activeSourceKeys[0] === scKey) {
+      setSelectedSourceKeys(null);
+      setSelectedFolderFilter("all");
+    } else {
+      setSelectedSourceKeys([scKey]);
+      setSelectedFolderFilter("all");
+    }
+  };
+
+  const handleFolderClick = (scKey, folderName, e) => {
+    e.stopPropagation();
+    setSelectedSourceKeys([scKey]);
+    if (selectedFolderFilter === folderName) {
+      setSelectedFolderFilter("all");
+    } else {
+      setSelectedFolderFilter(folderName);
+    }
   };
 
   const handleToggleFavorite = (e, photoId) => {
@@ -557,7 +715,7 @@ const Photos = () => {
 
   const resetAllFilters = () => {
     setActiveCategory("all_photos");
-    setSelectedSourceKeys([]);
+    setSelectedSourceKeys(null);
     setSelectedFolderFilter("all");
     setSelectedTypeFilter("all");
     setQuickPill("all");
@@ -565,22 +723,45 @@ const Photos = () => {
     setSelectedPhotoIds([]);
   };
 
+  const handleQuickPillClick = (key) => {
+    setQuickPill(key);
+    if (key === "google_photos") {
+      const allGPhotosKeys = sourceCards.filter((s) => s.provider === "google-photos").map((s) => s.key);
+      if (allGPhotosKeys.length > 0) {
+        setSelectedSourceKeys(allGPhotosKeys);
+      }
+    } else if (key === "all") {
+      setSelectedSourceKeys(null);
+      setSelectedFolderFilter("all");
+    }
+  };
+
   const [pickerLoading, setPickerLoading] = useState(false);
 
-  const handleOpenGooglePhotosPicker = async () => {
-    const googleAcc = accounts.find((a) => a.provider === "google");
-    if (!googleAcc) {
+  const handleOpenGooglePhotosPicker = () => {
+    const googleAccounts = accounts.filter((a) => a.provider === "google");
+    if (googleAccounts.length === 0) {
       alert("Please connect a Google Account first to import photos from Google Photos.");
       return;
     }
 
+    if (googleAccounts.length === 1) {
+      triggerPickerForAccount(googleAccounts[0]);
+    } else {
+      setSelectAccountModalOpen(true);
+    }
+  };
+
+  const triggerPickerForAccount = async (account) => {
+    setSelectAccountModalOpen(false);
     try {
       setPickerLoading(true);
-      const res = await API.post(`/google/picker/session/${googleAcc._id}`);
+      const res = await API.post(`/google/picker/session/${account._id}`);
       const { id: sessionId, pickerUri } = res.data;
 
       if (!pickerUri) {
         alert("Failed to get Google Photos Picker URI.");
+        setPickerLoading(false);
         return;
       }
 
@@ -598,7 +779,7 @@ const Photos = () => {
         }
 
         try {
-          const statusRes = await API.get(`/google/picker/session/${googleAcc._id}/${sessionId}`);
+          const statusRes = await API.get(`/google/picker/session/${account._id}/${sessionId}`);
           if (statusRes.data?.mediaItemsSet) {
             clearInterval(checkTimer);
             setPickerLoading(false);
@@ -606,9 +787,15 @@ const Photos = () => {
               if (pickerWin && !pickerWin.closed) pickerWin.close();
             } catch (e) { }
 
-            const importRes = await API.post(`/google/picker/import/${googleAcc._id}`, { sessionId });
+            const importRes = await API.post(`/google/picker/import/${account._id}`, { sessionId });
             if (importRes.data?.importedCount > 0) {
-              fetchTimeline(false);
+              const googlePhotosKey = `${account._id}_google-photos`;
+              setSelectedSourceKeys([googlePhotosKey]);
+              setSelectedFolderFilter("all");
+              setSelectedTypeFilter("all");
+              setQuickPill("all");
+              setSearchQuery("");
+              await fetchTimeline(false);
             }
           }
         } catch (e) {
@@ -617,21 +804,24 @@ const Photos = () => {
       }, 3000);
     } catch (err) {
       console.error("❌ Failed to launch Google Photos Picker:", err);
-      alert(err.response?.data?.message || err.message || "Google Photos Picker launch failed.");
+      const msg = err.response?.data?.message || err.message || "Google Photos Picker launch failed.";
+      const isScopeError = err.response?.data?.requiresReconnect || msg.toLowerCase().includes("permission missing") || msg.toLowerCase().includes("insufficient authentication scopes") || msg.toLowerCase().includes("permission_denied");
+
+      if (isScopeError) {
+        const goReconnect = window.confirm(
+          `Google Photos permission is missing for account (${account.accountEmail || account.email || "Google Account"}).\n\nWould you like to go to Manage Accounts to reconnect this Google Account and grant Google Photos access?`
+        );
+        if (goReconnect) {
+          window.location.href = "/manage-accounts";
+        }
+      } else {
+        alert(msg);
+      }
       setPickerLoading(false);
     }
   };
 
-  const getProviderSvg = (provider) => {
-    switch (provider) {
-      case "google": return <IconGoogleDrive />;
-      case "google-photos": return <IconGooglePhotos />;
-      case "onedrive": return <IconOneDrive />;
-      case "dropbox": return <IconDropbox />;
-      case "s3": return <IconS3 />;
-      default: return <IconCloud />;
-    }
-  };
+
 
   const [purgingGooglePhotos, setPurgingGooglePhotos] = useState(false);
 
@@ -654,28 +844,19 @@ const Photos = () => {
     }
   };
 
-  const getProviderName = (provider) => {
-    switch (provider) {
-      case "google": return "Google Drive";
-      case "google-photos": return "Google Photos";
-      case "onedrive": return "OneDrive";
-      case "dropbox": return "Dropbox";
-      case "s3": return "Amazon S3";
-      default: return "Cloud Account";
-    }
-  };
+
 
   // Label text for custom View From trigger
   const selectedViewFromText = useMemo(() => {
-    if (selectedSourceKeys.length === 0 || selectedSourceKeys.length === sourceCards.length) {
+    if (activeSourceKeys.length === sourceCards.length) {
       return `Multiple Accounts (${sourceCards.length})`;
     }
-    if (selectedSourceKeys.length === 1) {
-      const match = sourceCards.find((s) => s.key === selectedSourceKeys[0]);
+    if (activeSourceKeys.length === 1) {
+      const match = sourceCards.find((s) => s.key === activeSourceKeys[0]);
       return match ? `${match.name} (${match.email})` : "Custom Selection";
     }
-    return `${selectedSourceKeys.length} Sources Selected`;
-  }, [selectedSourceKeys, sourceCards]);
+    return `${activeSourceKeys.length} Sources Selected`;
+  }, [activeSourceKeys, sourceCards]);
 
   return (
     <MainLayout>
@@ -687,110 +868,98 @@ const Photos = () => {
              ========================================================================== */}
           <aside className="photos-sidebar-container">
 
-            {/* UPPER PANEL: SOURCES & CLOUD ACCOUNTS (WITH DISTINCT GOOGLE PHOTOS CARD) */}
+            {/* UPPER PANEL: MEDIA FOLDERS ACCORDION TREE BY CLOUD ACCOUNT */}
             <div className="photos-sidebar-panel sidebar-sources-panel">
-              <div className="sidebar-section-header">
-                <span className="sidebar-title">SOURCES <span className="info-tooltip"></span></span>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <div className="sidebar-section-header-col">
+                <span className="sidebar-title">Accounts</span>
+                <div className="sidebar-action-buttons-row">
                   <button className="add-account-btn" onClick={() => window.location.href = "/manage-accounts"}>
-                    <IconPlus /> Add Account
+                    <IconPlus /> <span>Add Account</span>
                   </button>
                   <button className="import-google-photos-top-btn" onClick={handleOpenGooglePhotosPicker} disabled={pickerLoading} title="Import photos directly from Google Photos">
-                    <IconGooglePhotos /> <span>{pickerLoading ? "Importing..." : "Import Photos"}</span>
+                    <IconGooglePhotos /> <span>{pickerLoading ? "Importing..." : "Add from Photos"}</span>
                   </button>
                 </div>
               </div>
 
-              {/* CUSTOM VIEW FROM DROPDOWN MENU */}
-              <div className="view-from-wrapper" ref={dropdownRef}>
-                <label className="sidebar-field-label">View From</label>
-                <div className="custom-view-from-container">
-                  <div
-                    className="custom-view-from-trigger"
-                    onClick={() => setIsViewFromOpen((prev) => !prev)}
+              {selectedFolderFilter !== "all" && (
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "rgba(99, 102, 241, 0.15)", borderRadius: "8px", margin: "6px 0", border: "1px solid rgba(99, 102, 241, 0.3)" }}>
+                  <span style={{ fontSize: "11px", color: "#a5b4fc" }}>Active Folder: <strong>{selectedFolderFilter}</strong></span>
+                  <span
+                    style={{ fontSize: "10px", color: "#818cf8", cursor: "pointer", fontWeight: 700 }}
+                    onClick={() => setSelectedFolderFilter("all")}
                   >
-                    <span>{selectedViewFromText}</span>
-                    <span style={{ fontSize: "10px", color: "#818cf8" }}>{isViewFromOpen ? "▲" : "▼"}</span>
-                  </div>
-
-                  {isViewFromOpen && (
-                    <div className="custom-view-from-menu">
-                      <div
-                        className={`custom-view-from-option ${selectedSourceKeys.length === 0 ? "selected" : ""}`}
-                        onClick={() => handleSelectViewFromSource("all")}
-                      >
-                        <span>Multiple Accounts ({sourceCards.length})</span>
-                        {selectedSourceKeys.length === 0 && <span style={{ color: "#818cf8" }}>✓</span>}
-                      </div>
-                      {sourceCards.map((sc) => {
-                        const isSel = selectedSourceKeys.length === 1 && selectedSourceKeys[0] === sc.key;
-                        return (
-                          <div
-                            key={sc.key}
-                            className={`custom-view-from-option ${isSel ? "selected" : ""}`}
-                            onClick={() => handleSelectViewFromSource(sc.key)}
-                          >
-                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                              {getProviderSvg(sc.provider)}
-                              <span>{sc.name} ({sc.email})</span>
-                            </div>
-                            {isSel && <span style={{ color: "#818cf8" }}>✓</span>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                    Clear
+                  </span>
                 </div>
-              </div>
+              )}
 
-              {/* SELECT ALL ROW */}
-              <div className="sidebar-select-all-row">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={sourceCards.length > 0 && (selectedSourceKeys.length === 0 || selectedSourceKeys.length === sourceCards.length)}
-                    onChange={handleToggleSelectAllSources}
-                  />
-                  <span className="checkbox-text">SELECT ALL</span>
-                </label>
-                <span className="count-pill">
-                  {selectedSourceKeys.length === 0 ? sourceCards.length : selectedSourceKeys.length} / {sourceCards.length}
-                </span>
-              </div>
-
-              {/* DISTINCT SOURCE CARDS LIST (GOOGLE DRIVE & GOOGLE PHOTOS CARDS INDIVIDUALLY) */}
-              <div className="sidebar-accounts-scroll-list">
+              {/* ACCORDION MEDIA FOLDERS TREE BY CLOUD ACCOUNT */}
+              <div className="sidebar-accounts-tree-list">
                 {sourceCards.length === 0 ? (
                   <div style={{ fontSize: "11px", color: "#64748b", padding: "8px" }}>No connected cloud sources</div>
                 ) : (
                   sourceCards.map((sc) => {
-                    const isChecked = selectedSourceKeys.length === 0 || selectedSourceKeys.includes(sc.key);
+                    const isExpanded = expandedAccountKeys.includes(sc.key);
+                    const isAccountActive = activeSourceKeys.length === 1 && activeSourceKeys[0] === sc.key;
+                    const sourceFolders = folderTree[sc.key] || {};
+                    const folderEntries = Object.entries(sourceFolders);
 
                     return (
-                      <div
-                        key={sc.key}
-                        className={`sidebar-account-card ${isChecked ? "selected" : ""}`}
-                        onClick={() => handleToggleSourceSelect(sc.key)}
-                      >
-                        <label className="checkbox-label" onClick={(e) => e.stopPropagation()}>
-                          <input
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={() => handleToggleSourceSelect(sc.key)}
-                          />
-                          <div className="account-icon-and-meta">
-                            <span className="provider-icon-badge">
-                              {getProviderSvg(sc.provider)}
-                            </span>
+                      <div key={sc.key} className={`account-tree-node ${isAccountActive ? "selected-account" : ""}`}>
+                        {/* ACCOUNT HEADER CARD */}
+                        <div
+                          className={`account-tree-header ${isExpanded ? "expanded" : ""} ${isAccountActive ? "selected-account" : ""}`}
+                          onClick={(e) => handleAccountHeaderClick(sc.key, e)}
+                        >
+                          <div className="account-header-left">
+                            <span className="expand-arrow">{isExpanded ? "▼" : "▶"}</span>
+                            <span className="provider-icon-badge">{getProviderSvg(sc.provider)}</span>
                             <div className="account-text-info">
                               <span className="account-provider-name">{sc.name}</span>
-                              <span className="account-email-handle">{sc.email}</span>
+                              <span className="account-email-handle">
+                                {sc.email}
+                                {sc.status === "expired" && (
+                                  <span
+                                    style={{ marginLeft: "6px", fontSize: "10px", color: "#f87171", fontWeight: 700 }}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.location.href = "/manage-accounts";
+                                    }}
+                                    title="Token expired. Click to reconnect account."
+                                  >
+                                    ⚠️ Reconnect
+                                  </span>
+                                )}
+                              </span>
                             </div>
                           </div>
-                        </label>
-                        <div className="account-card-right">
                           <span className="account-item-count">{sc.count}</span>
                         </div>
+
+                        {/* EXPANDABLE MEDIA FOLDERS SUBLIST (ONLY SHOWS FOLDERS CONTAINING IMAGES/VIDEOS) */}
+                        {isExpanded && (
+                          <div className="account-tree-folders">
+                            {folderEntries.length === 0 ? (
+                              <div className="empty-folders-note">No photo folders found</div>
+                            ) : (
+                              folderEntries.map(([folderName, count]) => {
+                                const isSelected = isAccountActive && selectedFolderFilter === folderName;
+                                return (
+                                  <div
+                                    key={folderName}
+                                    className={`tree-folder-item ${isSelected ? "selected" : ""}`}
+                                    onClick={(e) => handleFolderClick(sc.key, folderName, e)}
+                                  >
+                                    <IconFolder />
+                                    <span className="folder-name-text">{folderName}</span>
+                                    <span className="folder-count-badge">{count}</span>
+                                  </div>
+                                );
+                              })
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })
@@ -825,36 +994,7 @@ const Photos = () => {
                 </nav>
               </div>
 
-              {/* DYNAMIC FOLDERS TREE */}
-              {Object.keys(folderTree).length > 0 && (
-                <div className="sidebar-group">
-                  <div className="sidebar-group-title">
-                    <span>FOLDERS</span>
-                    {selectedFolderFilter !== "all" && (
-                      <span
-                        style={{ fontSize: "10px", color: "#818cf8", cursor: "pointer", marginLeft: "auto" }}
-                        onClick={() => setSelectedFolderFilter("all")}
-                      >
-                        Clear
-                      </span>
-                    )}
-                  </div>
-                  <div className="sidebar-folder-list">
-                    {Object.entries(folderTree).flatMap(([provKey, foldersMap]) =>
-                      Object.entries(foldersMap).map(([folderName, count]) => (
-                        <div
-                          key={`${provKey}-${folderName}`}
-                          className={`folder-item ${selectedFolderFilter === folderName ? "active" : ""}`}
-                          onClick={() => setSelectedFolderFilter(selectedFolderFilter === folderName ? "all" : folderName)}
-                          style={{ cursor: "pointer" }}
-                        >
-                          <IconFolder /> <span>{folderName}</span> <span className="nav-badge">{count}</span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
+
 
               {/* DYNAMIC REAL STORAGE GAUGE */}
               <div className="sidebar-group storage-gauge-group">
@@ -896,7 +1036,7 @@ const Photos = () => {
              ========================================================================== */}
           <main className="photos-main-content">
 
-            {/* TOP HEADER */}
+            {/* TOP HEADER WITH INTEGRATED GLASS SEARCH BAR */}
             <div className="photos-top-header">
               <div className="photos-title-box">
                 <div className="title-row">
@@ -907,148 +1047,202 @@ const Photos = () => {
               </div>
 
               <div className="photos-header-actions">
-                <div className="photos-search-box" style={{ width: "260px", position: "relative" }}>
-                  <IconSearch />
+                <div className="photos-search-box-redesigned">
+                  <span className="search-icon-wrapper"><IconSearch /></span>
                   <input
                     ref={searchInputRef}
                     type="text"
-                    className="photos-search-input"
-                    placeholder="Search photos..."
+                    className="photos-search-input-redesigned"
+                    placeholder="Search photos, folders..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
+                  {searchQuery ? (
+                    <button className="search-clear-btn" onClick={() => setSearchQuery("")}>
+                      <IconClose />
+                    </button>
+                  ) : (
+                    <span className="search-kbd-badge">Ctrl K</span>
+                  )}
                 </div>
 
-                <div className="photos-view-mode-group">
-                  <button className={`photos-view-btn ${viewMode === "grid" ? "active" : ""}`} onClick={() => setViewMode("grid")}>
-                    <IconGrid />
-                  </button>
-                  <button className={`photos-view-btn ${viewMode === "list" ? "active" : ""}`} onClick={() => setViewMode("list")}>
-                    <IconList />
-                  </button>
-                </div>
+
+
               </div>
             </div>
 
-            {/* FILTER CONTROLS BAR */}
+            {/* FILTER CONTROLS BAR (100% CUSTOM EMOJI-FREE DROPDOWNS & SVG PRESETS) */}
             <div className="photos-filter-section">
               <div className="photos-dropdown-filters">
-                <select
-                  className="photos-select-pill"
-                  value={selectedSourceKeys.length === 1 ? selectedSourceKeys[0] : "all"}
-                  onChange={(e) => handleSelectViewFromSource(e.target.value)}
-                >
-                  <option value="all">☁️ All Accounts ({sourceCards.length})</option>
-                  {sourceCards.map((sc) => (
-                    <option key={sc.key} value={sc.key}>
-                      {sc.name} ({sc.email})
-                    </option>
-                  ))}
-                </select>
 
-                <select
-                  className="photos-select-pill"
-                  value={selectedFolderFilter}
-                  onChange={(e) => setSelectedFolderFilter(e.target.value)}
-                >
-                  <option value="all">📁 All Folders</option>
-                  {Array.from(new Set(Object.values(folderTree).flatMap((obj) => Object.keys(obj)))).map((fn) => (
-                    <option key={fn} value={fn}>
-                      📂 {fn}
-                    </option>
-                  ))}
-                </select>
+                {/* ACCOUNT CUSTOM MULTI-SELECT DROPDOWN */}
+                <div className="custom-dropdown-container" ref={accountFilterRef}>
+                  <button
+                    type="button"
+                    className={`custom-dropdown-trigger ${openDropdown === "account" ? "open" : ""}`}
+                    onClick={() => setOpenDropdown((prev) => (prev === "account" ? null : "account"))}
+                  >
+                    <IconCloud />
+                    <span>
+                      {activeSourceKeys.length === sourceCards.length
+                        ? `All Accounts (${sourceCards.length})`
+                        : activeSourceKeys.length === 1
+                          ? sourceCards.find((s) => s.key === activeSourceKeys[0])?.name || "1 Account Selected"
+                          : `${activeSourceKeys.length} Accounts Selected`}
+                    </span>
+                    <span className="dropdown-chevron">{openDropdown === "account" ? "▲" : "▼"}</span>
+                  </button>
 
-                <select
-                  className="photos-select-pill"
-                  value={selectedTypeFilter}
-                  onChange={(e) => setSelectedTypeFilter(e.target.value)}
-                >
-                  <option value="all">🎞️ All Types</option>
-                  <option value="image">🖼️ Photos Only</option>
-                  <option value="video">🎬 Videos Only</option>
-                </select>
+                  {openDropdown === "account" && (
+                    <div className="custom-dropdown-menu" style={{ minWidth: "240px" }}>
+                      <div
+                        className={`custom-dropdown-item ${activeSourceKeys.length === sourceCards.length ? "active" : ""}`}
+                        onClick={handleToggleSelectAllSources}
+                      >
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                          <CheckIndicator checked={sourceCards.length > 0 && activeSourceKeys.length === sourceCards.length} />
+                          <span style={{ fontWeight: 600 }}>Select All ({sourceCards.length})</span>
+                        </div>
+                      </div>
+                      {sourceCards.map((sc) => {
+                        const isChecked = activeSourceKeys.includes(sc.key);
+                        return (
+                          <div
+                            key={sc.key}
+                            className={`custom-dropdown-item ${isChecked ? "active" : ""}`}
+                            onClick={() => handleToggleSourceSelect(sc.key)}
+                          >
+                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                              <CheckIndicator checked={isChecked} />
+                              {getProviderSvg(sc.provider)}
+                              <span>{sc.name} ({sc.email})</span>
+                            </div>
+                            <span style={{ fontSize: "11px", color: "#64748b", marginLeft: "auto" }}>{sc.count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
 
-                {(selectedSourceKeys.length > 0 || selectedFolderFilter !== "all" || selectedTypeFilter !== "all" || searchQuery || quickPill !== "all") && (
-                  <button className="photos-select-pill" onClick={resetAllFilters} style={{ background: "rgba(239, 68, 68, 0.15)", color: "#fca5a5", border: "1px solid rgba(239, 68, 68, 0.3)" }}>
-                    Reset Filters
+                {/* FOLDER CUSTOM DROPDOWN */}
+                <div className="custom-dropdown-container" ref={folderFilterRef}>
+                  <button
+                    type="button"
+                    className={`custom-dropdown-trigger ${openDropdown === "folder" ? "open" : ""}`}
+                    onClick={() => setOpenDropdown((prev) => (prev === "folder" ? null : "folder"))}
+                  >
+                    <IconFolder />
+                    <span>{selectedFolderFilter === "all" ? "All Folders" : selectedFolderFilter}</span>
+                    <span className="dropdown-chevron">{openDropdown === "folder" ? "▲" : "▼"}</span>
+                  </button>
+
+                  {openDropdown === "folder" && (
+                    <div className="custom-dropdown-menu">
+                      <div
+                        className={`custom-dropdown-item ${selectedFolderFilter === "all" ? "active" : ""}`}
+                        onClick={() => { setSelectedFolderFilter("all"); setOpenDropdown(null); }}
+                      >
+                        <IconFolder />
+                        <span>All Folders</span>
+                        {selectedFolderFilter === "all" && <span className="item-check">✓</span>}
+                      </div>
+                      {Array.from(new Set(Object.values(folderTree).flatMap((obj) => Object.keys(obj)))).map((fn) => (
+                        <div
+                          key={fn}
+                          className={`custom-dropdown-item ${selectedFolderFilter === fn ? "active" : ""}`}
+                          onClick={() => { setSelectedFolderFilter(fn); setOpenDropdown(null); }}
+                        >
+                          <IconFolder />
+                          <span>{fn}</span>
+                          {selectedFolderFilter === fn && <span className="item-check">✓</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* TYPE CUSTOM DROPDOWN */}
+                <div className="custom-dropdown-container" ref={typeFilterRef}>
+                  <button
+                    type="button"
+                    className={`custom-dropdown-trigger ${openDropdown === "type" ? "open" : ""}`}
+                    onClick={() => setOpenDropdown((prev) => (prev === "type" ? null : "type"))}
+                  >
+                    <IconLayers />
+                    <span>
+                      {selectedTypeFilter === "all"
+                        ? "All Types"
+                        : selectedTypeFilter === "image"
+                          ? "Photos Only"
+                          : "Videos Only"}
+                    </span>
+                    <span className="dropdown-chevron">{openDropdown === "type" ? "▲" : "▼"}</span>
+                  </button>
+
+                  {openDropdown === "type" && (
+                    <div className="custom-dropdown-menu">
+                      <div
+                        className={`custom-dropdown-item ${selectedTypeFilter === "all" ? "active" : ""}`}
+                        onClick={() => { setSelectedTypeFilter("all"); setOpenDropdown(null); }}
+                      >
+                        <IconLayers />
+                        <span>All Types</span>
+                        {selectedTypeFilter === "all" && <span className="item-check">✓</span>}
+                      </div>
+                      <div
+                        className={`custom-dropdown-item ${selectedTypeFilter === "image" ? "active" : ""}`}
+                        onClick={() => { setSelectedTypeFilter("image"); setOpenDropdown(null); }}
+                      >
+                        <IconPhotosApp />
+                        <span>Photos Only</span>
+                        {selectedTypeFilter === "image" && <span className="item-check">✓</span>}
+                      </div>
+                      <div
+                        className={`custom-dropdown-item ${selectedTypeFilter === "video" ? "active" : ""}`}
+                        onClick={() => { setSelectedTypeFilter("video"); setOpenDropdown(null); }}
+                      >
+                        <IconVideo />
+                        <span>Videos Only</span>
+                        {selectedTypeFilter === "video" && <span className="item-check">✓</span>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {(activeSourceKeys.length < sourceCards.length || selectedFolderFilter !== "all" || selectedTypeFilter !== "all" || searchQuery || quickPill !== "all") && (
+                  <button className="reset-filters-btn" onClick={resetAllFilters}>
+                    <IconClose />
+                    <span>Reset Filters</span>
                   </button>
                 )}
               </div>
 
+              {/* QUICK PRESET PILLS (100% SVG VECTOR ICONS) */}
               <div className="photos-quick-pills-row">
-                {["all", "today", "yesterday", "this_week", "this_month", "favorites", "videos"].map((pillKey) => {
-                  const labelMap = {
-                    all: "All Media",
-                    today: "Today",
-                    yesterday: "Yesterday",
-                    this_week: "This Week",
-                    this_month: "This Month",
-                    favorites: "Favorites",
-                    videos: "Videos",
-                  };
-                  return (
-                    <button
-                      key={pillKey}
-                      className={`quick-pill-btn ${quickPill === pillKey ? "active" : ""}`}
-                      onClick={() => setQuickPill(pillKey)}
-                    >
-                      {pillKey === "favorites" && <IconHeart />}
-                      {pillKey === "videos" && <IconVideo />}
-                      {labelMap[pillKey]}
-                    </button>
-                  );
-                })}
+                {[
+                  { key: "all", label: "All Media", icon: <IconGrid /> },
+                  { key: "google_photos", label: "Google Photos", icon: <IconGooglePhotos /> },
+                  { key: "favorites", label: "Favorites", icon: <IconHeart /> },
+                  { key: "videos", label: "Videos", icon: <IconVideo /> },
+                  { key: "today", label: "Today", icon: <IconCalendar /> },
+                  { key: "yesterday", label: "Yesterday", icon: <IconCalendar /> },
+                  { key: "this_week", label: "This Week", icon: <IconCalendar /> },
+                  { key: "this_month", label: "This Month", icon: <IconCalendar /> }
+                ].map((pill) => (
+                  <button
+                    key={pill.key}
+                    className={`quick-pill-btn ${quickPill === pill.key ? "active" : ""}`}
+                    onClick={() => handleQuickPillClick(pill.key)}
+                  >
+                    {pill.icon}
+                    <span>{pill.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* REAL DYNAMIC METRICS STATS BAR */}
-            <div className="photos-metrics-grid">
-              <div className="photos-metric-card">
-                <div className="metric-icon-box blue"><IconPhotosApp /></div>
-                <div className="metric-text-box">
-                  <span className="metric-label">Photos</span>
-                  <span className="metric-value">{metrics.photosCount}</span>
-                  <span className="metric-subtext">items</span>
-                </div>
-              </div>
 
-              <div className="photos-metric-card">
-                <div className="metric-icon-box pink"><IconVideo /></div>
-                <div className="metric-text-box">
-                  <span className="metric-label">Videos</span>
-                  <span className="metric-value">{metrics.videosCount}</span>
-                  <span className="metric-subtext">items</span>
-                </div>
-              </div>
-
-              <div className="photos-metric-card">
-                <div className="metric-icon-box purple"><IconCloud /></div>
-                <div className="metric-text-box">
-                  <span className="metric-label">Accounts</span>
-                  <span className="metric-value">{metrics.accountsCount}</span>
-                  <span className="metric-subtext">connected</span>
-                </div>
-              </div>
-
-              <div className="photos-metric-card">
-                <div className="metric-icon-box green"><IconDatabase /></div>
-                <div className="metric-text-box">
-                  <span className="metric-label">Storage Used</span>
-                  <span className="metric-value">{formatSize(metrics.totalUsedBytes)}</span>
-                  <span className="metric-subtext">of {formatSize(metrics.totalQuotaBytes)}</span>
-                </div>
-              </div>
-
-              <div className="photos-metric-card">
-                <div className="metric-icon-box orange"><IconDuplicate /></div>
-                <div className="metric-text-box">
-                  <span className="metric-label">Duplicates</span>
-                  <span className="metric-value">{metrics.duplicatesCount}</span>
-                  <span className="metric-subtext">items</span>
-                </div>
-              </div>
-            </div>
 
             {/* MEMORIES SECTION (DERIVED 100% FROM REAL MONGODB PHOTOS) */}
             {memoryHighlights.length > 0 && (
@@ -1113,27 +1307,78 @@ const Photos = () => {
                       {sec.items.map((p) => {
                         const isSelected = selectedPhotoIds.includes(p.id);
                         const isFav = favorites.includes(p.id);
+                        const pSourceKey = p.provider === "google-photos" ? `${p.accountId}_google-photos` : p.provider === "google" ? `${p.accountId}_google` : p.accountId;
+                        const sourceCard = sourceCards.find((s) => s.key === pSourceKey);
+                        const accountHandle = sourceCard?.name || getProviderName(p.provider);
 
                         return (
                           <div
                             key={p.id}
                             id={`photo-card-${p.id}`}
                             className={`photo-card-item ${isSelected ? "selected" : ""}`}
-                            onClick={() => setPreviewModalFile(p)}
+                            onClick={() => handleSelectPreviewFile(p)}
                           >
                             <div className="photo-card-media-wrapper">
-                              <img
-                                src={getPhotoThumbnail(p)}
-                                alt={p.name}
-                                className="photo-card-img"
-                                loading="lazy"
-                                referrerPolicy="no-referrer"
-                                onError={(e) => {
-                                  e.target.onerror = null;
-                                  e.target.src = getFallbackPhotoSrc(p);
-                                }}
-                              />
+                              {isVideoFile(p) ? (
+                                <div className="photo-card-video-wrapper">
+                                  {p.provider === "s3" || p.provider === "box" ? (
+                                    <video
+                                      src={getVideoStreamUrl(p)}
+                                      className="photo-card-img photo-card-video"
+                                      preload="metadata"
+                                      muted
+                                      playsInline
+                                      onLoadedData={(e) => {
+                                        try { e.currentTarget.currentTime = 1; } catch (err) {}
+                                      }}
+                                    />
+                                  ) : (
+                                    <img
+                                      src={getPhotoThumbnail(p)}
+                                      alt={p.name}
+                                      className="photo-card-img"
+                                      loading="lazy"
+                                      decoding="async"
+                                      referrerPolicy="no-referrer"
+                                      onError={(e) => {
+                                        e.currentTarget.onerror = null;
+                                        const videoEl = document.createElement("video");
+                                        videoEl.src = getVideoStreamUrl(p);
+                                        videoEl.className = "photo-card-img photo-card-video";
+                                        videoEl.preload = "metadata";
+                                        videoEl.muted = true;
+                                        videoEl.playsInline = true;
+                                        videoEl.onloadeddata = () => { try { videoEl.currentTime = 1; } catch (err) {} };
+                                        if (e.currentTarget.parentNode) {
+                                          e.currentTarget.parentNode.replaceChild(videoEl, e.currentTarget);
+                                        }
+                                      }}
+                                    />
+                                  )}
+                                  <div className="photo-card-video-play-icon">
+                                    <IconVideo />
+                                  </div>
+                                </div>
+                              ) : (
+                                <img
+                                  src={getPhotoThumbnail(p)}
+                                  alt={p.name}
+                                  className="photo-card-img"
+                                  loading="lazy"
+                                  referrerPolicy="no-referrer"
+                                  onError={(e) => {
+                                    e.currentTarget.onerror = null;
+                                    e.currentTarget.src = "/assets/logo.png";
+                                  }}
+                                />
+                              )}
 
+                              {/* SERVICE LOGO ON TOP LEFT */}
+                              <div className="photo-card-top-logo">
+                                {getProviderSvg(p.provider)}
+                              </div>
+
+                              {/* FAVORITE BUTTON ON TOP RIGHT */}
                               <button
                                 className={`photo-favorite-btn ${isFav ? "active" : ""}`}
                                 onClick={(e) => handleToggleFavorite(e, p.id)}
@@ -1142,11 +1387,16 @@ const Photos = () => {
                               </button>
                             </div>
 
+                            {/* BOTTOM OVERLAY: NAME, DATE, SIZE ALL ALIGNED IN 1 LINE */}
                             <div className="photo-card-minimal-overlay">
-                              <div className="photo-card-filename" title={p.name}>{p.name}</div>
-                              <div className="photo-card-meta-row">
-                                <span className="photo-provider-badge">{p.provider}</span>
-                                <span className="photo-size-badge">{formatSize(p.size, p)}</span>
+                              <div className="photo-card-single-line-info">
+                                <span className="photo-card-filename" title={p.name}>{p.name}</span>
+                                <span className="photo-card-dot">•</span>
+                                <span className="photo-card-date">
+                                  {new Date(p.photoTakenDate || p.createdDate || p.createdTime || Date.now()).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                                </span>
+                                <span className="photo-card-dot">•</span>
+                                <span className="photo-card-size">{formatSize(p.size, p)}</span>
                               </div>
                             </div>
                           </div>
@@ -1157,7 +1407,14 @@ const Photos = () => {
                 ))
               )}
 
-              <div ref={sentinelRef} style={{ height: "40px", margin: "20px 0" }} />
+              {/* SENTINEL ELEMENT FOR INFINITE SCROLL PRE-FETCH */}
+              <div ref={sentinelRef} style={{ height: "40px", margin: "20px 0" }}>
+                {loadingMore && (
+                  <div style={{ textAlign: "center", color: "#818cf8", fontSize: "12px" }}>
+                    Loading more memories...
+                  </div>
+                )}
+              </div>
             </div>
 
           </main>
@@ -1205,8 +1462,47 @@ const Photos = () => {
             isOpen={true}
             onClose={() => setPreviewModalFile(null)}
             files={filteredPhotos}
-            onSelectFile={setPreviewModalFile}
+            onSelectFile={handleSelectPreviewFile}
           />
+        )}
+
+        {/* GOOGLE ACCOUNT SELECTION MODAL (MULTI-ACCOUNT SAFE) */}
+        {selectAccountModalOpen && (
+          <div className="account-picker-modal-overlay" onClick={() => setSelectAccountModalOpen(false)}>
+            <div className="account-picker-modal-card" onClick={(e) => e.stopPropagation()}>
+              <div className="account-picker-modal-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+                <h3 style={{ margin: 0, fontSize: "16px", color: "#f8fafc", fontWeight: 700 }}>Select Google Account</h3>
+                <button
+                  style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "18px" }}
+                  onClick={() => setSelectAccountModalOpen(false)}
+                >
+                  ✕
+                </button>
+              </div>
+              <p style={{ fontSize: "12px", color: "#94a3b8", marginBottom: "16px" }}>
+                Select which connected Google Account you want to import Google Photos from:
+              </p>
+              <div className="account-picker-list" style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {accounts.filter((a) => a.provider === "google").map((acc) => {
+                  const email = acc.accountEmail || acc.email || "Google Account";
+                  return (
+                    <div
+                      key={acc._id}
+                      className="account-picker-option-item"
+                      onClick={() => triggerPickerForAccount(acc)}
+                    >
+                      <span className="provider-icon-badge">{getProviderSvg("google")}</span>
+                      <div className="account-picker-meta" style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: 1 }}>
+                        <span className="picker-acc-name" style={{ fontSize: "13px", fontWeight: 600, color: "#f1f5f9" }}>Google Account</span>
+                        <span className="picker-acc-email" style={{ fontSize: "11px", color: "#818cf8" }}>{email}</span>
+                      </div>
+                      <span className="picker-select-arrow" style={{ fontSize: "14px", color: "#818cf8", fontWeight: 700 }}>→</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </MainLayout>
@@ -1230,9 +1526,11 @@ function getPhotoThumbnail(photo) {
   const token = localStorage.getItem("token") || "";
   const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001/api";
   const cleanBase = baseUrl.endsWith("/api") ? baseUrl.slice(0, -4) : baseUrl;
+  const accId = photo.accountId || (typeof photo.account === "object" ? photo.account?._id : photo.account) || "default";
 
+  // 1. Google Photos: Fast =w400 thumbnail from Google CDN proxy
   if (photo.provider === "google-photos") {
-    let cleanTarget = photo.thumbnailUrl || photo.previewUrl || (photo.baseUrl ? `${photo.baseUrl}=w400` : null);
+    let cleanTarget = photo.thumbnailUrl || photo.previewUrl || photo.baseUrl || "";
     if (cleanTarget) {
       if (cleanTarget.includes("url=")) {
         try {
@@ -1244,59 +1542,94 @@ function getPhotoThumbnail(photo) {
       if (cleanTarget.startsWith("http")) {
         const baseWithoutParams = cleanTarget.split("=")[0];
         cleanTarget = `${baseWithoutParams}=w400`;
-        return `${cleanBase}/api/google/photos/proxy/${photo.accountId}?url=${encodeURIComponent(cleanTarget)}&token=${encodeURIComponent(token)}`;
+        return `${cleanBase}/api/google/photos/proxy/${accId}?url=${encodeURIComponent(cleanTarget)}&token=${encodeURIComponent(token)}`;
       }
     }
   }
 
+  // 2. Google Drive: Fast thumbnail endpoint
   if (photo.provider === "google") {
-    if (photo.thumbnailUrl && photo.thumbnailUrl.startsWith("http")) return photo.thumbnailUrl;
-    if (photo.thumbnailLink && photo.thumbnailLink.startsWith("http")) return photo.thumbnailLink;
     const fileId = photo.providerFileId || photo.id;
-    if (fileId) return `https://drive.google.com/thumbnail?id=${encodeURIComponent(fileId)}&sz=w400`;
+    if (fileId && accId) {
+      return `${cleanBase}/api/google/thumbnail/${accId}?fileId=${encodeURIComponent(fileId)}&token=${encodeURIComponent(token)}`;
+    }
   }
 
-  const rawThumb = photo.thumbnailUrl || photo.thumbnailLink || photo.thumbnail;
-  if (rawThumb) {
-    if (rawThumb.startsWith("/api/")) {
-      const sep = rawThumb.includes("?") ? "&" : "?";
-      return `${cleanBase}${rawThumb}${sep}token=${encodeURIComponent(token)}`;
+  // 3. Box: Resilient open route stream with name parameter
+  if (photo.provider === "box") {
+    const fileId = photo.providerFileId || photo.id;
+    if (fileId && accId) {
+      return `${cleanBase}/api/box/open/${accId}?fileId=${encodeURIComponent(fileId)}&name=${encodeURIComponent(photo.name || "image.png")}&token=${encodeURIComponent(token)}`;
     }
+  }
+
+  // 4. Dropbox: Fast thumbnail endpoint
+  if (photo.provider === "dropbox") {
+    const pathOrId = photo.providerFileId || photo.id;
+    if (pathOrId && accId) {
+      return `${cleanBase}/api/dropbox/thumbnail/${accId}?path=${encodeURIComponent(pathOrId)}&token=${encodeURIComponent(token)}`;
+    }
+  }
+
+  // 5. OneDrive & S3 direct CDN pre-rendered thumbnails
+  const rawThumb = photo.thumbnailUrl || photo.thumbnailLink || photo.thumbnail;
+  if (rawThumb && rawThumb.startsWith("http") && !rawThumb.includes("googleusercontent.com")) {
     return rawThumb;
   }
 
-  if (photo.baseUrl) return `${photo.baseUrl}=s400`;
+  // Fallback to open route
+  const fileId = photo.providerFileId || photo.id;
+  if (photo.provider && accId && fileId) {
+    const idKey = photo.provider === "dropbox" ? "path" : "fileId";
+    return `${cleanBase}/api/${photo.provider}/open/${accId}?${idKey}=${encodeURIComponent(fileId)}&name=${encodeURIComponent(photo.name || "image")}&token=${encodeURIComponent(token)}`;
+  }
 
-  return getFallbackPhotoSrc(photo);
+  if (photo.baseUrl) return `${photo.baseUrl}=w400`;
+  return "/assets/logo.png";
 }
 
-function getFallbackPhotoSrc(photo) {
-  if (!photo) return "/assets/logo.png";
+function isVideoFile(photo) {
+  if (!photo) return false;
+  if (photo.isVideo) return true;
+  const mime = (photo.mimeType || photo.type || "").toLowerCase();
+  if (mime.startsWith("video/")) return true;
+  const name = (photo.name || "").toLowerCase();
+  return /\.(mp4|webm|mov|mkv|avi|m4v|flv|wmv|3gp)$/i.test(name);
+}
+
+function getVideoStreamUrl(photo) {
+  if (!photo) return "";
   const token = localStorage.getItem("token") || "";
   const baseUrl = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001/api";
   const cleanBase = baseUrl.endsWith("/api") ? baseUrl.slice(0, -4) : baseUrl;
 
   if (photo.provider === "google-photos") {
-    let target = photo.thumbnailUrl || photo.previewUrl || (photo.baseUrl ? `${photo.baseUrl}=w400` : null);
-    if (target) {
-      if (target.includes("url=")) {
-        try {
-          const queryStr = target.includes("?") ? target.split("?")[1] : "";
-          const qUrl = new URLSearchParams(queryStr).get("url");
-          if (qUrl) target = qUrl;
-        } catch (e) { }
-      }
-      if (target.startsWith("http")) {
-        const clean = target.split("=")[0];
-        return `${clean}=w400`;
-      }
+    let cleanTarget = photo.baseUrl || photo.previewUrl || photo.thumbnailUrl || "";
+    if (cleanTarget.includes("url=")) {
+      try {
+        const queryStr = cleanTarget.includes("?") ? cleanTarget.split("?")[1] : "";
+        const qUrl = new URLSearchParams(queryStr).get("url");
+        if (qUrl) cleanTarget = qUrl;
+      } catch (e) {}
     }
-    return "/assets/logo.png";
+    if (cleanTarget.startsWith("http")) {
+      const baseWithoutParams = cleanTarget.split("=")[0];
+      cleanTarget = `${baseWithoutParams}=dv`;
+      return `${cleanBase}/api/google/photos/proxy/${photo.accountId}?url=${encodeURIComponent(cleanTarget)}&token=${encodeURIComponent(token)}`;
+    }
   }
 
-  if (!photo.provider || !photo.accountId || !photo.id) return "/assets/logo.png";
-  const idKey = photo.provider === "dropbox" ? "path" : "fileId";
-  return `${cleanBase}/api/${photo.provider}/open/${photo.accountId}?${idKey}=${encodeURIComponent(photo.id)}&name=${encodeURIComponent(photo.name || "image")}&token=${encodeURIComponent(token)}`;
+  const fileId = photo.providerFileId || photo.id;
+  if (photo.provider && photo.accountId && fileId) {
+    return `${cleanBase}/api/${photo.provider}/open/${photo.accountId}?fileId=${encodeURIComponent(fileId)}&name=${encodeURIComponent(photo.name || "video")}&token=${encodeURIComponent(token)}`;
+  }
+
+  const raw = photo.url || photo.webContentLink || photo.downloadUrl;
+  if (raw && raw.startsWith("/api/")) {
+    const sep = raw.includes("?") ? "&" : "?";
+    return `${cleanBase}${raw}${sep}token=${encodeURIComponent(token)}`;
+  }
+  return raw || "";
 }
 
 function formatSize(bytes, photo = null) {

@@ -30,6 +30,10 @@ export const refreshDropboxToken = async (account) => {
     return newAccessToken;
   } catch (err) {
     console.error("❌ Failed to refresh Dropbox token:", err.response?.data || err.message);
+    if (account) {
+      account.status = "expired";
+      await account.save().catch(() => {});
+    }
     throw err;
   }
 };

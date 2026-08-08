@@ -31,6 +31,10 @@ export const refreshBoxToken = async (account) => {
     return newAccessToken;
   } catch (err) {
     console.error("❌ Failed to refresh Box token:", err.response?.data || err.message);
+    if (account) {
+      account.status = "expired";
+      await account.save().catch(() => {});
+    }
     throw err;
   }
 };

@@ -50,26 +50,74 @@ class TimelineEngineService {
       name: { $not: /\.(d\.ts|d\.mts|ts|tsx|mts|cts|js|jsx|json|html|css|py|cpp|c|java|sql|md|txt|sh|env|log|xml|yaml|yml|ipynb|pdf|docx?|xlsx?|pptx?|zip|tar|gz|7z|rar|exe|dll|bin)$/i },
     };
 
-    // Account filtering (supports single or multi account selection)
+    // Account & Provider filtering (supports accountId_google-photos and accountId_google keys)
     if (options.accountIds && Array.isArray(options.accountIds) && options.accountIds.length > 0) {
-      const validAccountIds = options.accountIds
-        .filter((id) => mongoose.Types.ObjectId.isValid(id))
-        .map((id) => new mongoose.Types.ObjectId(id));
-      if (validAccountIds.length > 0) {
-        query.accountId = { $in: validAccountIds };
+      const targetAccountIds = [];
+      const targetProviders = [];
+
+      options.accountIds.forEach((keyStr) => {
+        if (!keyStr || typeof keyStr !== "string") return;
+        if (keyStr.endsWith("_google-photos")) {
+          const rawId = keyStr.replace("_google-photos", "");
+          if (mongoose.Types.ObjectId.isValid(rawId)) {
+            targetAccountIds.push(new mongoose.Types.ObjectId(rawId));
+            targetProviders.push("google-photos");
+          }
+        } else if (keyStr.endsWith("_google")) {
+          const rawId = keyStr.replace("_google", "");
+          if (mongoose.Types.ObjectId.isValid(rawId)) {
+            targetAccountIds.push(new mongoose.Types.ObjectId(rawId));
+            targetProviders.push("google");
+          }
+        } else if (mongoose.Types.ObjectId.isValid(keyStr)) {
+          targetAccountIds.push(new mongoose.Types.ObjectId(keyStr));
+        }
+      });
+
+      if (targetAccountIds.length > 0) {
+        query.accountId = { $in: targetAccountIds };
+      }
+      if (targetProviders.length > 0) {
+        query.provider = { $in: targetProviders };
       }
     }
 
-    // Folder filtering
+    // Folder filtering (supports Root fallback for unparented items)
     if (options.folder && options.folder !== "all") {
-      query.parentFolder = options.folder;
+      if (options.folder === "Root") {
+        query.$or = [{ parentFolder: "Root" }, { parentFolder: null }, { parentFolder: { $exists: false } }];
+      } else {
+        query.parentFolder = options.folder;
+      }
     }
 
     // Type filtering (image vs video)
     if (options.type === "image") {
       query.mimeType = { $regex: "^image/" };
     } else if (options.type === "video") {
-      query.mimeType = { $regex: "^video/" };
+      query.$or = [
+        { mimeType: { $regex: "^video/" } },
+        { name: { $regex: "\\.(mp4|mov|avi|webm|mkv|3gp|m4v|flv|wmv)$", $options: "i" } }
+      ];
+    }
+
+    // Date Preset filtering
+    if (options.preset) {
+      const now = new Date();
+      if (options.preset === "today") {
+        const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        query.photoTakenDate = { $gte: startToday };
+      } else if (options.preset === "yesterday") {
+        const startYest = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+        const endYest = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        query.photoTakenDate = { $gte: startYest, $lt: endYest };
+      } else if (options.preset === "this_week") {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        query.photoTakenDate = { $gte: weekAgo };
+      } else if (options.preset === "this_month") {
+        const startMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        query.photoTakenDate = { $gte: startMonth };
+      }
     }
 
     // Fetch batch with skip offset and limit + 1 to determine hasMore

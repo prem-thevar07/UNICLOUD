@@ -7,6 +7,7 @@ import auth from "../middleware/auth.middleware.js";
 import { fileCache } from "../utils/cache.js";
 import { logActivity } from "../utils/activityLogger.js";
 import { fetchBoxStorage, refreshBoxToken } from "../services/providers/box.provider.js";
+import { syncManagerService } from "../services/photos/SyncManager.service.js";
 
 const router = express.Router();
 
@@ -107,8 +108,9 @@ router.get("/callback", async (req, res) => {
       { provider: "box", email }
     );
 
-    // Invalidate photos cache for the user
+    // Invalidate photos cache and sync photos for the newly connected Box account
     fileCache.invalidateUserPhotos(userId);
+    syncManagerService.syncAccount(account).catch((e) => console.warn("Background Box photo sync warning:", e.message));
 
     res.redirect(`${process.env.FRONTEND_URL}/manage-accounts`);
   } catch (err) {
@@ -273,9 +275,12 @@ router.get(["/download/:id", "/open/:id"], auth, async (req, res) => {
     const isPdf = ext === "pdf";
     const isCodeOrText = ["js", "jsx", "ts", "tsx", "py", "json", "html", "css", "cpp", "c", "java", "sql", "md", "txt", "sh", "env", "log", "xml", "yaml", "yml", "ipynb"].includes(ext);
 
+    const { streamRes } = await getBoxStream();
+    const serverMime = (streamRes.headers["content-type"] || "").toLowerCase();
+    const isStreamImageOrMedia = serverMime.startsWith("image/") || serverMime.startsWith("video/") || serverMime.startsWith("audio/");
+
     // Direct raw byte stream for Images, Audio, Video, PDFs, and Code/Text Files
-    if (isImage || isMedia || isPdf || isCodeOrText) {
-      const { streamRes } = await getBoxStream();
+    if (isImage || isMedia || isPdf || isCodeOrText || isStreamImageOrMedia) {
       const mimeMap = {
         jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml", bmp: "image/bmp", ico: "image/x-icon",
         mp3: "audio/mpeg", wav: "audio/wav", ogg: "audio/ogg", m4a: "audio/mp4", aac: "audio/aac", flac: "audio/flac",
@@ -283,7 +288,7 @@ router.get(["/download/:id", "/open/:id"], auth, async (req, res) => {
         pdf: "application/pdf",
         txt: "text/plain; charset=utf-8", html: "text/html; charset=utf-8", json: "application/json", xml: "text/xml"
       };
-      const contentType = mimeMap[ext] || streamRes.headers["content-type"] || "application/octet-stream";
+      const contentType = mimeMap[ext] || streamRes.headers["content-type"] || "image/jpeg";
       res.setHeader("Content-Type", contentType);
       res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(safeName)}"`);
       return streamRes.data.pipe(res);
@@ -318,14 +323,70 @@ router.get(["/download/:id", "/open/:id"], auth, async (req, res) => {
     }
 
     // Fallback Inline Stream Preview
-    const { streamRes } = await getBoxStream();
-    res.setHeader("Content-Type", streamRes.headers["content-type"] || "application/octet-stream");
+    const fallbackObj = await getBoxStream();
+    const fallbackRes = fallbackObj.streamRes;
+    res.setHeader("Content-Type", fallbackRes.headers["content-type"] || "application/octet-stream");
     res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(safeName)}"`);
-    return streamRes.data.pipe(res);
+    return fallbackRes.data.pipe(res);
 
   } catch (err) {
     console.error("❌ Box file proxy error:", err.message);
     res.status(500).json({ message: "Failed to retrieve Box file: " + err.message });
+  }
+});
+
+/* ===============================
+   🖼️ BOX FAST 15KB THUMBNAIL ROUTE
+=============================== */
+router.get("/thumbnail/:id", auth, async (req, res) => {
+  try {
+    const accountId = req.params.id;
+    const { fileId } = req.query;
+
+    if (!fileId) return res.status(400).send("Missing fileId");
+
+    let account = null;
+    if (accountId && accountId !== "default" && mongoose.Types.ObjectId.isValid(accountId)) {
+      account = await CloudAccount.findOne({ _id: accountId, userId: req.user.id, provider: "box" });
+    }
+    if (!account) {
+      account = await CloudAccount.findOne({ userId: req.user.id, provider: "box" });
+    }
+    if (!account) return res.status(404).send("Account not found");
+
+    let token = account.accessToken;
+    let thumbRes;
+    try {
+      thumbRes = await axios.get(`https://api.box.com/2.0/files/${fileId}/thumbnail.png?min_height=256&min_width=256`, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "stream",
+        timeout: 10000,
+      });
+    } catch (err) {
+      if (err.response?.status === 401 && account.refreshToken) {
+        token = await refreshBoxToken(account);
+        try {
+          thumbRes = await axios.get(`https://api.box.com/2.0/files/${fileId}/thumbnail.png?min_height=256&min_width=256`, {
+            headers: { Authorization: `Bearer ${token}` },
+            responseType: "stream",
+            timeout: 10000,
+          });
+        } catch (e2) {
+          const fallbackUrl = `/api/box/open/${accountId}?fileId=${fileId}&token=${req.query.token || ""}`;
+          return res.redirect(fallbackUrl);
+        }
+      } else {
+        const fallbackUrl = `/api/box/open/${accountId}?fileId=${fileId}&token=${req.query.token || ""}`;
+        return res.redirect(fallbackUrl);
+      }
+    }
+
+    res.setHeader("Content-Type", "image/png");
+    res.setHeader("Cache-Control", "public, max-age=604800");
+    thumbRes.data.pipe(res);
+  } catch (err) {
+    console.error("❌ Box fast thumbnail error:", err.message);
+    res.status(500).send("Thumbnail failed");
   }
 });
 
@@ -341,90 +402,90 @@ router.get("/open/:id", auth, async (req, res) => {
       return res.status(400).json({ message: "File ID is required" });
     }
 
-    const account = await CloudAccount.findOne({
+    let account = await CloudAccount.findOne({
       _id: accountId,
       userId: req.user.id,
       provider: "box",
     });
 
     if (!account) {
+      account = await CloudAccount.findOne({
+        userId: req.user.id,
+        provider: "box",
+      });
+    }
+
+    if (!account) {
       return res.status(404).json({ message: "Account not found" });
     }
 
-    // 1. Fetch file metadata (name, extension, expiring_embed_link)
-    let fileInfoRes;
-    try {
-      fileInfoRes = await axios.get(`https://api.box.com/2.0/files/${fileId}?fields=id,name,extension,expiring_embed_link`, {
-        headers: { Authorization: `Bearer ${account.accessToken}` }
-      });
-    } catch (err) {
-      if (err.response?.status === 401 && account.refreshToken) {
-        const { refreshBoxToken } = await import("../services/providers/box.provider.js");
-        account.accessToken = await refreshBoxToken(account);
-        fileInfoRes = await axios.get(`https://api.box.com/2.0/files/${fileId}?fields=id,name,extension,expiring_embed_link`, {
-          headers: { Authorization: `Bearer ${account.accessToken}` }
+    // Industrial Box Stream Fetcher following Box REST API & CDN 302 Spec
+    const fetchBoxStream = async (url) => {
+      let token = account.accessToken;
+      const executeFetch = async (authToken) => {
+        let redirectUrl = url;
+        try {
+          const apiRes = await axios.get(url, {
+            headers: { Authorization: `Bearer ${authToken}` },
+            maxRedirects: 0,
+            validateStatus: (s) => (s >= 200 && s < 400) || s === 202,
+            responseType: "stream",
+          });
+
+          if (apiRes.status === 200) {
+            return apiRes;
+          }
+          if (apiRes.headers?.location) {
+            redirectUrl = apiRes.headers.location;
+          }
+        } catch (err) {
+          if ((err.response?.status === 302 || err.response?.status === 202) && err.response?.headers?.location) {
+            redirectUrl = err.response.headers.location;
+          } else {
+            throw err;
+          }
+        }
+
+        // Fetch presigned dl.boxcloud.com URL without Authorization header
+        return await axios.get(redirectUrl, {
+          responseType: "stream",
+          timeout: 20000,
         });
-      } else {
+      };
+
+      try {
+        return await executeFetch(token);
+      } catch (err) {
+        if (err.response?.status === 401 && account.refreshToken) {
+          const { refreshBoxToken } = await import("../services/providers/box.provider.js");
+          token = await refreshBoxToken(account);
+          account.accessToken = token;
+          return await executeFetch(token);
+        }
         throw err;
       }
-    }
-
-    const name = fileInfoRes.data?.name || "file";
-    const ext = (fileInfoRes.data?.extension || name.split(".").pop()).toLowerCase();
-    const embedUrl = fileInfoRes.data?.expiring_embed_link?.url;
-
-    const officeExts = ["doc", "docx", "xls", "xlsx", "ppt", "pptx"];
-
-    // 1. For Office documents: Use Box expiring embed viewer or web URL
-    if (officeExts.includes(ext) && embedUrl) {
-      return res.redirect(embedUrl);
-    }
-
-    const mimeMap = {
-      jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp", svg: "image/svg+xml",
-      pdf: "application/pdf", txt: "text/plain", json: "application/json", js: "text/javascript", html: "text/html",
-      mp3: "audio/mpeg", wav: "audio/wav", mp4: "video/mp4", webm: "video/webm"
     };
-    const mime = mimeMap[ext] || "application/octet-stream";
 
-    const isDirectInline = 
-      mime.startsWith("image/") || 
-      mime.startsWith("video/") || 
-      mime.startsWith("audio/") || 
-      ext === "pdf" || ext === "txt";
-
-    if (isDirectInline) {
-      try {
-        const streamRes = await axios.get(`https://api.box.com/2.0/files/${fileId}/content`, {
-          headers: { Authorization: `Bearer ${account.accessToken}` },
-          responseType: "stream"
-        });
-
-        res.setHeader("Content-Type", ext === "pdf" ? "application/pdf" : mime);
-        res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(name)}"`);
-        return streamRes.data.pipe(res);
-      } catch (streamErr) {
-        console.warn("Box direct stream error, falling back to embed url:", streamErr.message);
-      }
-    }
-
-    // 2. If embed link available, redirect to expiring_embed_link
-    if (embedUrl) {
-      return res.redirect(embedUrl);
-    }
-
-    // 3. Final fallback: Stream file content directly as inline text/binary stream
+    // 1. Attempt Box API Official Thumbnail Endpoint (256x256 PNG)
     try {
-      const streamRes = await axios.get(`https://api.box.com/2.0/files/${fileId}/content`, {
-        headers: { Authorization: `Bearer ${account.accessToken}` },
-        responseType: "stream"
-      });
+      const thumbRes = await fetchBoxStream(`https://api.box.com/2.0/files/${fileId}/thumbnail.png?min_height=256&min_width=256`);
+      res.setHeader("Content-Type", thumbRes.headers["content-type"] || "image/png");
+      res.setHeader("Content-Disposition", "inline");
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      return thumbRes.data.pipe(res);
+    } catch (thumbErr) {
+      console.warn("Box thumbnail endpoint fallback:", thumbErr.message);
+    }
 
-      res.setHeader("Content-Type", mime || "text/plain; charset=utf-8");
-      res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(name)}"`);
-      return streamRes.data.pipe(res);
-    } catch (fallbackErr) {
-      return res.status(404).json({ message: "Box file preview not available" });
+    // 2. Full Content Stream Fallback
+    try {
+      const contentRes = await fetchBoxStream(`https://api.box.com/2.0/files/${fileId}/content`);
+      res.setHeader("Content-Type", contentRes.headers["content-type"] || "image/jpeg");
+      res.setHeader("Content-Disposition", "inline");
+      return contentRes.data.pipe(res);
+    } catch (contentErr) {
+      console.error("❌ Box file content stream error:", contentErr.message);
+      return res.status(500).json({ message: "Failed to open Box file: " + contentErr.message });
     }
   } catch (err) {
     console.error("❌ Box open link error:", err.message);

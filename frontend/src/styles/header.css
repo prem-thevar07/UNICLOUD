@@ -12,13 +12,16 @@
 }
 
 .header-container {
-  max-width: var(--max-width);
+  max-width: 1680px;
+  width: 100%;
   margin: 0 auto;
-  padding: 0 24px;
-  height: var(--header-height);
+  padding: 0 32px;
+  height: 72px;
+  min-height: 72px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  box-sizing: border-box;
 }
 
 /* ================= LOGO ================= */
@@ -31,6 +34,8 @@
   font-size: 20px;
   font-weight: 700;
   color: var(--text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: transform var(--transition-fast);
 }
 
@@ -58,15 +63,19 @@
 .nav-links {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: nowrap;
+  gap: 6px;
 }
 
 .nav-item {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 500;
   color: var(--text-secondary);
-  padding: 8px 16px;
+  padding: 7px 14px;
   border-radius: var(--radius-full);
+  white-space: nowrap;
+  flex-shrink: 0;
+  text-decoration: none;
   transition: all var(--transition-fast);
 }
 
@@ -81,12 +90,14 @@
   justify-content: center;
   background: linear-gradient(135deg, #6366f1, #a855f7);
   color: white;
-  height: 40px;
-  padding: 0 20px;
+  height: 38px;
+  padding: 0 18px;
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: transform 0.2s, box-shadow 0.2s;
 }
 

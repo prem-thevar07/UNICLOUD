@@ -180,6 +180,7 @@ export const importPickerMediaItems = async (userId, account, sessionId) => {
               photoTakenDate: createdDate,
               createdDate,
               modifiedDate: createdDate,
+              parentFolder: "Root",
               width: metadata.photoMetadata?.width || metadata.videoMetadata?.width || null,
               height: metadata.photoMetadata?.height || metadata.videoMetadata?.height || null,
             },

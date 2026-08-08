@@ -21,6 +21,10 @@ export const refreshOneDriveToken = async (account) => {
     return res.data.access_token;
   } catch (err) {
     console.error("❌ Failed to refresh OneDrive token:", err.response?.data || err.message);
+    if (account) {
+      account.status = "expired";
+      await account.save().catch(() => {});
+    }
     throw err;
   }
 };

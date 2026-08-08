@@ -115,8 +115,21 @@
 }
 
 .email-badge {
-  background: rgba(51, 65, 85, 0.5);
-  color: #94a3b8;
+  background: rgba(99, 102, 241, 0.18);
+  color: #a5b4fc;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  text-transform: none;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.date-badge {
+  background: rgba(148, 163, 184, 0.12);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-transform: none;
+  font-size: 0.72rem;
+  font-weight: 600;
 }
 
 /* ACTIONS */

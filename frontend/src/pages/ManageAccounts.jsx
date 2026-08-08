@@ -7,7 +7,7 @@ const providerIcons = {
   google: "/assets/drive.png",
   onedrive: "/assets/onedrive.png",
   dropbox: "/assets/dropbox.png",
-  s3: "/assets/s3.png",
+  s3: "/assets/s3.svg",
   box: "/assets/box.png",
 };
 

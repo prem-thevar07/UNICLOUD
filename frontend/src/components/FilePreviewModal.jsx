@@ -23,6 +23,15 @@ const formatSize = (bytes, file = null) => {
   return "Photo";
 };
 
+const formatFileDate = (file) => {
+  if (!file) return null;
+  const rawDate = file.photoTakenDate || file.createdDate || file.createdTime || file.modifiedTime || file.updatedAt || file.createdAt;
+  if (!rawDate) return null;
+  const d = new Date(rawDate);
+  if (isNaN(d.getTime())) return null;
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+};
+
 const FilePreviewModal = ({
   file,
   isOpen = true,
@@ -156,10 +165,10 @@ const FilePreviewModal = ({
   const isPowerPoint = ["pptx", "ppt"].includes(ext);
   const isIpynb = ext === "ipynb";
   const isDocx = isWord || isExcel || isPowerPoint;
-  const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext);
+  const isVideo = ["mp4", "webm", "ogv", "mov", "mkv", "avi", "3gp", "m4v"].includes(ext) || Boolean(file?.isVideo) || (file?.mimeType || "").startsWith("video/");
+  const isImage = ["jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico"].includes(ext) && !isVideo;
   const isPdf = ext === "pdf";
-  const isVideo = ["mp4", "webm", "ogv", "mov"].includes(ext);
-  const isAudio = ["mp3", "wav", "ogg", "m4a"].includes(ext);
+  const isAudio = ["mp3", "wav", "ogg", "m4a", "aac", "flac"].includes(ext) || (file?.mimeType || "").startsWith("audio/");
   const isCodeFile = ["js", "jsx", "ts", "tsx", "py", "json", "html", "css", "cpp", "c", "java", "sql", "md", "txt", "sh", "env", "log", "xml", "yaml", "yml"].includes(ext) && !isIpynb;
   const isText = isCodeFile;
 
@@ -192,23 +201,48 @@ const FilePreviewModal = ({
 
   const getGooglePhotosUrl = (f) => {
     if (!f) return "";
-    let target = f.previewUrl || f.thumbnailUrl || (f.baseUrl ? `${f.baseUrl}=w1600` : "");
-    if (target.includes("url=")) {
-      try {
-        const queryStr = target.includes("?") ? target.split("?")[1] : "";
-        const qUrl = new URLSearchParams(queryStr).get("url");
-        if (qUrl) target = qUrl;
-      } catch (e) {}
+    let target = "";
+
+    // Candidate search for the first valid absolute http(s) URL
+    const candidates = [f.baseUrl, f.previewUrl, f.thumbnailUrl, f.originalUrl];
+    for (const cand of candidates) {
+      if (!cand) continue;
+      if (cand.startsWith("http://") || cand.startsWith("https://")) {
+        if (cand.includes("/proxy/") && cand.includes("url=")) {
+          try {
+            const queryStr = cand.includes("?") ? cand.split("?")[1] : "";
+            const qUrl = new URLSearchParams(queryStr).get("url");
+            if (qUrl && (qUrl.startsWith("http://") || qUrl.startsWith("https://"))) {
+              target = qUrl;
+              break;
+            }
+          } catch (e) {}
+        } else if (!cand.includes("/api/")) {
+          target = cand;
+          break;
+        }
+      }
     }
-    if (target.startsWith("http")) {
+
+    const fName = (f.name || "").toLowerCase();
+    const isVid = (f.mimeType || "").startsWith("video/") || /\.(mp4|mov|avi|webm|mkv|3gp|m4v)$/i.test(fName) || Boolean(f.isVideo);
+    const accId = f.accountId || (typeof f.account === "object" ? f.account?._id : f.account) || "default";
+    const envBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001";
+    const cleanBase = envBase.endsWith("/api") ? envBase.slice(0, -4) : envBase;
+
+    if (target && (target.startsWith("http://") || target.startsWith("https://"))) {
       const baseWithoutParams = target.split("=")[0];
-      target = `${baseWithoutParams}=w1600`;
-      const envBase = import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || "http://localhost:5001";
-      const cleanBase = envBase.endsWith("/api") ? envBase.slice(0, -4) : envBase;
-      const accId = f.accountId || (typeof f.account === "object" ? f.account?._id : f.account) || "default";
+      target = isVid ? `${baseWithoutParams}=dv` : `${baseWithoutParams}=w1600`;
       return `${cleanBase}/api/google/photos/proxy/${accId}?url=${encodeURIComponent(target)}&token=${encodeURIComponent(token)}`;
     }
-    return target;
+
+    // Fallback if target is a Google Drive fileId rather than a full http://lh3.googleusercontent.com URL
+    const fileId = f.providerFileId || f.id;
+    if (accId && fileId) {
+      return `${cleanBase}/api/google/open/${accId}?fileId=${encodeURIComponent(fileId)}&name=${encodeURIComponent(f.name || "file")}&token=${encodeURIComponent(token)}`;
+    }
+
+    return "";
   };
 
   const idParamKey = file?.provider === "dropbox" ? "path" : "fileId";
@@ -491,9 +525,17 @@ const FilePreviewModal = ({
                 {file.name}
               </h3>
               <div className="preview-file-meta">
-                <span className="preview-badge provider-badge">{file.provider?.toUpperCase()}</span>
+                {(file.accountEmail || file.email || file.accountHandle) && (
+                  <span className="preview-badge email-badge">
+                    {file.accountEmail || file.email || file.accountHandle}
+                  </span>
+                )}
+                {formatFileDate(file) && (
+                  <span className="preview-badge date-badge">
+                    {formatFileDate(file)}
+                  </span>
+                )}
                 <span className="preview-badge size-badge">{formatSize(file.size, file)}</span>
-                {file.accountEmail && <span className="preview-badge email-badge">{file.accountEmail}</span>}
               </div>
             </div>
           </div>

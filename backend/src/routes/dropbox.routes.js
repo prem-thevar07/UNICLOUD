@@ -216,9 +216,9 @@ router.post("/sync/:accountId", auth, async (req, res) => {
 router.get(["/download/:accountId", "/open/:accountId"], auth, async (req, res) => {
   try {
     const { accountId } = req.params;
-    const { path } = req.query;
+    const targetPath = req.query.path || req.query.fileId || req.query.id;
 
-    if (!path) {
+    if (!targetPath) {
       return res.status(400).json({ message: "Missing file path" });
     }
 
@@ -247,7 +247,7 @@ router.get(["/download/:accountId", "/open/:accountId"], auth, async (req, res) 
     const refreshAndGetLink = async (accessToken) => {
       return axios.post(
         "https://api.dropboxapi.com/2/files/get_temporary_link",
-        { path },
+        { path: targetPath },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -284,7 +284,7 @@ router.get(["/download/:accountId", "/open/:accountId"], auth, async (req, res) 
       }
     }
 
-    const fileName = String(req.query.name || path || "").toLowerCase();
+    const fileName = String(req.query.name || targetPath || "").toLowerCase();
     const ext = fileName.split(".").pop().toLowerCase();
     const isOfficeDoc = ["docx", "doc", "xlsx", "xls", "pptx", "ppt"].includes(ext);
     const isDownloadRoute = req.path?.startsWith("/download") || req.originalUrl?.includes("/download/");
@@ -331,6 +331,72 @@ router.get(["/download/:accountId", "/open/:accountId"], auth, async (req, res) 
   } catch (err) {
     console.error("❌ Dropbox get download link failed:", err.response?.data || err.message);
     res.status(500).json({ message: "Failed to generate download link" });
+  }
+});
+/* ===============================
+   🖼️ DROPBOX FAST 10KB THUMBNAIL ROUTE
+=============================== */
+router.get("/thumbnail/:accountId", auth, async (req, res) => {
+  try {
+    const { accountId } = req.params;
+    const targetPath = req.query.path || req.query.fileId || req.query.id;
+
+    if (!targetPath) return res.status(400).send("Missing file path");
+
+    let account = null;
+    if (accountId && accountId !== "default" && mongoose.Types.ObjectId.isValid(accountId)) {
+      account = await CloudAccount.findOne({ _id: accountId, userId: req.user.id, provider: "dropbox" });
+    }
+    if (!account) {
+      account = await CloudAccount.findOne({ userId: req.user.id, provider: "dropbox" });
+    }
+    if (!account) return res.status(404).send("Account not found");
+
+    const getDbxThumb = async (token) => {
+      return axios.post("https://content.dropboxapi.com/2/files/get_thumbnail_v2", null, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Dropbox-API-Arg": JSON.stringify({
+            resource: { ".tag": "path", path: targetPath },
+            format: "jpeg",
+            size: "w256h256",
+            mode: "strict"
+          })
+        },
+        responseType: "stream"
+      });
+    };
+
+    let thumbRes;
+    try {
+      thumbRes = await getDbxThumb(account.accessToken);
+    } catch (err) {
+      if (err.response?.status === 401 && account.refreshToken) {
+        const params = new URLSearchParams();
+        params.append("grant_type", "refresh_token");
+        params.append("refresh_token", account.refreshToken);
+        params.append("client_id", process.env.DROPBOX_APP_KEY);
+        params.append("client_secret", process.env.DROPBOX_APP_SECRET);
+
+        const refreshRes = await axios.post("https://api.dropbox.com/oauth2/token", params, {
+          headers: { "Content-Type": "application/x-www-form-urlencoded" }
+        });
+        const token = refreshRes.data.access_token;
+        account.accessToken = token;
+        await account.save();
+        thumbRes = await getDbxThumb(token);
+      } else {
+        const fallbackUrl = `/api/dropbox/open/${accountId}?path=${encodeURIComponent(targetPath)}&token=${req.query.token || ""}`;
+        return res.redirect(fallbackUrl);
+      }
+    }
+
+    res.setHeader("Content-Type", "image/jpeg");
+    res.setHeader("Cache-Control", "public, max-age=604800");
+    thumbRes.data.pipe(res);
+  } catch (err) {
+    console.error("❌ Dropbox fast thumbnail error:", err.message);
+    res.status(500).send("Thumbnail failed");
   }
 });
 

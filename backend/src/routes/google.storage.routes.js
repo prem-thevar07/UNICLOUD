@@ -12,6 +12,7 @@ import {
   getPickerSessionStatus,
   importPickerMediaItems,
 } from "../services/providers/googlePhotosPicker.provider.js";
+import { refreshGoogleToken } from "../services/providers/google.provider.js";
 
 const router = express.Router();
 
@@ -547,6 +548,9 @@ router.get("/open/:accountId", auth, async (req, res) => {
 
     res.status(404).json({ message: "Preview not available" });
   } catch (err) {
+    if (err.message?.includes("invalid_grant") || err.response?.data?.error === "invalid_grant") {
+      return res.status(401).json({ message: "Google account authorization expired. Please reconnect in Manage Accounts.", requiresReconnect: true });
+    }
     console.error("❌ Google open proxy error:", err.message);
     res.status(500).json({ message: "Failed to open Google Drive file: " + err.message });
   }
@@ -572,7 +576,11 @@ router.post("/picker/session/:accountId", auth, async (req, res) => {
     res.json(sessionData);
   } catch (err) {
     console.error("❌ Picker Session Route Error:", err.message);
-    res.status(500).json({ message: "Failed to create Google Photos Picker session", error: err.message });
+    const isScopeError = err.message?.includes("insufficient authentication scopes") || err.message?.includes("PERMISSION_DENIED");
+    const message = isScopeError
+      ? "Google Photos permission missing. Please reconnect this Google account in Manage Accounts to enable Google Photos access."
+      : "Failed to create Google Photos Picker session: " + err.message;
+    res.status(isScopeError ? 403 : 500).json({ message, requiresReconnect: isScopeError });
   }
 });
 
@@ -627,65 +635,168 @@ router.post("/picker/import/:accountId", auth, async (req, res) => {
 router.get("/photos/proxy/:accountId", auth, async (req, res) => {
   try {
     let { url } = req.query;
-    if (!url) return res.status(400).send("Missing URL");
-
-    // Google Photos baseUrl requires dimension parameters (e.g. =w400) or it returns 400 Bad Request
-    if (!url.includes("=")) {
-      url = `${url}=w400`;
+    if (!url) {
+      return res.status(400).send("Url is required");
     }
 
-    console.log("🔍 PROXY FETCHING GOOGLE PHOTO URL:", url);
+    // If url is not an absolute HTTP(S) URL (e.g. raw fileId or token), fallback to google open route
+    if (!url.startsWith("http://") && !url.startsWith("https://")) {
+      const fallbackOpenUrl = `/api/google/open/${req.params.accountId}?fileId=${encodeURIComponent(url)}&token=${req.query.token || ""}`;
+      return res.redirect(fallbackOpenUrl);
+    }
 
-    const account = await CloudAccount.findOne({
-      _id: req.params.accountId,
-      userId: req.user.id,
-      provider: "google",
-    });
+    const accountId = req.params.accountId;
+    let token = req.query.token;
 
-    if (!account) return res.status(404).send("Account not found");
-
-    let token = account.accessToken;
-    if (!token || (account.tokenExpiry && new Date(account.tokenExpiry) <= new Date())) {
+    // Refresh Google OAuth token if account is available
+    if (accountId && accountId !== "default" && mongoose.Types.ObjectId.isValid(accountId)) {
       try {
-        const client = new google.auth.OAuth2(
-          process.env.GOOGLE_CLIENT_ID,
-          process.env.GOOGLE_CLIENT_SECRET
-        );
-        client.setCredentials({ refresh_token: account.refreshToken });
-        const newTokens = await client.getAccessToken();
-        token = newTokens.token;
-        account.accessToken = token;
-        account.tokenExpiry = new Date(Date.now() + 3500 * 1000);
-        await account.save();
+        const account = await CloudAccount.findOne({ _id: accountId, userId: req.user.id });
+        if (account && account.refreshToken) {
+          token = await refreshGoogleToken(account);
+        }
       } catch (e) {
         console.warn("⚠️ Token refresh error in proxy:", e.message);
       }
     }
 
-    const headers = {
+    const baseHeaders = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-      "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+      "Accept": "*/*",
     };
 
-    if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+    if (req.headers.range) {
+      baseHeaders.range = req.headers.range;
     }
 
-    let imgRes;
-    try {
-      imgRes = await axios.get(url, { headers, responseType: "stream" });
-    } catch (e1) {
-      // Fallback retry without Auth header if Bearer token is rejected
-      delete headers["Authorization"];
-      imgRes = await axios.get(url, { headers, responseType: "stream" });
+    // Build target URLs to try (=dv, =m18, =m22, raw)
+    const targets = [url];
+    if (url.includes("=dv")) {
+      targets.push(url.replace("=dv", "=m18"));
+      targets.push(url.replace("=dv", "=m22"));
+      targets.push(url.split("=")[0]);
+    } else if (!url.includes("=")) {
+      targets.push(`${url}=dv`);
+      targets.push(`${url}=w400`);
     }
 
-    res.setHeader("Content-Type", imgRes.headers["content-type"] || "image/jpeg");
+    let imgRes = null;
+    let lastErr = null;
+
+    // Smart dual-mode fetch with manual 302 redirect tracking to prevent Authorization header leakage to download CDN
+    for (const targetUrl of targets) {
+      const headerVariants = [];
+      if (token) {
+        headerVariants.push({ ...baseHeaders, Authorization: `Bearer ${token}` });
+      }
+      headerVariants.push({ ...baseHeaders });
+
+      for (const reqHeaders of headerVariants) {
+        try {
+          let resAttempt = await axios.get(targetUrl, {
+            headers: reqHeaders,
+            responseType: "stream",
+            maxRedirects: 0,
+            validateStatus: (s) => s >= 200 && s < 400,
+            timeout: 15000,
+          });
+
+          // Handle 302 / 301 / 307 redirects manually
+          if (resAttempt.status >= 300 && resAttempt.status < 400 && resAttempt.headers.location) {
+            const redirectUrl = resAttempt.headers.location;
+            resAttempt = await axios.get(redirectUrl, {
+              headers: baseHeaders, // Clean headers without Authorization Bearer token
+              responseType: "stream",
+              maxRedirects: 5,
+              timeout: 25000,
+            });
+          }
+
+          if (resAttempt && (resAttempt.status === 200 || resAttempt.status === 206)) {
+            imgRes = resAttempt;
+            break;
+          }
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+      if (imgRes && (imgRes.status === 200 || imgRes.status === 206)) {
+        break;
+      }
+    }
+
+    if (!imgRes) {
+      throw lastErr || new Error("Failed to fetch Google photo stream");
+    }
+
+    if (imgRes.status === 206) {
+      res.status(206);
+      if (imgRes.headers["content-range"]) res.setHeader("Content-Range", imgRes.headers["content-range"]);
+      if (imgRes.headers["accept-ranges"]) res.setHeader("Accept-Ranges", imgRes.headers["accept-ranges"]);
+      if (imgRes.headers["content-length"]) res.setHeader("Content-Length", imgRes.headers["content-length"]);
+    }
+
+    const isVid = url.includes("=dv") || url.includes("=m18") || url.includes("=m22") || (imgRes.headers["content-type"] || "").startsWith("video/");
+    res.setHeader("Content-Type", imgRes.headers["content-type"] || (isVid ? "video/mp4" : "image/jpeg"));
     res.setHeader("Cache-Control", "public, max-age=86400");
     imgRes.data.pipe(res);
   } catch (err) {
     console.error("❌ Google Photos proxy error:", err.response?.status, err.message);
     res.status(500).send("Failed to proxy photo: " + err.message);
+  }
+});
+
+/* ===============================
+   🖼️ GOOGLE DRIVE FAST 15KB THUMBNAIL ROUTE
+=============================== */
+router.get("/thumbnail/:accountId", auth, async (req, res) => {
+  try {
+    const { accountId } = req.params;
+    const { fileId } = req.query;
+
+    if (!fileId) return res.status(400).send("Missing fileId");
+
+    let account = null;
+    if (accountId && accountId !== "default" && mongoose.Types.ObjectId.isValid(accountId)) {
+      account = await CloudAccount.findOne({ _id: accountId, userId: req.user.id, provider: "google" });
+    }
+    if (!account) {
+      account = await CloudAccount.findOne({ userId: req.user.id, provider: "google" });
+    }
+    if (!account) return res.status(404).send("Account not found");
+
+    const client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET
+    );
+    client.setCredentials({
+      access_token: account.accessToken,
+      refresh_token: account.refreshToken,
+    });
+    const drive = google.drive({ version: "v3", auth: client });
+
+    let meta;
+    try {
+      meta = await drive.files.get({ fileId, fields: "thumbnailLink" });
+    } catch (e1) {
+      const fallbackUrl = `/api/google/open/${accountId}?fileId=${fileId}&token=${req.query.token || ""}`;
+      return res.redirect(fallbackUrl);
+    }
+
+    const rawThumb = meta?.data?.thumbnailLink;
+    if (rawThumb) {
+      const thumbUrl = rawThumb.replace(/=s\d+$/, "=s300");
+      const imgRes = await axios.get(thumbUrl, { responseType: "stream", timeout: 10000 });
+      res.setHeader("Content-Type", "image/jpeg");
+      res.setHeader("Cache-Control", "public, max-age=604800");
+      return imgRes.data.pipe(res);
+    }
+
+    const fallbackUrl = `/api/google/open/${accountId}?fileId=${fileId}&token=${req.query.token || ""}`;
+    return res.redirect(fallbackUrl);
+  } catch (err) {
+    console.error("❌ Google Drive fast thumbnail error:", err.message);
+    res.status(500).send("Thumbnail failed");
   }
 });
 

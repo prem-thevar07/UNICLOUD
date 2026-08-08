@@ -1,6 +1,7 @@
 import { timelineEngineService } from "../services/photos/TimelineEngine.service.js";
 import { syncManagerService } from "../services/photos/SyncManager.service.js";
 import PhotoMetadata from "../models/PhotoMetadata.js";
+import CloudAccount from "../models/CloudAccount.js";
 
 /**
  * GET /api/photos or POST /api/photos (Timeline Cursor Endpoint)
@@ -8,23 +9,30 @@ import PhotoMetadata from "../models/PhotoMetadata.js";
 export const getPhotos = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { cursor, limit, accountIds, folder, type } = req.body || req.query;
+    const { cursor, limit, accountIds, folder, type, preset } = req.body || req.query;
 
-    // Check if user has indexed metadata in PhotoMetadata collection
-    const metadataCount = await PhotoMetadata.countDocuments({ userId });
-    
-    // If metadata index is empty, trigger background sync and populate initial items
-    if (metadataCount === 0) {
-      console.log(`📌 Initial metadata sync required for user ${userId}...`);
-      await syncManagerService.syncUserAccounts(userId);
+    let parsedAccountIds = accountIds;
+    if (typeof accountIds === "string") {
+      parsedAccountIds = accountIds.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+
+    // Ensure every connected cloud account has its photos indexed in PhotoMetadata
+    const connectedAccounts = await CloudAccount.find({ userId, status: "connected" });
+    for (const acc of connectedAccounts) {
+      const accCount = await PhotoMetadata.countDocuments({ userId, accountId: acc._id });
+      if (accCount === 0) {
+        console.log(`📌 Syncing photos for newly connected account [${acc.provider}:${acc.email}]...`);
+        await syncManagerService.syncAccount(acc).catch((e) => console.warn("Account photo sync warning:", e.message));
+      }
     }
 
     const result = await timelineEngineService.getTimeline(userId, {
       cursor,
       limit: limit ? parseInt(limit, 10) : 60,
-      accountIds,
+      accountIds: parsedAccountIds,
       folder,
       type,
+      preset,
     });
 
     res.json({

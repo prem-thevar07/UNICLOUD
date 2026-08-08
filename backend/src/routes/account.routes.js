@@ -1,6 +1,7 @@
 import express from "express";
 import auth from "../middleware/auth.middleware.js";
 import CloudAccount from "../models/CloudAccount.js";
+import PhotoMetadata from "../models/PhotoMetadata.js";
 import { google } from "googleapis";
 import { logActivity } from "../utils/activityLogger.js";
 
@@ -129,6 +130,11 @@ router.delete("/:id", auth, async (req, res) => {
         { provider: account.provider, email: account.email }
       );
     }
+
+    await PhotoMetadata.deleteMany({
+      accountId: req.params.id,
+      userId: req.user.id,
+    });
 
     await CloudAccount.deleteOne({
       _id: req.params.id,

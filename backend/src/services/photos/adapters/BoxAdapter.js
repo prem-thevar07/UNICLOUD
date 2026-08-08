@@ -38,7 +38,7 @@ export class BoxAdapter extends ProviderAdapter {
     const created = file.created_at ? new Date(file.created_at) : new Date();
     const modified = file.modified_at ? new Date(file.modified_at) : created;
     const parentName = file.parent?.name || "Root";
-    const openUrl = `/api/box/open/${this.accountId}?fileId=${file.id}`;
+    const openUrl = `/api/box/open/${this.accountId}?fileId=${file.id}&name=${encodeURIComponent(name)}`;
 
     return {
       userId: this.account.userId,
